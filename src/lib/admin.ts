@@ -43,7 +43,7 @@ export async function overview() {
         performers: sql<number>`count(*) filter (where ${performers.accountType} = 'performer')::int`,
         organizers: sql<number>`count(*) filter (where ${performers.accountType} = 'organizer')::int`,
         suspended: sql<number>`count(*) filter (where ${performers.status} = 'suspended')::int`,
-        new30: sql<number>`count(*) filter (where ${performers.createdAt} > ${at(d30)})::int`,
+        new30: sql<number>`count(*) filter (where ${performers.createdAt} > ${at(d30)} and ${performers.accountType} = 'performer')::int`,
       })
       .from(performers),
     db.select({ now: sql<number>`count(*)::int` }).from(performers).where(isNotNull(performers.liveSessionId)),

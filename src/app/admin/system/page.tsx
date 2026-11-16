@@ -42,7 +42,11 @@ export default async function System() {
           rows={Object.entries(GAME_TYPES).map(([id, t]) => [
             t.name,
             <span key="d" className="small">{t.desc}</span>,
-            UNITS[id as keyof typeof UNITS].length ? UNITS[id as keyof typeof UNITS].map((u) => `${u.name} NT$${u.price}（+${u.power}）`).join("、") : <span key="f" className="text-ok">完全免費</span>,
+            UNITS[id as keyof typeof UNITS].length
+              ? UNITS[id as keyof typeof UNITS].map((u) => `${u.name} NT$${u.price}（+${u.power}）`).join("、")
+              : t.paid
+                ? <span key="f">依支持金額換算</span>
+                : <span key="f" className="text-ok">完全免費</span>,
           ])}
         />
       </section>
