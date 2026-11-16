@@ -1,0 +1,52 @@
+import { desc, eq } from "drizzle-orm";
+import { requireAccount } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { pointLedger } from "@/lib/db/schema";
+import { canAcceptOrders, fmtPoints } from "@/lib/billing";
+import { POINT_PACKAGES } from "@/lib/env";
+import { BuyButton } from "./BuyButton";
+
+const REASON: Record<string, string> = { event_promo: "活動曝光", event_notify: "活動通知", signup_bonus: "新手贈點", purchase: "儲值", fee: "服務費", live_notify: "開演通知", broadcast: "粉絲訊息", adjust: "平台調整", promo: "曝光版位" };
+
+export default async function Points() {
+  const { performer: p } = (await requireAccount())!;
+  const db = await getDb();
+  const ledger = await db.select().from(pointLedger).where(eq(pointLedger.performerId, p.id)).orderBy(desc(pointLedger.createdAt)).limit(40);
+  return (
+    <div className="flex flex-col gap-8">
+      <section>
+        <h1 className="h1">點數</h1>
+        <div className="mt-3 flex items-baseline gap-2"><strong className={`num text-[44px] leading-[52px] ${canAcceptOrders(p.pointsCents) ? "" : "text-err"}`}>{fmtPoints(p.pointsCents)}</strong><span className="h3">點</span></div>
+        <p className="small mt-2 max-w-[600px]">
+          1 點 = NT$1。活動曝光版位與通知表演者粉絲時扣點。平台不收成交抽成，也不經手門票或演出費。
+        </p>
+      </section>
+      <section className="sec">
+        <h2 className="h2">購買點數</h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          {POINT_PACKAGES.map((k) => (
+            <div key={k.id} className="card p-5">
+              <strong className="num text-[26px] leading-9">NT${k.priceNt.toLocaleString()}</strong>
+              <div className="font-medium">{k.label}</div>
+              <div className="small">{k.points.toLocaleString()} 點</div>
+              <BuyButton packageId={k.id} />
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="sec">
+        <h2 className="h2">點數明細</h2>
+        <ul className="mt-2 border-t border-rule text-[14px]">
+          {ledger.map((l) => (
+            <li key={l.id} className="row flex items-center gap-3 py-2.5">
+              <span className="w-20 shrink-0 font-medium">{REASON[l.reason] ?? l.reason}</span>
+              <span className="min-w-0 flex-1 truncate text-ink3">{l.note}</span>
+              <strong className={`num ${l.deltaCents < 0 ? "" : "text-ok"}`}>{l.deltaCents > 0 ? "+" : ""}{fmtPoints(l.deltaCents)}</strong>
+              <span className="small num w-16 text-right">{fmtPoints(l.balanceAfterCents)}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}

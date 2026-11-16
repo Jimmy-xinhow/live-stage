@@ -1,0 +1,22 @@
+-- 所有存取都經過 Next.js API（伺服器端連線），對 Supabase 的 anon/authenticated 角色一律拒絕。
+ALTER TABLE "achievements" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "checkins" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "fan_achievements" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "fans" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "follows" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "games" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "hands" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "inquiries" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "inquiry_targets" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "live_sessions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "lotteries" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "lottery_entries" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "menu_items" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "orders" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "performers" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "point_ledger" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "point_purchases" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "promotions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "shows" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "wish_votes" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "wishes" ENABLE ROW LEVEL SECURITY;

@@ -1,0 +1,31 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { and, eq } from "drizzle-orm";
+import { getDb } from "@/lib/db";
+import { fans, orders } from "@/lib/db/schema";
+import { requirePerformer } from "@/lib/auth";
+import { pushMessage } from "@/lib/line";
+
+const Body = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("reply"), reply: z.string().trim().min(1).max(200) }),
+  z.object({ action: z.literal("hide") }),
+  z.object({ action: z.literal("unhide") }),
+]);
+
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requirePerformer();
+  if (!auth) return NextResponse.json({ error: "請先登入" }, { status: 401 });
+  const parsed = Body.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "格式錯誤" }, { status: 400 });
+  const b = parsed.data;
+  const db = await getDb();
+  const where = and(eq(orders.id, (await params).id), eq(orders.performerId, auth.performer.id), eq(orders.status, "paid"));
+  const set = b.action === "reply" ? { reply: b.reply, repliedAt: new Date() } : { hidden: b.action === "hide" };
+  const [o] = await db.update(orders).set(set).where(where).returning();
+  if (!o) return NextResponse.json({ error: "找不到這筆紀錄" }, { status: 404 });
+  if (b.action === "reply" && o.fanId) {
+    const [f] = await db.select().from(fans).where(eq(fans.id, o.fanId));
+    if (f) await pushMessage(f.lineUserId, [{ type: "text", text: `💌 ${auth.performer.displayName} 回覆你：\n「${b.reply}」` }]);
+  }
+  return NextResponse.json({ ok: true });
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "inquiry_targets" ADD COLUMN "review_hidden" boolean DEFAULT false NOT NULL;

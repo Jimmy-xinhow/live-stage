@@ -1,0 +1,69 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794817309315,
+      "tag": "0000_init",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794817309872,
+      "tag": "0001_enable_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794844980043,
+      "tag": "0002_events_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794845000000,
+      "tag": "0003_enable_rls_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794846217733,
+      "tag": "0004_pk_promo_stats",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794846365930,
+      "tag": "0005_map_coords",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794846557926,
+      "tag": "0006_live_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794846558926,
+      "tag": "0007_enable_rls_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794848349253,
+      "tag": "0008_review_hidden",
+      "breakpoints": true
+    }
+  ]
+}
