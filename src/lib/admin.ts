@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   chatMessages, events, eventPerformers, fans, follows, inquiries, inquiryTargets, liveSessions, orders,
@@ -10,6 +10,8 @@ import { env } from "./env";
 
 const n = (v: unknown) => Number(v ?? 0);
 const since = (days: number) => new Date(Date.now() - days * 86400_000);
+/** 在原生 SQL 片段裡比時間：postgres-js 不吃 Date 物件，要自己轉字串再轉型別 */
+const at = (d: Date) => sql`${d.toISOString()}::timestamptz`;
 
 /** 總覽數字：成交、服務費、購點、曝光、互動 */
 export async function overview() {
@@ -18,11 +20,11 @@ export async function overview() {
   const [[pay], [buy], [promo], [inq], [acct], [live], [ev], [fanN], [chat]] = await Promise.all([
     db
       .select({
-        gmv1: sql<number>`coalesce(sum(${orders.amount}) filter (where ${orders.paidAt} > ${d1}),0)::int`,
-        gmv7: sql<number>`coalesce(sum(${orders.amount}) filter (where ${orders.paidAt} > ${d7}),0)::int`,
-        gmv30: sql<number>`coalesce(sum(${orders.amount}) filter (where ${orders.paidAt} > ${d30}),0)::int`,
-        fee30: sql<number>`coalesce(sum(${orders.feeCents}) filter (where ${orders.paidAt} > ${d30}),0)::int`,
-        cnt30: sql<number>`count(*) filter (where ${orders.paidAt} > ${d30})::int`,
+        gmv1: sql<number>`coalesce(sum(${orders.amount}) filter (where ${orders.paidAt} > ${at(d1)}),0)::int`,
+        gmv7: sql<number>`coalesce(sum(${orders.amount}) filter (where ${orders.paidAt} > ${at(d7)}),0)::int`,
+        gmv30: sql<number>`coalesce(sum(${orders.amount}) filter (where ${orders.paidAt} > ${at(d30)}),0)::int`,
+        fee30: sql<number>`coalesce(sum(${orders.feeCents}) filter (where ${orders.paidAt} > ${at(d30)}),0)::int`,
+        cnt30: sql<number>`count(*) filter (where ${orders.paidAt} > ${at(d30)})::int`,
         awaiting: sql<number>`count(*) filter (where ${orders.status} = 'awaiting')::int`,
       })
       .from(orders)
@@ -41,12 +43,12 @@ export async function overview() {
         performers: sql<number>`count(*) filter (where ${performers.accountType} = 'performer')::int`,
         organizers: sql<number>`count(*) filter (where ${performers.accountType} = 'organizer')::int`,
         suspended: sql<number>`count(*) filter (where ${performers.status} = 'suspended')::int`,
-        new30: sql<number>`count(*) filter (where ${performers.createdAt} > ${d30})::int`,
+        new30: sql<number>`count(*) filter (where ${performers.createdAt} > ${at(d30)})::int`,
       })
       .from(performers),
     db.select({ now: sql<number>`count(*)::int` }).from(performers).where(isNotNull(performers.liveSessionId)),
     db.select({ upcoming: sql<number>`count(*) filter (where ${events.startsAt} > now() and ${events.status} = 'published')::int`, total: sql<number>`count(*)::int` }).from(events),
-    db.select({ total: sql<number>`count(*)::int`, new30: sql<number>`count(*) filter (where ${fans.createdAt} > ${d30})::int` }).from(fans),
+    db.select({ total: sql<number>`count(*)::int`, new30: sql<number>`count(*) filter (where ${fans.createdAt} > ${at(d30)})::int` }).from(fans),
     db.select({ n: sql<number>`count(*)::int` }).from(chatMessages).where(gte(chatMessages.createdAt, d30)),
   ]);
   const [reply] = await db
@@ -104,14 +106,12 @@ export async function accounts(kind: "performer" | "organizer", q = ""): Promise
   const list = await db.select().from(performers).where(and(...conds)).orderBy(desc(performers.createdAt)).limit(200);
   if (!list.length) return [];
   const ids = list.map((p) => p.id);
-  const inIds = sql`${performers.id} in ${ids}`;
   const [gmv, shows, fanRows, evRows] = await Promise.all([
-    db.select({ id: orders.performerId, sum: sql<number>`coalesce(sum(${orders.amount}),0)::int` }).from(orders).where(and(eq(orders.status, "paid"), sql`${orders.performerId} in ${ids}`)).groupBy(orders.performerId),
-    db.select({ id: liveSessions.performerId, n: sql<number>`count(*)::int` }).from(liveSessions).where(sql`${liveSessions.performerId} in ${ids}`).groupBy(liveSessions.performerId),
-    db.select({ id: follows.performerId, n: sql<number>`count(*)::int` }).from(follows).where(sql`${follows.performerId} in ${ids}`).groupBy(follows.performerId),
-    db.select({ id: events.organizerId, n: sql<number>`count(*)::int` }).from(events).where(sql`${events.organizerId} in ${ids}`).groupBy(events.organizerId),
+    db.select({ id: orders.performerId, sum: sql<number>`coalesce(sum(${orders.amount}),0)::int` }).from(orders).where(and(eq(orders.status, "paid"), inArray(orders.performerId, ids))).groupBy(orders.performerId),
+    db.select({ id: liveSessions.performerId, n: sql<number>`count(*)::int` }).from(liveSessions).where(inArray(liveSessions.performerId, ids)).groupBy(liveSessions.performerId),
+    db.select({ id: follows.performerId, n: sql<number>`count(*)::int` }).from(follows).where(inArray(follows.performerId, ids)).groupBy(follows.performerId),
+    db.select({ id: events.organizerId, n: sql<number>`count(*)::int` }).from(events).where(inArray(events.organizerId, ids)).groupBy(events.organizerId),
   ]);
-  void inIds;
   return list.map((p) => ({
     id: p.id, slug: p.slug, name: p.displayName, kind: p.accountType, status: p.status,
     city: areaBySlug(p.city)?.short ?? "—", act: p.accountType === "performer" ? actName(p.actType) : p.orgKind,
