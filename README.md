@@ -68,6 +68,17 @@
 - 藝人在「收款與頁面設定」選演出縣市＋常駐行政區／地點；後台開通清單會提示。
 - 平台定位：只做系統，不做場地、商圈或公部門合作。
 
+## 部署（Railway）
+驗收環境：<https://web-production-95b3751c.up.railway.app>（Railway 專案 `live-stage`，服務 `web` ＋ `Postgres`；推 `main` 就自動部署）。
+
+- `MIGRATE_ON_BOOT=true`：啟動時自動跑 `drizzle/` 的遷移，不必另外下指令。
+- `SEED_DEMO=true`：資料庫是空的時候寫入示範資料（7 位表演者、1 個店家主辦、活動、歌單、訂單）。正式營運請設 `false`。
+- `ADMIN_PASSWORD`：管理後台 `/admin` 的密碼登入；也可以用 `ADMIN_LINE_USER_IDS` 指定管理員的 LINE 帳號。
+- 驗收用的 `DEV_LOGIN=true`、`ECPAY_ALLOW_MOCK=true` 會讓任何人免 LINE 登入、用模擬付款下單，**正式上線前務必改成 false**（`/admin/system` 會把這兩項標成「要注意」）。
+
+## 管理後台 `/admin`
+總覽（成交、平台收入、使用狀況、近 14 天走勢）、表演者、店家主辦、活動、交易、點數、曝光、邀約與評價、系統九個分頁。可以調整點數、停用或恢復帳號、下架活動、隱藏不當評價；系統頁列出這個環境的設定健檢，以及目前的費率、版位價格與遊戲道具價格。
+
 ## 本機啟動
 ```bash
 npm install
