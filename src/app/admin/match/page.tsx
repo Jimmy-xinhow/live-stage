@@ -1,6 +1,7 @@
 import { matchData } from "@/lib/admin";
 import { ReviewActions } from "./ReviewActions";
 import { Out, Table, Tag, When } from "../Bits";
+import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function Match() {
   const replied = inquiries.reduce((a, i) => a + i.replied, 0);
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">邀約與評價</h1><p className="small">平台只轉達需求與報價，不經手演出費。最近 {inquiries.length} 筆邀約共送給 {sent} 位表演者，已回覆 {replied} 次{sent ? `（${Math.round((replied / sent) * 100)}%）` : ""}。</p></div>
+      <PageHead title="邀約與評價" desc={<>平台只轉達需求與報價，不經手演出費。最近 {inquiries.length} 筆邀約共送給 {sent} 位表演者，已回覆 {replied} 次{sent ? `（${Math.round((replied / sent) * 100)}%）` : ""}。</>} />
 
       <section className="sec">
         <h2 className="h2">邀約</h2>

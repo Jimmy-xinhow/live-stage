@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { achievements, fanAchievements } from "@/lib/db/schema";
 import { AchievementsManager } from "./AchievementsManager";
 import { PendingRewards } from "./PendingRewards";
+import { Empty, PageHead, Section } from "@/components/back/Shell";
 
 export default async function Rewards() {
   const { performer: p } = (await requirePerformer())!;
@@ -16,7 +17,7 @@ export default async function Rewards() {
     .groupBy(fanAchievements.achievementId);
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">成就與獎勵</h1><p className="small">粉絲累計支持達標就自動解鎖並收到 LINE 通知，徽章顯示在排行、排隊與留言牆。</p></div>
+      <PageHead title="成就與獎勵" desc={<>粉絲累計支持達標就自動解鎖並收到 LINE 通知，徽章顯示在排行、排隊與留言牆。</>} />
       <section className="sec">
         <h2 className="h2">待兌換獎勵</h2>
         <p className="small mb-1">粉絲在現場按「領取」會出現兌換碼，核對後按已兌換。LINE 也會通知你，可以直接在 LINE 按。</p>

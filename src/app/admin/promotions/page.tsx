@@ -1,5 +1,6 @@
 import { promotionsData } from "@/lib/admin";
 import { Pts, Table, Tag, When } from "../Bits";
+import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 const SLOT: Record<string, string> = { search: "搜尋置頂", home: "首頁推薦", event_top: "活動列表置頂", event_home: "首頁活動推薦" };
@@ -10,7 +11,7 @@ export default async function Promotions() {
   const pts = list.reduce((a, p) => a + p.cost, 0);
   return (
     <div className="flex flex-col gap-5">
-      <div><h1 className="h1">曝光版位</h1><p className="small">刊登中 {live.length} 筆、累計收入 <span className="num font-semibold text-ink">{pts} 點</span>。曝光＝版位被看到的次數，點擊＝從版位點進去的次數。</p></div>
+      <PageHead title="曝光版位" desc={<>刊登中 {live.length} 筆、累計收入 <span className="num font-semibold text-ink">{pts} 點</span>。曝光＝版位被看到的次數，點擊＝從版位點進去的次數。</>} />
       <Table
         head={["期間", "買的人", "版位", "對象", "地區", "費用", "曝光", "點擊", "點擊率", "狀態"]}
         rows={list.map((p) => {

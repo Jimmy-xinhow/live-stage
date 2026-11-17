@@ -98,12 +98,13 @@ export function EventLine({ e }: { e: { id: string; title: string; city: string;
 }
 
 /** 演出列：日期大字、名稱、時間地點 */
-export function ShowRow({ s }: { s: { startsAt: string; location: string; note: string; slug: string; name: string; city?: { short: string } | null } }) {
+export function ShowRow({ s }: { s: { startsAt: string; location: string; note: string; slug: string; name: string; cover?: string | null; city?: { short: string } | null } }) {
   const d = new Date(new Date(s.startsAt).getTime() + 8 * 3600_000);
   const hm = `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
   return (
-    <Link href={`/u/${s.slug}`} className="row grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-4 py-4 md:grid-cols-[72px_minmax(0,1fr)_200px] md:gap-6">
+    <Link href={`/u/${s.slug}`} className="row grid grid-cols-[56px_56px_minmax(0,1fr)_auto] items-center gap-3 py-4 md:grid-cols-[72px_72px_minmax(0,1fr)_200px] md:gap-6">
       <span className="flex flex-col"><span className="label">週{WD[d.getUTCDay()]}</span><strong className="num text-[36px] leading-9 font-extrabold md:text-[52px] md:leading-[52px]">{d.getUTCDate()}</strong></span>
+      <Photo src={s.cover} ratio="1 / 1" label="" className="!rounded-[12px]" />
       <span className="min-w-0"><span className="h3 block">{s.name}</span><span className="small block">{s.note || "現場演出"}</span></span>
       <span className="small text-right md:text-left"><span className="num block text-[15px] font-semibold text-ink">{hm}</span>{[s.city?.short, s.location].filter(Boolean).join("・")}</span>
     </Link>

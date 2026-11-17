@@ -94,6 +94,8 @@ export async function seedDemo(db: DB) {
   await mk(5, items[7], null, 150, "", "waiting", 4);
   for (const a of await db.insert(achievements).values(ACHIEVEMENT_TEMPLATES.map((t) => ({ ...t, performerId: p.id }))).returning()) await backfillAchievement(a, db);
   await db.insert(shows).values({ performerId: p.id, startsAt: new Date(new Date(now + 5 * 86400_000).setUTCHours(11, 30, 0, 0)), location: "駁二大勇倉庫 C5 前", note: "這週有新歌〈雨夜花〉" });
+  // 示範照片：public/demo 下自己產生的現場感圖，正式上線要換成真實照片
+  await db.update(performers).set({ coverUrl: "/demo/busker-1.jpg" }).where(eq(performers.id, p.id));
 
   // 另外兩位示範藝人，讓地區頁有內容可看（僅開發環境）
   const extra = [
@@ -103,7 +105,7 @@ export async function seedDemo(db: DB) {
   for (const e of extra) {
     const [x] = await db
       .insert(performers)
-      .values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.slug === "demo-band" ? "band" : "busker", genres: e.slug === "demo-band" ? "台語老歌、搖滾" : "日系、華語抒情", priceFrom: e.slug === "demo-band" ? 15000 : 4000, occasions: ["婚禮", "尾牙春酒", "企業活動"], status: "active", gateway: "mock", payMethods: [{ type: "linepay", label: "LINE Pay", qrText: "DEMO", imageData: null }] })
+      .values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.slug === "demo-band" ? "band" : "busker", coverUrl: e.slug === "demo-band" ? "/demo/band-1.jpg" : "/demo/uku-1.jpg", genres: e.slug === "demo-band" ? "台語老歌、搖滾" : "日系、華語抒情", priceFrom: e.slug === "demo-band" ? 15000 : 4000, occasions: ["婚禮", "尾牙春酒", "企業活動"], status: "active", gateway: "mock", payMethods: [{ type: "linepay", label: "LINE Pay", qrText: "DEMO", imageData: null }] })
       .returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     await db.insert(menuItems).values(e.songs.map(([title, subtitle, category, price], i) => ({ performerId: x.id, title, subtitle, category, price, sort: i })));
@@ -112,13 +114,13 @@ export async function seedDemo(db: DB) {
   // 不同類型的示範表演者＋付費推薦＋許願池（僅開發環境）
   const { promotions, wishes } = await import("./schema");
   const more = [
-    { slug: "demo-mia", name: "Mia", act: "singer", city: "kaohsiung", district: "鹽埕區・Bar Jade", genres: "華語流行、英文抒情", price: 3500, bio: "在高雄駐唱八年，固定在鹽埕和鼓山的餐酒館演出。婚禮可以配合進場、敬酒、送客三段曲目。", occ: ["餐廳酒吧", "婚禮", "企業活動"] },
-    { slug: "demo-mc", name: "主持人小安", act: "mc", city: "kaohsiung", district: "前鎮區", genres: "婚禮、尾牙、記者會", price: 8000, bio: "雙語主持十年，婚禮與尾牙各兩百場以上，流程與音控都能一起確認。", occ: ["婚禮", "尾牙春酒", "企業活動"] },
-    { slug: "demo-magic", name: "魔術師阿凱", act: "magic", city: "kaohsiung", district: "左營區", genres: "近距離、親子舞台", price: 5000, bio: "近距離魔術與親子舞台秀，三十分鐘到一小時的節目都有。", occ: ["生日派對", "企業活動", "校園活動"] },
-    { slug: "demo-dj", name: "DJ KAI", act: "dj", city: "taipei", district: "大安區", genres: "House、City Pop", price: 6000, bio: "派對與品牌活動 DJ，自備控台，可依場地準備歌單。", occ: ["生日派對", "企業活動", "市集活動"] },
+    { slug: "demo-mia", name: "Mia", act: "singer", cover: "/demo/singer-1.jpg", city: "kaohsiung", district: "鹽埕區・Bar Jade", genres: "華語流行、英文抒情", price: 3500, bio: "在高雄駐唱八年，固定在鹽埕和鼓山的餐酒館演出。婚禮可以配合進場、敬酒、送客三段曲目。", occ: ["餐廳酒吧", "婚禮", "企業活動"] },
+    { slug: "demo-mc", name: "主持人小安", act: "mc", cover: "/demo/mc-1.jpg", city: "kaohsiung", district: "前鎮區", genres: "婚禮、尾牙、記者會", price: 8000, bio: "雙語主持十年，婚禮與尾牙各兩百場以上，流程與音控都能一起確認。", occ: ["婚禮", "尾牙春酒", "企業活動"] },
+    { slug: "demo-magic", name: "魔術師阿凱", act: "magic", cover: "/demo/magic-1.jpg", city: "kaohsiung", district: "左營區", genres: "近距離、親子舞台", price: 5000, bio: "近距離魔術與親子舞台秀，三十分鐘到一小時的節目都有。", occ: ["生日派對", "企業活動", "校園活動"] },
+    { slug: "demo-dj", name: "DJ KAI", act: "dj", cover: "/demo/dj-1.jpg", city: "taipei", district: "大安區", genres: "House、City Pop", price: 6000, bio: "派對與品牌活動 DJ，自備控台，可依場地準備歌單。", occ: ["生日派對", "企業活動", "市集活動"] },
   ];
   for (const e of more) {
-    const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", lineUserId: `Udev-${e.slug}` }).returning();
+    const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", coverUrl: e.cover, lineUserId: `Udev-${e.slug}` }).returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     if (e.act === "singer") {
       // Mia 也在演出中，方便示範跨表演者 PK
@@ -150,6 +152,7 @@ export async function seedDemo(db: DB) {
       organizerId: venue.id, title: "週五爵士之夜", city: "kaohsiung", place: "Bar Jade", address: "高雄市鹽埕區大勇路 1 號",
       startsAt: at(4, 20), endsAt: at(4, 23), lat: "22.6238", lng: "120.2816",
       description: "每月一次的爵士之夜，兩組演出接力。入場低消一杯。", priceText: "低消 350", guestActs: "Trio Nocturne", notifyFans: true,
+      coverUrl: "/demo/stage-jazz.jpg",
     })
     .returning();
   if (mia) await db.insert(eventPerformers).values({ eventId: ev.id, performerId: mia.id, status: "confirmed" });

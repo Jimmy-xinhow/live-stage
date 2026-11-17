@@ -4,6 +4,7 @@ import { PROMO } from "@/lib/market";
 import { EVENT_PROMO } from "@/lib/events";
 import { GAME_TYPES, UNITS } from "@/lib/games";
 import { Table } from "../Bits";
+import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function System() {
   const checks = systemChecks();
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">系統</h1><p className="small">目前這個環境的設定。價格與費率都在環境變數裡，改完重新部署就生效。</p></div>
+      <PageHead title="系統" desc={<>目前這個環境的設定。價格與費率都在環境變數裡，改完重新部署就生效。</>} />
 
       <section className="sec">
         <h2 className="h2">設定健檢</h2>

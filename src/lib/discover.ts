@@ -44,6 +44,7 @@ export async function liveList(city?: string, limit = 24) {
     slug: r.p.slug,
     name: r.p.displayName,
     avatar: r.p.avatarUrl,
+    cover: r.p.coverUrl,
     color: r.p.themeColor,
     city: areaBySlug(r.p.city)?.name ?? "",
     location: r.location || r.p.district,
@@ -72,6 +73,7 @@ export async function upcomingShows(city?: string, days = 14, limit = 30) {
     slug: r.p.slug,
     name: r.p.displayName,
     avatar: r.p.avatarUrl,
+    cover: r.p.coverUrl,
     color: r.p.themeColor,
     city: areaBySlug(r.p.city),
   }));

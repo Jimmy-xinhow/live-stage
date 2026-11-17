@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { fmtTaipei } from "@/lib/format";
 import { useRouter } from "next/navigation";
+import { Empty } from "@/components/back/Shell";
 
 type Row = { id: string; title: string; place: string; cityName: string; startsAt: string; status: string; organizer: string; cancelled: boolean };
 const when = (iso: string) => fmtTaipei(iso);
@@ -24,7 +25,7 @@ export function TaggedEvents({ list }: { list: Row[] }) {
     router.refresh();
   }
 
-  if (!list.length) return <p className="sec small">目前沒有被標記的活動。</p>;
+  if (!list.length) return <Empty text="還沒有店家或主辦把你列進活動名單。被標記時會用 LINE 通知你，確認後才會公開顯示。" />;
   return (
     <div className="border-t-2 border-ink">
       {msg && <p className="py-2 text-[14px] text-ok">{msg}</p>}

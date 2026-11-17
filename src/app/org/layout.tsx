@@ -1,19 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { requireAccount } from "@/lib/auth";
 import { fmtPoints } from "@/lib/billing";
 import { APP_NAME } from "@/lib/env";
-import { DashNav } from "../dashboard/DashNav";
+import { BackShell } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
-
-const NAV = [
-  ["/org", "總覽"],
-  ["/org/events", "我的活動"],
-  ["/org/promote", "活動曝光"],
-  ["/org/profile", "場地資料"],
-  ["/org/points", "點數"],
-] as const;
 
 export default async function OrgLayout({ children }: { children: React.ReactNode }) {
   const auth = await requireAccount();
@@ -21,16 +13,19 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
   if (auth.performer.accountType !== "organizer") redirect("/dashboard");
   const p = auth.performer;
   return (
-    <div className="mx-auto max-w-[880px] px-5 pb-16">
-      <header className="no-print flex h-16 items-center gap-3">
-        <Link href="/" className="text-[18px] font-bold">{APP_NAME}</Link>
-        <span className="text-rule">/</span>
-        <span className="min-w-0 truncate font-medium">{p.displayName}</span>
-        <Link href="/org/points" className="tag tag-quiet num ml-auto shrink-0">{fmtPoints(p.pointsCents)} 點</Link>
-        <form action="/api/auth/logout" method="post" className="shrink-0"><button className="small underline">登出</button></form>
-      </header>
-      <DashNav items={NAV} />
+    <BackShell
+      appName={APP_NAME}
+      home="/org"
+      subtitle="店家主辦後台"
+      title={p.displayName}
+      status={<Link href="/org/points" className="tag tag-quiet num">{fmtPoints(p.pointsCents)} 點</Link>}
+      groups={[
+        { label: "活動", items: [{ href: "/org", label: "總覽" }, { href: "/org/events", label: "我的活動" }, { href: "/org/promote", label: "活動曝光" }] },
+        { label: "帳號", items: [{ href: "/org/profile", label: "場地資料" }, { href: "/org/points", label: "點數" }] },
+        { label: "找表演者", items: [{ href: "/invite", label: "送出邀約" }, { href: "/find", label: "搜尋表演者" }] },
+      ]}
+    >
       {children}
-    </div>
+    </BackShell>
   );
 }

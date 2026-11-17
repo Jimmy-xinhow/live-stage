@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAccount } from "@/lib/auth";
 import { eventStats, fmtWhen, myEvents } from "@/lib/events";
+import { Empty, PageHead, Section } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,7 @@ export default async function OrgHome() {
   const needSetup = !p.city || !p.bio;
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="h1">{p.displayName}</h1>
-        <p className="small">刊登演出活動、標記平台上的表演者、用點數買活動曝光。平台不抽成，也不經手門票或演出費。</p>
-      </div>
+      <PageHead title="{p.displayName}" desc={<>刊登演出活動、標記平台上的表演者、用點數買活動曝光。平台不抽成，也不經手門票或演出費。</>} />
 
       {needSetup && (
         <Link href="/org/profile" className="rounded-[12px] border-[1.5px] border-ink px-4 py-3 text-[14px]">

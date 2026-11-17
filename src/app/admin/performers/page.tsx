@@ -1,6 +1,7 @@
 import { accounts } from "@/lib/admin";
 import { AccountActions } from "../AccountActions";
 import { Money, Out, Table, Tag, When } from "../Bits";
+import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export default async function Performers({ searchParams }: { searchParams: Promi
   const list = await accounts("performer", q);
   return (
     <div className="flex flex-col gap-5">
-      <div><h1 className="h1">表演者</h1><p className="small">共 {list.length} 位{q ? `（搜尋：${q}）` : ""}。停用後作品頁與點歌頁會下架，資料保留。</p></div>
+      <PageHead title="表演者" desc={<>共 {list.length} 位{q ? `（搜尋：${q}）` : ""}。停用後作品頁與點歌頁會下架，資料保留。</>} />
       <form className="flex gap-2"><input name="q" defaultValue={q} placeholder="搜尋名稱或網址代號" className="input max-w-[320px]" /><button className="btn btn-secondary">搜尋</button></form>
       <Table
         head={["名稱", "類型", "縣市", "點數", "場次", "累計成交", "粉絲", "加入", "狀態", ""]}

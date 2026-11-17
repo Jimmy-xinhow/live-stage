@@ -2,6 +2,7 @@ import { requireAccount } from "@/lib/auth";
 import { myEvents } from "@/lib/events";
 import { AREAS } from "@/lib/areas";
 import { EventManager } from "./EventManager";
+import { Empty, PageHead, Section } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function OrgEvents() {
   const list = await myEvents(p.id);
   return (
     <div className="flex flex-col gap-6">
-      <div><h1 className="h1">我的活動</h1><p className="small">標記平台上的表演者後，對方確認才會公開顯示；勾選通知粉絲時，確認的當下會用你的點數發送。</p></div>
+      <PageHead title="我的活動" desc={<>標記平台上的表演者後，對方確認才會公開顯示；勾選通知粉絲時，確認的當下會用你的點數發送。</>} />
       <EventManager
         defaultCity={p.city ?? "kaohsiung"}
         defaultPlace={p.district || p.displayName}

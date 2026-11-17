@@ -2,6 +2,7 @@ import Link from "next/link";
 import { dailyRevenue, overview } from "@/lib/admin";
 import { nt } from "@/lib/format";
 import { Stats } from "./Bits";
+import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function AdminHome() {
   const max = Math.max(1, ...daily.map((d) => d.sum));
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">總覽</h1><p className="small">成交金額是表演者收到的錢（平台不經手）；平台收入＝服務費點數＋購點＋曝光版位。</p></div>
+      <PageHead title="總覽" desc={<>成交金額是表演者收到的錢（平台不經手）；平台收入＝服務費點數＋購點＋曝光版位。</>} />
 
       <section className="sec">
         <h2 className="h2">成交</h2>

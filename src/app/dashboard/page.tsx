@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Empty, PageHead, Section } from "@/components/back/Shell";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { requirePerformer } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -36,17 +37,19 @@ export default async function Dashboard() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">總覽</h1><p className="small break-all">作品頁：{performerShareUrl(p.slug).replace("/p/", "/u/")}・點歌頁：{performerShareUrl(p.slug)}・收款碼 {p.payMethods.length} 個・刷卡：{GATEWAY_LABEL[p.gateway]}</p></div>
+      <PageHead
+        title="總覽"
+        desc={<>作品頁 {performerShareUrl(p.slug).replace("/p/", "/u/")}・點歌頁 {performerShareUrl(p.slug)}・收款碼 {p.payMethods.length} 個・刷卡 {GATEWAY_LABEL[p.gateway]}</>}
+        actions={<><Link href="/dashboard/stage" className="btn btn-primary btn-sm">開演出控制台</Link><Link href="/dashboard/poster" className="btn btn-secondary btn-sm">列印 QR 立牌</Link></>}
+      />
       {!canAcceptOrders(p.pointsCents) && (
         <Link href="/dashboard/points" className="rounded-[12px] border-[1.5px] border-err px-4 py-3 text-[14px] text-err">點數用完了（{fmtPoints(p.pointsCents)} 點），點歌與打賞已暫停。按這裡補充點數。</Link>
       )}
       {env.line.oaAddFriendUrl && <a href={env.line.oaAddFriendUrl} className="rounded-[12px] bg-sunken px-4 py-3 text-[14px] underline">加入官方帳號好友，才能收到即時點歌通知</a>}
 
       {left > 0 && (
-        <section className="sec">
-          <h2 className="h2">開始使用</h2>
-          <p className="small">還剩 {left} 步。</p>
-          <ol className="mt-2">
+        <Section title="開始使用" desc={`還剩 ${left} 步。`}>
+          <ol>
             {steps.map((x, i) => (
               <li key={x.label} className="row">
                 <Link href={x.href} className="flex min-h-[64px] items-center gap-3 py-2.5">
@@ -57,11 +60,10 @@ export default async function Dashboard() {
               </li>
             ))}
           </ol>
-        </section>
+        </Section>
       )}
 
-      <section className="sec">
-        <h2 className="h2">收入</h2>
+      <Section title="收入">
         <div className="mt-3 grid grid-cols-3 border-y border-rule">
           {([["今天", t1], ["近 7 天", t7], ["近 30 天", t30]] as const).map(([label, s], i) => (
             <div key={label} className={`flex flex-col py-4 ${i ? "border-l border-rule pl-4" : ""}`}>
@@ -72,15 +74,13 @@ export default async function Dashboard() {
           ))}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/dashboard/stage" className="btn btn-primary btn-sm">開演出控制台</Link>
           <Link href={`/p/${p.slug}`} className="btn btn-secondary btn-sm">看點歌頁</Link>
           <Link href={`/live/${p.slug}`} className="btn btn-secondary btn-sm">大螢幕</Link>
-          <Link href="/dashboard/poster" className="btn btn-secondary btn-sm">列印 QR 立牌</Link>
+          <Link href={`/u/${p.slug}`} className="btn btn-secondary btn-sm">看作品頁</Link>
         </div>
-      </section>
+      </Section>
 
-      <section className="sec">
-        <h2 className="h2">最近的點歌與打賞</h2>
+      <Section title="最近的點歌與打賞">
         {list.length ? (
           <ul className="mt-2">
             {list.map((o) => (
@@ -88,9 +88,9 @@ export default async function Dashboard() {
             ))}
           </ul>
         ) : (
-          <p className="small mt-2">還沒有紀錄。先建好歌單，把 QR 立牌放到現場。</p>
+          <Empty text="還沒有點歌或打賞紀錄。" action={<Link href="/dashboard/menu" className="btn btn-secondary btn-sm">先把歌單建好</Link>} />
         )}
-      </section>
+      </Section>
     </div>
   );
 }

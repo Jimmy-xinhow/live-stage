@@ -127,3 +127,9 @@ a { text-underline-offset: 4px; }
   .no-print { display: none !important; }
   body { background: #fff; }
 }
+
+/* 鍵盤操作時看得到焦點；滑鼠點擊不會出現 */
+:focus-visible { outline: 2px solid #151412; outline-offset: 2px; border-radius: 6px; }
+.night :focus-visible { outline-color: #ffc83d; }
+/* 表格在手機上橫向捲動時，第一欄不要被截掉 */
+table { font-variant-numeric: tabular-nums; }

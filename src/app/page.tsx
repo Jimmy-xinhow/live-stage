@@ -37,7 +37,7 @@ export default async function Home() {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
               {live.map((l) => (
                 <Link key={l.slug} href={`/p/${l.slug}`} className="flex flex-col gap-3">
-                  <Photo src={l.avatar} label="現場照" />
+                  <Photo src={l.cover ?? l.avatar} ratio="4 / 5" label="現場照" />
                   <span className="flex flex-col"><strong className="h3">{l.name}</strong><span className="small">{[l.city, l.location].filter(Boolean).join("・")}</span><span className="small font-medium text-nowtext">可點歌・排隊 {l.waiting} 首</span></span>
                 </Link>
               ))}

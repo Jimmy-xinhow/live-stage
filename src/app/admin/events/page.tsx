@@ -1,6 +1,7 @@
 import { eventsData } from "@/lib/admin";
 import { EventActions } from "./EventActions";
 import { Out, Table, Tag, When } from "../Bits";
+import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +9,7 @@ export default async function AdminEvents() {
   const list = await eventsData();
   return (
     <div className="flex flex-col gap-5">
-      <div><h1 className="h1">活動</h1><p className="small">違反刊登規範可以下架。下架後活動頁標示已取消，也不再出現在列表、地圖與 sitemap。</p></div>
+      <PageHead title="活動" desc={<>違反刊登規範可以下架。下架後活動頁標示已取消，也不再出現在列表、地圖與 sitemap。</>} />
       <Table
         head={["活動", "主辦", "時間", "地點", "演出者", "狀態", ""]}
         rows={list.map((e) => [

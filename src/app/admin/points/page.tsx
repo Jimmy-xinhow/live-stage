@@ -1,5 +1,6 @@
 import { pointsData } from "@/lib/admin";
 import { Money, Pts, Table, Tag, When } from "../Bits";
+import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 const REASON: Record<string, string> = {
@@ -12,7 +13,7 @@ export default async function Points() {
   const paid = buys.filter((b) => b.status === "paid");
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">點數</h1><p className="small">1 點 = NT$1。購點金額進平台帳戶，成交服務費與版位費在這裡扣。已付款購點合計 <span className="num font-semibold text-ink">NT${paid.reduce((a, b) => a + b.nt, 0).toLocaleString()}</span>。</p></div>
+      <PageHead title="點數" desc={<>1 點 = NT$1。購點金額進平台帳戶，成交服務費與版位費在這裡扣。已付款購點合計 <span className="num font-semibold text-ink">NT${paid.reduce((a, b) => a + b.nt, 0).toLocaleString()}</span>。</>} />
 
       <section className="sec">
         <h2 className="h2">購點紀錄</h2>

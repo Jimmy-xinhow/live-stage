@@ -5,6 +5,7 @@ import { fmtPoints } from "@/lib/billing";
 import { areaBySlug } from "@/lib/areas";
 import { actName } from "@/lib/acts";
 import { PromoteForm } from "./PromoteForm";
+import { Empty, PageHead, Section } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function Page() {
   const fmt = (d: Date) => d.toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei", month: "numeric", day: "numeric" });
   return (
     <div className="flex flex-col gap-6">
-      <div><h1 className="h1">曝光推廣</h1><p className="small">要不要買、買多久都由你決定。所有推薦位在前台都會標示「付費推薦」，不保證邀約數量。點數餘額 <span className="num font-semibold text-ink">{fmtPoints(p.pointsCents)}</span> 點・<Link href="/dashboard/points" className="underline">加購</Link></p></div>
+      <PageHead title="曝光推廣" desc={<>要不要買、買多久都由你決定。所有推薦位在前台都會標示「付費推薦」，不保證邀約數量。點數餘額 <span className="num font-semibold text-ink">{fmtPoints(p.pointsCents)}</span> 點・<Link href="/dashboard/points" className="underline">加購</Link></>} />
       {area ? <PromoteForm where={`${area.short}・${actName(p.actType)}`} slots={Object.entries(PROMO).map(([id, s]) => ({ id, name: s.name, daily: s.daily, cap: s.cap }))} /> : <p className="sec">請先到「設定」選擇演出縣市，才能購買版位。</p>}
       <section className="sec">
         <h2 className="h2">刊登與成效</h2>

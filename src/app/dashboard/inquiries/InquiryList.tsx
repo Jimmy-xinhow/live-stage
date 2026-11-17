@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { nt } from "@/lib/format";
+import Link from "next/link";
+import { Empty } from "@/components/back/Shell";
 
 type Row = { id: string; contactName: string; occasion: string; eventDate: string; timeText: string; cityName: string; place: string; guests: string; budget: string; note: string; createdAt: string; status: string; quoteAmount: number | null; quoteNote: string | null };
 
@@ -19,7 +21,8 @@ export function InquiryList({ list }: { list: Row[] }) {
     setOpen(null); setAmount(""); setNote("");
     router.refresh();
   }
-  if (!list.length) return <p className="sec small">還沒有邀約。把「對外頁面」的介紹、起價和可接場合填完整，比較容易被找到。</p>;
+  if (!list.length)
+    return <Empty text="還沒有收到邀約。把介紹、起價與可接場合填完整，被找到的機會會高一些。" action={<Link href="/dashboard/profile" className="btn btn-secondary btn-sm">去補對外頁面</Link>} />;
   return (
     <div className="border-t-2 border-ink">
       {list.map((q) => (
