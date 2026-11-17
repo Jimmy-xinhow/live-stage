@@ -13,11 +13,11 @@ export function Calc() {
   const be = breakEven();
 
   return (
-    <div className="card flex flex-col gap-5 p-6">
+    <div className="pane flex flex-col gap-5 p-6">
       <div>
-        <label className="label" htmlFor="gmv">你一個月大概收到多少點歌與打賞？</label>
+        <label className="text-[14px] text-[color:var(--dim)]" htmlFor="gmv">你一個月大概收到多少點歌與打賞？</label>
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="num text-[34px] font-extrabold">{nt(gmv)}</span>
+          <span className="num text-[36px] font-black">{nt(gmv)}</span>
         </div>
         <input
           id="gmv"
@@ -27,21 +27,21 @@ export function Calc() {
           step={1000}
           value={gmv}
           onChange={(e) => setGmv(Number(e.target.value))}
-          className="mt-3 w-full accent-[#151412]"
+          className="mt-3 w-full accent-[#ffb03a]"
         />
-        <div className="small flex justify-between"><span>NT$0</span><span>NT$120,000</span></div>
+        <div className="flex justify-between text-[13px] text-[color:var(--dim)]"><span>NT$0</span><span>NT$120,000</span></div>
       </div>
 
-      <div className="border-t-2 border-ink">
+      <div className="border-t border-[color:var(--line)]">
         {rows.map(({ p, cost }) => (
-          <div key={p.slug} className="row flex items-baseline justify-between gap-4 py-3">
+          <div key={p.slug} className="flex items-baseline justify-between gap-4 border-b border-[color:var(--line)] py-3">
             <span>
               <strong>{p.name}</strong>
-              <span className="small ml-2">
+              <span className="ml-2 text-[13px] text-[color:var(--dim)]">
                 {p.price > 0 ? `月費 ${nt(p.price)}＋` : ""}成交 {(p.feeRate * 100).toFixed(0)}%
               </span>
             </span>
-            <span className={`num text-[18px] font-bold ${best.p.slug === p.slug ? "text-now" : ""}`}>{nt(cost)}</span>
+            <span className={`num text-[18px] font-bold ${best.p.slug === p.slug ? "text-[color:var(--sodium)]" : ""}`}>{nt(cost)}</span>
           </div>
         ))}
       </div>

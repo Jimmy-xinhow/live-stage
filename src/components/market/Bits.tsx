@@ -49,16 +49,16 @@ export function Cta({ note, primary = "免費建立我的點歌頁", secondary }
 }
 
 /** 常見問題：純 HTML details，不需要 JS */
-export function Faq({ items }: { items: { q: string; a: React.ReactNode }[] }) {
+export function Faq({ items, dark = false }: { items: { q: string; a: React.ReactNode }[]; dark?: boolean }) {
   return (
-    <div className="border-t-2 border-ink">
+    <div className={dark ? "border-t border-[color:var(--line)]" : "border-t-2 border-ink"}>
       {items.map((it, i) => (
-        <details key={i} className="row group py-4">
+        <details key={i} className={`group py-4 ${dark ? "border-b border-[color:var(--line)]" : "row"}`}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-bold">
             {it.q}
-            <span className="shrink-0 text-ink3 transition group-open:rotate-45">＋</span>
+            <span className={`shrink-0 transition group-open:rotate-45 ${dark ? "text-[color:var(--dim)]" : "text-ink3"}`}>＋</span>
           </summary>
-          <div className="mt-3 max-w-[640px] text-[15px] leading-8 text-ink2">{it.a}</div>
+          <div className={`mt-3 max-w-[640px] text-[15px] leading-8 ${dark ? "text-[color:var(--dim)]" : "text-ink2"}`}>{it.a}</div>
         </details>
       ))}
     </div>
