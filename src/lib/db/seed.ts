@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
 import type { DB } from "./index";
 import { fans, follows, liveSessions, menuItems, orders, performers, shows } from "./schema";
 import { applyPoints, feeFor } from "../billing";
@@ -19,6 +19,12 @@ const SONGS: [string, string, string, number][] = [
   ["告白歌（幫你唱給他/她）", "特別服務", "特別服務", 500],
   ["一起合照＋簽名", "特別服務", "特別服務", 100],
 ];
+
+/** 清掉所有示範帳號（lineUserId 以 Udev- 開頭），外鍵都是 cascade，相關資料會一起刪 */
+export async function resetDemo(db: DB) {
+  await db.delete(performers).where(like(performers.lineUserId, "Udev-%"));
+  await db.delete(fans).where(like(fans.lineUserId, "Udev-%"));
+}
 
 export async function seedDemo(db: DB) {
   if ((await db.select({ id: performers.id }).from(performers).where(eq(performers.slug, "demo"))).length) return;

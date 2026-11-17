@@ -17,8 +17,10 @@ async function init(): Promise<DB> {
     if (process.env.MIGRATE_ON_BOOT === "true") {
       const { migrate } = await import("drizzle-orm/postgres-js/migrator");
       await migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
-      if (process.env.SEED_DEMO === "true") {
-        const { seedDemo } = await import("./seed");
+      // SEED_DEMO=true 只在空資料庫建示範資料；=reset 會先清掉舊的示範帳號再重建（驗收用）
+      if (process.env.SEED_DEMO === "true" || process.env.SEED_DEMO === "reset") {
+        const { resetDemo, seedDemo } = await import("./seed");
+        if (process.env.SEED_DEMO === "reset") await resetDemo(db as unknown as DB);
         await seedDemo(db as unknown as DB);
       }
     }
