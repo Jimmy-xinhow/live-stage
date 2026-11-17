@@ -1,5 +1,5 @@
 // 集中管理環境變數。伺服器端專用的值不要用 NEXT_PUBLIC_ 前綴。
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "現場";
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "安可";
 
 export const env = {
   baseUrl: (process.env.APP_BASE_URL ?? "http://localhost:3000").replace(/\/$/, ""),

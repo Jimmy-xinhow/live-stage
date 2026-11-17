@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { APP_NAME } from "@/lib/env";
+import { BRAND } from "@/lib/brand";
+import { Wordmark } from "@/components/Wordmark";
 
 /** 行銷頁的頁首。產品後台不吃這個，那邊維持紙本質感 */
 export function StageHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--line)] bg-[color:var(--night)]/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center gap-7 px-5">
-        <Link href="/" className="text-[19px] font-black tracking-tight">{APP_NAME}</Link>
+        <Link href="/" aria-label={BRAND.name}><Wordmark /></Link>
         <nav className="hidden items-center gap-6 text-[15px] text-[color:var(--dim)] md:flex">
           <Link href="/for/street">街頭</Link>
           <Link href="/for/venue">駐唱與樂團</Link>
@@ -35,7 +36,7 @@ export function StageFooter() {
           <Link href="/me">我的護照</Link>
         </div>
         <p className="mt-8 text-[13px] text-[color:var(--dim)]">
-          {APP_NAME}　星昊科技有限公司　款項由聽眾直接付給表演者，平台不經手
+          {BRAND.name}　{BRAND.legal}　款項由聽眾直接付給表演者，平台不經手
         </p>
       </div>
     </footer>

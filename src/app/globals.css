@@ -215,3 +215,40 @@ table { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   .stage * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ─────────── 互動遊戲 ───────────
+   大螢幕要從五公尺外看得懂，所以回饋都是大動作：數字飄起來、受擊閃一下、
+   達標時整個抖。這些動畫只在分數真的變動時觸發，不是裝飾。 */
+
+@keyframes g-floatup {
+  0%   { transform: translate(-50%, 0) scale(.7); opacity: 0; }
+  18%  { transform: translate(-50%, -1.4vh) scale(1.12); opacity: 1; }
+  100% { transform: translate(-50%, -9vh) scale(1); opacity: 0; }
+}
+.animate-floatup { animation: g-floatup 1.5s cubic-bezier(.2,.8,.3,1) forwards; }
+
+@keyframes g-hit { 0%,100% { filter: none; } 20% { filter: brightness(2.4) saturate(.4); } }
+.animate-hit { animation: g-hit .36s ease-out; }
+
+@keyframes g-shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-1.1vh) rotate(-.8deg); }
+  45% { transform: translateX(.9vh) rotate(.6deg); }
+  70% { transform: translateX(-.5vh); }
+}
+.animate-shake { animation: g-shake .5s cubic-bezier(.36,.07,.19,.97); }
+
+@keyframes g-pulse { 0%,100% { opacity: .35; } 50% { opacity: .9; } }
+.animate-slowpulse { animation: g-pulse 2.2s ease-in-out infinite; }
+
+/* 觀眾端點按的手感：按下去立刻縮，放開彈回來 */
+.taptarget { transition: transform .09s cubic-bezier(.2,.8,.3,1); touch-action: manipulation; }
+.taptarget:active { transform: scale(.94); }
+
+@keyframes g-ring { 0% { transform: scale(.8); opacity: .55; } 100% { transform: scale(1.9); opacity: 0; } }
+.taprings { animation: g-ring .55s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-floatup, .animate-hit, .animate-shake, .animate-slowpulse, .taprings { animation: none; }
+  .animate-floatup { opacity: 1; }
+}

@@ -17,7 +17,7 @@ export function GameScreen({ slug, name, initial }: { slug: string; name: string
     return () => clearInterval(t);
   }, [slug]);
   return (
-    <div className="night h-dvh w-screen overflow-hidden">
+    <div className="stage h-dvh w-screen overflow-hidden">
       {g ? <GameView g={g} now={now} qr={`/api/qr/${slug}`} /> : <div className="flex h-full flex-col items-center justify-center gap-3"><div className="text-[3vw] font-bold">{name}</div><div className="text-[1.6vw] text-[#B9B5AC]">遊戲開始後會顯示在這裡</div></div>}
     </div>
   );

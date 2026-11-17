@@ -1,1 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#e8590c"/><circle cx="256" cy="256" r="150" fill="#ffd43b"/><circle cx="256" cy="256" r="112" fill="none" stroke="#e8590c" stroke-width="16"/><text x="256" y="300" font-size="140" text-anchor="middle" font-family="sans-serif" font-weight="900" fill="#e8590c">賞</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="9" fill="#ffb03a"/><g fill="#15110a">
+  <rect x="6.4" y="14.3" width="9.6" height="3.4" rx="1.7"/>
+  <rect x="9.5" y="11.2" width="3.4" height="9.6" rx="1.7"/>
+  <path d="M19.2 11.4h3.2v9.2h2.6v2.6h-7.8v-2.6h2.6v-6l-2.2 1.1-1-2.4 2.6-1.9Z"/></g></svg>
