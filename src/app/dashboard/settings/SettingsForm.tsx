@@ -43,7 +43,7 @@ export function SettingsForm({ initial, gatewayLabel, merchantId, payMethods: pm
 
       <section className="sec flex flex-col gap-3">
         <button type="button" onClick={() => setShowGw((x) => !x)} className="flex w-full items-baseline gap-3 text-left">
-          <h2 className="h2">刷卡（選用）</h2><span className="small">信用卡、Apple Pay 自動確認；互動遊戲的付費加成需要這個</span>
+          <h2 className="h2">刷卡（選用）</h2><span className="small">信用卡、Apple Pay 自動確認，聽眾付完款直接進排隊，不用你手動確認</span>
           <span className="small ml-auto shrink-0 underline">{showGw ? "收合" : "展開"}</span>
         </button>
         {showGw && <>

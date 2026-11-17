@@ -5,6 +5,7 @@ import { requireOrganizer } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { performers } from "@/lib/db/schema";
 import { AREAS } from "@/lib/areas";
+import { featureGate } from "@/lib/features";
 
 const Body = z.object({
   displayName: z.string().trim().min(1).max(40),
@@ -19,6 +20,8 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  const off = featureGate("events");
+  if (off) return off;
   const auth = await requireOrganizer();
   if (!auth) return NextResponse.json({ error: "請用店家／主辦帳號登入" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => null));

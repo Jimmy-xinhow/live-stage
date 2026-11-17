@@ -33,3 +33,15 @@ export type Feature = keyof typeof FEATURES;
 export function enabled(f: Feature) {
   return FEATURES[f];
 }
+
+/**
+ * API 路由的守門。功能關閉時回 404（和頁面一致，不洩漏這個端點存在）。
+ * 用法：`const off = featureGate("matching"); if (off) return off;`
+ */
+export function featureGate(f: Feature): Response | null {
+  if (FEATURES[f]) return null;
+  return new Response(JSON.stringify({ error: "not_found" }), {
+    status: 404,
+    headers: { "content-type": "application/json" },
+  });
+}

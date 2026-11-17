@@ -19,7 +19,7 @@ export default async function Points() {
       <section>
         <PageHead
           title="點數"
-          desc={<>1 點 = NT$1。每筆成交扣金額的 {rate}%（NT$100 扣 {rate} 點）；曝光版位與粉絲通知也用點數。款項本身直接進你的帳戶，平台不經手。用完後可再透支 {env.billing.overdraftCents / 100} 點，避免演出到一半被暫停。</>}
+          desc={<>1 點 = NT$1。每筆成交扣金額的 {rate}%（NT$100 扣 {rate} 點）；開演通知粉絲也用點數。款項本身直接進你的帳戶，平台不經手。用完後可再透支 {env.billing.overdraftCents / 100} 點，避免演出到一半被暫停。</>}
         />
         <div className="flex items-baseline gap-2"><strong className={`num text-[44px] leading-[52px] ${canAcceptOrders(p.pointsCents) ? "" : "text-err"}`}>{fmtPoints(p.pointsCents)}</strong><span className="h3">點</span></div>
       </section>

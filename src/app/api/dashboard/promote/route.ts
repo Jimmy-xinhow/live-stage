@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { requirePerformer } from "@/lib/auth";
 import { buyPromotion, MarketError, PROMO, type PromoSlot } from "@/lib/market";
+import { featureGate } from "@/lib/features";
 
 export async function POST(req: Request) {
+  const off = featureGate("promote");
+  if (off) return off;
   const auth = await requirePerformer();
   if (!auth) return NextResponse.json({ error: "請先登入" }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as { slot?: string; days?: number };

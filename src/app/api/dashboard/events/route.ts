@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { requirePerformer } from "@/lib/auth";
 import { EventError, respondTag } from "@/lib/events";
+import { featureGate } from "@/lib/features";
 
 export async function POST(req: Request) {
+  const off = featureGate("events");
+  if (off) return off;
   const auth = await requirePerformer();
   if (!auth) return NextResponse.json({ error: "請先登入" }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as { id?: string; accept?: boolean };

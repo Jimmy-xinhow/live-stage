@@ -1,6 +1,7 @@
 import { eq, like } from "drizzle-orm";
 import type { DB } from "./index";
 import { fans, follows, liveSessions, menuItems, orders, performers, shows } from "./schema";
+import { FEATURES } from "../features";
 import { applyPoints, feeFor } from "../billing";
 import { achievements } from "./schema";
 import { ACHIEVEMENT_TEMPLATES, backfillAchievement } from "../rewards";
@@ -119,7 +120,7 @@ export async function seedDemo(db: DB) {
     await db.insert(shows).values({ performerId: x.id, startsAt: new Date(new Date(now + (e.city === "taipei" ? 2 : 3) * 86400_000).setUTCHours(e.city === "taipei" ? 11 : 12, 0, 0, 0)), location: e.district.split("・")[1] ?? e.district });
   }
   // 不同類型的示範表演者＋付費推薦＋許願池（僅開發環境）
-  const { promotions, wishes } = await import("./schema");
+  const { wishes } = await import("./schema");
   const more = [
     { slug: "demo-mia", name: "Mia", act: "singer", cover: "/demo/singer-1.jpg", city: "kaohsiung", district: "鹽埕區・Bar Jade", genres: "華語流行、英文抒情", price: 3500, bio: "在高雄駐唱八年，固定在鹽埕和鼓山的餐酒館演出。婚禮可以配合進場、敬酒、送客三段曲目。", occ: ["餐廳酒吧", "婚禮", "企業活動"] },
     { slug: "demo-mc", name: "主持人小安", act: "mc", cover: "/demo/mc-1.jpg", city: "kaohsiung", district: "前鎮區", genres: "婚禮、尾牙、記者會", price: 8000, bio: "雙語主持十年，婚禮與尾牙各兩百場以上，流程與音控都能一起確認。", occ: ["婚禮", "尾牙春酒", "企業活動"] },
@@ -130,14 +131,16 @@ export async function seedDemo(db: DB) {
     const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", coverUrl: e.cover, avatarUrl: e.cover.replace("/demo/", "/demo/av-"), lineUserId: `Udev-${e.slug}` }).returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     if (e.act === "singer") {
-      // Mia 也在演出中，方便示範跨表演者 PK
+      // Mia 也在演出中，首頁「現在演出中」才有兩個以上
       const [ls] = await db.insert(liveSessions).values({ performerId: x.id, location: "鹽埕區・Bar Jade" }).returning();
       await db.update(performers).set({ liveSessionId: ls.id, lat: "22.6241", lng: "120.2810" }).where(eq(performers.id, x.id));
     }
     if (e.act === "singer") await db.insert(menuItems).values([["小幸運", "田馥甄"], ["Perfect", "Ed Sheeran"], ["如果可以", "韋禮安"]].map(([title, subtitle], i) => ({ performerId: x.id, title, subtitle, category: "華語", price: 100, sort: i })));
-    if (e.act === "mc" || e.act === "singer") await db.insert(promotions).values({ performerId: x.id, slot: e.act === "mc" ? "home" : "search", city: e.city, actType: e.act, startsAt: new Date(now), endsAt: new Date(now + 7 * 86400_000), costCents: 21000 });
   }
   await db.insert(wishes).values([{ performerId: p.id, title: "倒數 鄧紫棋", votes: 12 }, { performerId: p.id, title: "刻在我心底的名字 盧廣仲", votes: 8 }, { performerId: p.id, title: "告白氣球 周杰倫", votes: 15, status: "practice", note: "預計下週五首唱" }]);
+
+  // 店家主辦與活動：2026-11 收斂後預設關閉，功能開回來才建示範資料
+  if (!FEATURES.events) return;
 
   // 示範店家／主辦帳號與一場活動（僅開發環境）
   // 幾天後的台北時間某點整

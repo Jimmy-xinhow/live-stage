@@ -5,6 +5,7 @@ import { createInquiry, MarketError } from "@/lib/market";
 import { AREAS } from "@/lib/areas";
 import { ACTS, OCCASIONS } from "@/lib/acts";
 import { LIMITS, guard } from "@/lib/ratelimit";
+import { featureGate } from "@/lib/features";
 
 const Body = z.object({
   contactName: z.string().trim().min(1).max(30),
@@ -22,6 +23,8 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  const off = featureGate("matching");
+  if (off) return off;
   const rl = guard(req, "inquiry", LIMITS.submit);
   if (rl) return rl;
   const fanId = await getFanId();

@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ACTS, OCCASIONS, streamInfo } from "@/lib/acts";
-import { AREAS } from "@/lib/areas";
+import { ACTS, streamInfo } from "@/lib/acts";
 import { PageHead } from "@/components/back/Shell";
 
 type Init = { actType: string; bio: string; genres: string; bookable: boolean; priceFrom: number | null; occasions: string[]; serviceAreas: string[]; coverUrl: string; videoUrl: string; streamUrl: string; lat: string; lng: string };
@@ -14,7 +13,6 @@ export function ProfileForm(props: { slug: string; baseUrl: string; city: string
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof Init>(k: K, v: Init[K]) => setF((x) => ({ ...x, [k]: v }));
-  const toggle = (k: "occasions" | "serviceAreas", v: string) => set(k, f[k].includes(v) ? f[k].filter((x) => x !== v) : [...f[k], v]);
   const info = streamInfo(f.streamUrl);
   const overlay = token ? `${props.baseUrl}/overlay/${props.slug}?k=${token}` : "";
 
@@ -43,13 +41,6 @@ export function ProfileForm(props: { slug: string; baseUrl: string; city: string
         <label className="field">常駐地點經度<input className="num" value={f.lng} onChange={(e) => set("lng", e.target.value)} placeholder="120.2823" /></label>
       </section>
 
-      <section className="sec flex flex-col gap-4">
-        <h2 className="h3">接受邀約</h2>
-        <label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={f.bookable} onChange={(e) => set("bookable", e.target.checked)} className="h-5 w-5 accent-ink" />開放婚禮、活動、店家邀請我演出</label>
-        <label className="field max-w-[280px]">每場起價（NT$，可留空＝面議）<input type="number" min={0} value={f.priceFrom ?? ""} onChange={(e) => set("priceFrom", e.target.value === "" ? null : Number(e.target.value))} /></label>
-        <div><div className="label mb-2">可接場合</div><div className="flex flex-wrap gap-2">{OCCASIONS.map((o) => <button key={o} type="button" onClick={() => toggle("occasions", o)} className={chip(f.occasions.includes(o))}>{o}</button>)}</div></div>
-        <div><div className="label mb-2">除了主要縣市，還可以去</div><div className="flex flex-wrap gap-2">{AREAS.map((a) => <button key={a.slug} type="button" onClick={() => toggle("serviceAreas", a.slug)} className={chip(f.serviceAreas.includes(a.slug))}>{a.short}</button>)}</div></div>
-      </section>
 
       <section className="sec flex flex-col gap-4">
         <div><h2 className="h3">直播串接</h2><p className="small">在你習慣的平台開直播，線上粉絲到這裡點歌、支持，和現場排同一個隊伍。款項直接進你自己的金流。</p></div>

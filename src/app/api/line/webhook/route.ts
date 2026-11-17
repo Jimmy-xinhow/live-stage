@@ -8,8 +8,6 @@ import { confirmManual, getPerformerById, OrderError, rejectManual, sessionQueue
 import { fmtPoints } from "@/lib/billing";
 import { fmtShowTime, getFanByLine, myFollowing } from "@/lib/fans";
 import { redeemReward, RewardError } from "@/lib/rewards";
-import { EventError, respondTag, taggedEvents } from "@/lib/events";
-import { inquiriesFor } from "@/lib/market";
 import { fmtTaipei } from "@/lib/format";
 
 type LineEvent = { type: string; replyToken?: string; source?: { userId?: string }; message?: { type: string; text?: string }; postback?: { data: string } };
@@ -29,26 +27,12 @@ export async function POST(req: Request) {
         {
           type: "text",
           text: p
-            ? `歡迎回來 ${p.displayName}！之後收到打賞都會在這裡通知你。\n輸入「打賞碼」拿連結、「今日」看業績、「邀約」看待回覆、「活動」看被標記的活動、「點數」查餘額。`
-            : `歡迎使用${APP_NAME} 🙌\n想開通自己的打賞頁？登入後台：${env.baseUrl}/login\n想打賞？直接掃藝人的 QR Code 就可以。`,
+            ? `歡迎回來 ${p.displayName}！之後收到點歌和打賞都會在這裡通知你。\n輸入「點歌碼」拿連結、「今日」看業績、「點數」查餘額。`
+            : `歡迎使用${APP_NAME} 🙌\n想開通自己的點歌頁？登入後台：${env.baseUrl}/login\n想點歌？直接掃表演者的 QR Code 就可以。`,
         },
       ]);
       continue;
     }
-    // 表演者在 LINE 裡確認或婉拒被標記的活動
-    if (p && ev.type === "postback" && /^event_(yes|no):/.test(ev.postback?.data ?? "")) {
-      const [kind, id] = ev.postback!.data.split(":");
-      let text: string;
-      try {
-        const r = await respondTag((await getPerformerById(p.id))!, id, kind === "event_yes");
-        text = kind === "event_yes" ? `已確認，你的名字會顯示在活動頁${r.notified ? `，並通知了 ${r.notified} 位粉絲` : ""}。` : "已婉拒，不會顯示你的名字。";
-      } catch (e) {
-        text = e instanceof EventError ? e.message : "處理失敗";
-      }
-      await replyMessage(ev.replyToken, [{ type: "text", text }]);
-      continue;
-    }
-
     // 藝人在 LINE 裡按「已兌換」獎勵
     if (p && ev.type === "postback" && (ev.postback?.data ?? "").startsWith("redeem:")) {
       let text: string;
@@ -101,34 +85,14 @@ export async function POST(req: Request) {
     }
 
     if (!p) continue; // 一般使用者的其他訊息交給 LINE OA 自動回覆設定處理
-    if (/打賞碼|收款碼|QR/i.test(text)) {
+    if (/點歌碼|打賞碼|收款碼|QR/i.test(text)) {
       await replyMessage(ev.replyToken, [
-        { type: "text", text: `你的打賞頁：${env.baseUrl}/p/${p.slug}\n演出控制台：${env.baseUrl}/dashboard/stage\n大螢幕：${env.baseUrl}/live/${p.slug}\n列印立牌：${env.baseUrl}/dashboard/poster` },
+        { type: "text", text: `你的點歌頁：${env.baseUrl}/p/${p.slug}\n演出控制台：${env.baseUrl}/dashboard/stage\n大螢幕：${env.baseUrl}/live/${p.slug}\n列印立牌：${env.baseUrl}/dashboard/poster` },
       ]);
     } else if (/今日|今天|業績/.test(text)) {
       const t = await totalsSince(p.id, startOfTodayTaipei());
       await replyMessage(ev.replyToken, [{ type: "text", text: `今日收到 ${t.count} 筆點歌／打賞，共 NT$${t.sum.toLocaleString()} 🎉` }]);
-    } else if (/活動/.test(text)) {
-      const list = (await taggedEvents(p.id)).filter((e) => !e.cancelled && new Date(e.startsAt).getTime() > Date.now());
-      await replyMessage(ev.replyToken, [
-        {
-          type: "text",
-          text: list.length
-            ? `你被標記的活動：\n${list.slice(0, 5).map((e) => `${fmtTaipei(e.startsAt)}・${e.title}（${e.status === "confirmed" ? "已確認" : e.status === "pending" ? "待確認" : "已婉拒"}）`).join("\n")}\n\n全部：${env.baseUrl}/dashboard/events`
-            : `目前沒有被標記的活動。\n${env.baseUrl}/dashboard/events`,
-        },
-      ]);
-    } else if (/邀約|報價/.test(text)) {
-      const list = (await inquiriesFor(p.id)).filter((q) => q.status === "new");
-      await replyMessage(ev.replyToken, [
-        {
-          type: "text",
-          text: list.length
-            ? `有 ${list.length} 筆邀約還沒回覆：\n${list.slice(0, 5).map((q) => `${q.eventDate}・${q.occasion}・${q.cityName}${q.budget ? `・${q.budget}` : ""}`).join("\n")}\n\n回覆報價：${env.baseUrl}/dashboard/inquiries`
-            : `目前沒有待回覆的邀約。\n${env.baseUrl}/dashboard/inquiries`,
-        },
-      ]);
-    } else if (/點數|餘額/.test(text)) {
+        } else if (/點數|餘額/.test(text)) {
       await replyMessage(ev.replyToken, [{ type: "text", text: `目前點數 ${fmtPoints(p.pointsCents)} 點\n儲值：${env.baseUrl}/dashboard/points` }]);
     }
   }

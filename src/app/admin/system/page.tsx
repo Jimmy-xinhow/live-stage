@@ -1,12 +1,21 @@
 import { systemChecks } from "@/lib/admin";
 import { APP_NAME, POINT_PACKAGES, env } from "@/lib/env";
-import { PROMO } from "@/lib/market";
-import { EVENT_PROMO } from "@/lib/events";
-import { GAME_TYPES, UNITS } from "@/lib/games";
+import { FEATURES } from "@/lib/features";
 import { Table } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
+
+const FEATURE_LABELS: Record<string, string> = {
+  matching: "邀約媒合與評價",
+  events: "活動刊登與店家主辦",
+  promote: "付費曝光版位",
+  games: "互動遊戲",
+  map: "表演地圖",
+  seoAreas: "地區 SEO 頁",
+  discovery: "公開搜尋與瀏覽",
+  rewards: "成就與獎勵",
+};
 
 export default async function System() {
   const checks = systemChecks();
@@ -30,24 +39,23 @@ export default async function System() {
             ["可透支", `${env.billing.overdraftCents / 100} 點`],
             ["通知每人", `${env.billing.liveNotifyCents / 100} 點`],
             ["點數方案", POINT_PACKAGES.map((p) => `${p.label}／NT$${p.priceNt}`).join("、")],
-            ["表演者版位", Object.values(PROMO).map((p) => `${p.name} ${p.daily} 點／天（${p.cap} 格）`).join("、")],
-            ["活動版位", Object.values(EVENT_PROMO).map((p) => `${p.name} ${p.daily} 點／天（${p.cap} 格）`).join("、")],
           ]}
         />
       </section>
 
       <section className="sec">
-        <h2 className="h2">互動遊戲</h2>
+        <h2 className="h2">功能開關</h2>
+        <p className="small mb-3 max-w-[620px]">
+          2026-11 的收斂：產品定位收回「現場點歌台」這一條線，其餘功能先關掉，程式保留。
+          要開回來改 <code className="num">src/lib/features.ts</code> 對應的值。
+        </p>
         <Table
-          head={["遊戲", "說明", "付費道具"]}
-          rows={Object.entries(GAME_TYPES).map(([id, t]) => [
-            t.name,
-            <span key="d" className="small">{t.desc}</span>,
-            UNITS[id as keyof typeof UNITS].length
-              ? UNITS[id as keyof typeof UNITS].map((u) => `${u.name} NT$${u.price}（+${u.power}）`).join("、")
-              : t.paid
-                ? <span key="f">依支持金額換算</span>
-                : <span key="f" className="text-ok">完全免費</span>,
+          head={["功能", "狀態"]}
+          rows={Object.entries(FEATURE_LABELS).map(([k, label]) => [
+            label,
+            FEATURES[k as keyof typeof FEATURES]
+              ? <span key="s" className="text-ok">開啟</span>
+              : <span key="s" className="text-ink3">已收起</span>,
           ])}
         />
       </section>

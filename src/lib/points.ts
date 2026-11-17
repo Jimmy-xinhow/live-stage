@@ -5,6 +5,7 @@ import { applyPoints } from "./billing";
 import { pushMessage } from "./line";
 import { POINT_PACKAGES } from "./env";
 import { newTradeNo } from "./orders";
+import { FEATURES } from "./features";
 
 export async function createPurchase(performerId: string, packageId: string) {
   const pkg = POINT_PACKAGES.find((x) => x.id === packageId);
@@ -48,5 +49,5 @@ export async function markPurchaseFailed(tradeNo: string, raw?: unknown) {
 export async function pointsHome(tradeNo: string) {
   const db = await getDb();
   const [r] = await db.select({ t: performers.accountType }).from(pointPurchases).innerJoin(performers, eq(performers.id, pointPurchases.performerId)).where(eq(pointPurchases.tradeNo, tradeNo));
-  return r?.t === "organizer" ? "/org/points" : "/dashboard/points";
+  return r?.t === "organizer" && FEATURES.events ? "/org/points" : "/dashboard/points";
 }

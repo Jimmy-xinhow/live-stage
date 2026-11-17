@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireOrganizer } from "@/lib/auth";
 import { cancelEvent, EventError, updateEvent } from "@/lib/events";
-import { Body } from "../route";
+import { EventBody as Body } from "@/lib/schemas/event";
+import { featureGate } from "@/lib/features";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const off = featureGate("events");
+  if (off) return off;
   const auth = await requireOrganizer();
   if (!auth) return NextResponse.json({ error: "請用店家／主辦帳號登入" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => null));
@@ -18,6 +21,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  const off = featureGate("events");
+  if (off) return off;
   const auth = await requireOrganizer();
   if (!auth) return NextResponse.json({ error: "請用店家／主辦帳號登入" }, { status: 401 });
   try {

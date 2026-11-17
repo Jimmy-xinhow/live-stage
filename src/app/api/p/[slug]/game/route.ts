@@ -4,16 +4,21 @@ import { getFanId } from "@/lib/session";
 import { getFan } from "@/lib/fans";
 import { currentGame, GameError, publicGame, quizAnswer, tap, wheelSubmit } from "@/lib/games";
 import { LIMITS, guard } from "@/lib/ratelimit";
+import { featureGate } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const off = featureGate("games");
+  if (off) return off;
   const p = await getPerformerBySlug((await params).slug);
   if (!p) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ game: publicGame(await currentGame(p.id), await getFanId(), p.id) });
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const off = featureGate("games");
+  if (off) return off;
   const rl = guard(req, "game", LIMITS.interact);
   if (rl) return rl;
   const p = await getPerformerBySlug((await params).slug);

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireOrganizer } from "@/lib/auth";
 import { buyEventPromotion, EventError, type EventSlot } from "@/lib/events";
+import { featureGate } from "@/lib/features";
 
 export async function POST(req: Request) {
+  const off = featureGate("promote");
+  if (off) return off;
   const auth = await requireOrganizer();
   if (!auth) return NextResponse.json({ error: "請用店家／主辦帳號登入" }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as { eventId?: string; slot?: EventSlot; days?: number };

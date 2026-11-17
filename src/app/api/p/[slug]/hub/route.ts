@@ -3,16 +3,21 @@ import { getPerformerBySlug } from "@/lib/orders";
 import { getFanId } from "@/lib/session";
 import { addWish, checkIn, cheer, HubError, hubState, joinLottery, raiseHand, voteWish } from "@/lib/hub";
 import { LIMITS, guard } from "@/lib/ratelimit";
+import { featureGate } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const off = featureGate("games");
+  if (off) return off;
   const p = await getPerformerBySlug((await params).slug);
   if (!p) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json(await hubState(p, await getFanId()));
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const off = featureGate("games");
+  if (off) return off;
   const rl = guard(req, "hub", LIMITS.interact);
   if (rl) return rl;
   const p = await getPerformerBySlug((await params).slug);

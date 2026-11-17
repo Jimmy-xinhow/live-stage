@@ -69,7 +69,7 @@ export function MyFollowing(props: { fan: FanInfo; following: Following; orders:
       {!fan && (
         <section className="pt-8">
           <h1 className="h1">演出護照</h1>
-          <p className="small mt-1">用 LINE 登入，就能看到追蹤的表演者誰正在演出、你的簽到章、點歌紀錄與邀約回覆。</p>
+          <p className="small mt-1">用 LINE 登入，就能看到追蹤的表演者誰正在演出、你的簽到章與點歌紀錄。</p>
           <button onClick={() => ensureFan()} className="btn btn-primary btn-lg btn-block mt-6">用 LINE 登入</button>
         </section>
       )}
