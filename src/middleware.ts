@@ -12,7 +12,7 @@ export function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith("/api/pay/notify")) return NextResponse.next();
   if (req.nextUrl.pathname.startsWith("/api/line/webhook")) return NextResponse.next();
 
-  const r = hit(`edge:${clientIp(req.headers)}`, LIMITS.write);
+  const r = hit(`edge:${clientIp(req.headers)}`, LIMITS.edge);
   if (r.ok) return NextResponse.next();
   return NextResponse.json(
     { error: "too_many_requests", message: "動作太頻繁，請稍後再試。" },

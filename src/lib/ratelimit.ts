@@ -34,6 +34,12 @@ export const LIMITS = {
   auth: { limit: 10, windowMs: 300_000 },
   /** 其他寫入動作的預設值 */
   write: { limit: 60, windowMs: 60_000 },
+  /**
+   * middleware 的全站底線。放得比個別路由寬很多：
+   * 同一個場地的觀眾常常共用電信業者的 NAT IP，太嚴會誤傷。
+   * 真正的保護在個別路由的限制。
+   */
+  edge: { limit: 300, windowMs: 60_000 },
   /** 讀取類的輪詢端點（狀態、排行） */
   poll: { limit: 240, windowMs: 60_000 },
 } satisfies Record<string, Limit>;
