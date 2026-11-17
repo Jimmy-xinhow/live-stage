@@ -8,9 +8,9 @@ import { KINDS } from "@/lib/kinds";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: `${APP_NAME}｜讓現場的聽眾點歌給你`,
+  title: `${APP_NAME}｜讓聽眾點歌給你`,
   description:
-    "街頭與駐唱表演者的現場點歌台。聽眾掃 QR 點一首想聽的歌，歌直接進你的排隊清單，款項直接進你的帳戶。平台不抽演出費。",
+    "給表演者的點歌收款台。街頭、駐唱、線上直播都能用：聽眾點一首想聽的歌，歌直接進你的排隊清單，款項直接進你的帳戶。平台只收 3%，不抽演出費。",
   alternates: { canonical: "/" },
 };
 
@@ -30,7 +30,7 @@ export default async function Home() {
           "@type": "WebSite",
           name: APP_NAME,
           url: absUrl("/"),
-          description: "街頭與駐唱表演者的現場點歌台",
+          description: "給表演者的點歌收款台，街頭、駐唱、線上直播都能用",
         }}
       />
       <SiteHeader />
@@ -39,9 +39,9 @@ export default async function Home() {
         {/* 主張：一句話說清楚這是什麼 */}
         <section className="pt-14 pb-16 md:pt-20 md:pb-20">
           <div className="max-w-[760px]">
-            <span className="label">給街頭藝人與駐唱歌手</span>
+            <span className="label">給街頭藝人、駐唱歌手與直播主</span>
             <h1 className="mt-3 text-[40px] leading-[1.12] font-extrabold tracking-tight md:text-[64px]">
-              讓現場的聽眾<br />點歌給你
+              讓聽眾<br />點歌給你
             </h1>
             <p className="mt-5 max-w-[560px] text-[17px] leading-8 text-ink2 md:text-[19px]">
               聽眾點一首想聽的歌、順手給點什麼。歌直接進你的排隊清單，
