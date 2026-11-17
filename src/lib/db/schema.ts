@@ -530,7 +530,24 @@ export const reports = pgTable(
   (t) => [index("reports_status_idx").on(t.status, t.createdAt), index("reports_target_idx").on(t.targetType, t.targetId)],
 );
 
+/** 跟進名單：看了銷售頁但還沒註冊的人 */
+export const leads = pgTable(
+  "leads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: varchar("email", { length: 120 }).notNull().unique(),
+    /** 他自己說的情境：street | venue | streamer */
+    kind: varchar("kind", { length: 10 }).notNull().default("street"),
+    /** 寄過幾封跟進信 */
+    sentCount: integer("sent_count").notNull().default(0),
+    ip: varchar("ip", { length: 45 }).notNull().default(""),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("leads_at_idx").on(t.createdAt)],
+);
+
 export type Performer = typeof performers.$inferSelect;
+export type Lead = typeof leads.$inferSelect;
 export type AdminLog = typeof adminLogs.$inferSelect;
 export type Report = typeof reports.$inferSelect;
 export type Game = typeof games.$inferSelect;

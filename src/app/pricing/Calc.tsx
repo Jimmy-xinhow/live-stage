@@ -1,0 +1,55 @@
+"use client";
+
+import { useState } from "react";
+import { PLANS, breakEven } from "@/lib/plans";
+
+const nt = (n: number) => `NT$${Math.round(n).toLocaleString()}`;
+
+/** 自己算一次：這個月收多少，兩個方案各付多少 */
+export function Calc() {
+  const [gmv, setGmv] = useState(20000);
+  const rows = PLANS.map((p) => ({ p, cost: Math.round(gmv * p.feeRate) + p.price }));
+  const best = rows.reduce((a, b) => (b.cost < a.cost ? b : a));
+  const be = breakEven();
+
+  return (
+    <div className="card flex flex-col gap-5 p-6">
+      <div>
+        <label className="label" htmlFor="gmv">你一個月大概收到多少點歌與打賞？</label>
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="num text-[34px] font-extrabold">{nt(gmv)}</span>
+        </div>
+        <input
+          id="gmv"
+          type="range"
+          min={0}
+          max={120000}
+          step={1000}
+          value={gmv}
+          onChange={(e) => setGmv(Number(e.target.value))}
+          className="mt-3 w-full accent-[#151412]"
+        />
+        <div className="small flex justify-between"><span>NT$0</span><span>NT$120,000</span></div>
+      </div>
+
+      <div className="border-t-2 border-ink">
+        {rows.map(({ p, cost }) => (
+          <div key={p.slug} className="row flex items-baseline justify-between gap-4 py-3">
+            <span>
+              <strong>{p.name}</strong>
+              <span className="small ml-2">
+                {p.price > 0 ? `月費 ${nt(p.price)}＋` : ""}成交 {(p.feeRate * 100).toFixed(0)}%
+              </span>
+            </span>
+            <span className={`num text-[18px] font-bold ${best.p.slug === p.slug ? "text-now" : ""}`}>{nt(cost)}</span>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[15px] leading-7">
+        以一個月 {nt(gmv)} 來算，<strong>{best.p.name}方案</strong>比較划算，一個月付 {nt(best.cost)}。
+        分界點在 {nt(be)}：超過就換月費。
+      </p>
+    </div>
+  );
+}

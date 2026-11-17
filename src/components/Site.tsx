@@ -10,9 +10,15 @@ export function SiteHeader() {
     <header className="row no-print">
       <div className="wrap flex h-16 items-center gap-6">
         <Link href="/" className="text-[19px] font-bold tracking-wide">{APP_NAME}</Link>
+        <nav className="hidden items-center gap-5 text-[15px] md:flex">
+          <Link href="/for/street">街頭</Link>
+          <Link href="/for/venue">駐唱・樂團</Link>
+          <Link href="/for/streamer">直播</Link>
+          <Link href="/pricing">方案</Link>
+        </nav>
         <span className="flex-1" />
         <Link href="/me" className="hidden text-[15px] md:block">我的護照</Link>
-        <Link href="/login" className="btn btn-secondary btn-sm">表演者登入</Link>
+        <Link href="/login" className="btn btn-primary btn-sm">免費建立</Link>
       </div>
     </header>
   );
@@ -22,7 +28,12 @@ export function SiteFooter() {
   return (
     <footer className="no-print mt-16 border-t border-rule">
       <div className="wrap flex flex-wrap items-center gap-x-6 gap-y-2 pt-8 pb-4 text-[14px]">
-        <Link href="/login">表演者登入</Link>
+        <Link href="/for/street">給街頭藝人</Link>
+        <Link href="/for/venue">給駐唱與樂團</Link>
+        <Link href="/for/streamer">給直播主</Link>
+        <Link href="/pricing">方案與費用</Link>
+        <Link href="/p/demo">看示範頁</Link>
+        <Link href="/login">登入</Link>
         <Link href="/me">我的護照</Link>
       </div>
       <div className="wrap pb-8 text-[13px] text-ink3">
