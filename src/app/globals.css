@@ -2,8 +2,14 @@
 
 /* 「演出刊物」設計系統：色彩、字級、圓角、按鈕層次都從這裡來 */
 @theme inline {
+  /* 標題用明體。台灣的演唱會海報、戲票、節目單就是這個字體語言，
+     筆畫有粗細對比，「設計感」是從這裡來的，黑體是平的。
+     要換字體改這一行就好（候選：Iansui 芫荽 / LXGW WenKai TC 霞鶩文楷 / Huninn 粉圓）。 */
+  --font-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --font-num: Archivo, "Noto Sans TC", sans-serif;
+  /* 觀眾打到大螢幕上的留言用手寫體，像他真的寫了張紙條 */
+  --font-hand: Iansui, "Noto Sans TC", sans-serif;
   --color-paper: #f4f1ea;
   --color-raised: #fbfaf6;
   --color-sunken: #eae5da;
@@ -34,20 +40,21 @@
   --color-orange-500: #151412;
   --color-orange-600: #b23a10;
   --color-orange-700: #8f2e0c;
+  /* 圓角只有四階。量測發現原本站上有八種圓角值，那是「看起來很亂」的主因之一 */
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
   --radius-xl: 20px;
   --radius-2xl: 20px;
-  --radius-3xl: 24px;
+  --radius-3xl: 20px;
 }
 
 body {
   background: #f4f1ea;
   color: #151412;
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 26px;
+  font-size: 16px;
+  line-height: 1.75;
   -webkit-tap-highlight-color: transparent;
 }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
@@ -170,15 +177,28 @@ table { font-variant-numeric: tabular-nums; }
 .lit-wash { --lc: rgba(232, 53, 109, 0.2); --lx: 78%; }
 .lit-haze { --lc: rgba(95, 208, 227, 0.16); --lx: 50%; }
 
-/* 字級：中文用 900 重量、負字距做出海報感，不靠襯線也不靠單字變色 */
-.stage h1 { font-weight: 900; letter-spacing: -0.035em; line-height: 1.04; }
-.stage h2 { font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; }
-.stage h3 { font-weight: 700; letter-spacing: -0.015em; }
-.d1 { font-size: clamp(40px, 7.4vw, 86px); }
-.d2 { font-size: clamp(28px, 4.2vw, 46px); }
-.d3 { font-size: clamp(19px, 2vw, 23px); }
-.lede { font-size: clamp(17px, 1.5vw, 20px); line-height: 1.72; color: var(--dim); max-width: 58ch; }
-.stage .body { font-size: 16px; line-height: 1.8; color: var(--dim); max-width: 62ch; }
+/* 標題用明體，字重 700 不用 900。
+   量過四個成熟平台（Linear 510、Mentimeter 400、StreamElements 400、Ko-fi 400），
+   沒有一個主標用 700 以上——大字級配常規字重加緊字距，是目前的共同語言。
+   中文 900 的問題更實際：筆畫會糊在一起。 */
+.stage h1, .stage h2 { font-family: var(--font-display); font-weight: 700; }
+.stage h1 { letter-spacing: -0.02em; line-height: 1.12; }
+.stage h2 { letter-spacing: -0.018em; line-height: 1.18; }
+.stage h3 { font-weight: 700; letter-spacing: -0.012em; line-height: 1.4; }
+
+/* 型階：八階，全部用 rem 讓使用者的瀏覽器縮放有效。
+   版面裡禁止再寫 text-[Npx]，量測腳本會抓。 */
+.d1 { font-size: clamp(2.75rem, 6.2vw, 5rem); }        /* 44 → 80 */
+.d2 { font-size: clamp(1.875rem, 4vw, 2.875rem); }     /* 30 → 46 */
+.d3 { font-size: clamp(1.25rem, 1.9vw, 1.5rem); }      /* 20 → 24 */
+.t1 { font-size: 1.3125rem; line-height: 1.5; }   /* 21 */
+.t2 { font-size: 1.125rem;  line-height: 1.62; }  /* 18 */
+.lede { font-size: clamp(1.0625rem, 1.4vw, 1.25rem); line-height: 1.75; color: var(--dim); max-width: 36em; }
+.stage .body { font-size: 1rem; line-height: 1.85; color: var(--dim); max-width: 38em; }
+.cap { font-size: 0.875rem; line-height: 1.6; color: var(--dim); }  /* 14 */
+
+/* 觀眾留言 */
+.hand { font-family: var(--font-hand); font-weight: 400; }
 
 /* 面板：有厚度的暗面，不是千篇一律的圓角白卡 */
 .pane {

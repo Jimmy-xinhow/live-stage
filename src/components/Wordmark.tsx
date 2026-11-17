@@ -21,7 +21,7 @@ export function Mark({ size = 28, className = "" }: { size?: number; className?:
 export function Wordmark({ className = "", mark = true }: { className?: string; mark?: boolean }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      <span className="text-[20px] leading-none font-black tracking-[-0.04em]">{BRAND.name}</span>
+      <span className="text-[21px] leading-none font-bold tracking-[-0.02em] [font-family:var(--font-display)]">{BRAND.name}</span>
       {mark && <Mark size={19} className="text-[color:var(--sodium,#ffb03a)]" />}
     </span>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { IconScreen, IconTroops, IconWheel } from "@/components/icons";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useFan, type FanInfo } from "@/components/useFan";
@@ -151,7 +152,7 @@ export function GameApp(props: { slug: string; name: string; initial: PublicGame
           {g.units.map((u, i) => (
             <button key={u.id} onClick={() => buy(u)} className="taptarget flex items-center gap-3 rounded-[18px] border-2 border-[#2E2E32] bg-[#18181A] p-3.5 text-left">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-[24px]" style={{ background: `${LANE_COLORS[i % LANE_COLORS.length]}22` }}>
-                {["⚔", "🏹", "🐉"][i] ?? "⚡"}
+                {[<IconTroops key="a" size={26} />, <IconWheel key="b" size={26} />, <IconScreen key="c" size={26} />][i] ?? <IconTroops size={26} />}
               </span>
               <span className="min-w-0 flex-1">
                 <strong className="block text-[17px]">{u.name}</strong>

@@ -1,5 +1,6 @@
 "use client";
 
+import { IconRequest } from "@/components/icons";
 import { Floaters, LANE, LANE_INK, useBumps } from "./bits";
 
 /**
@@ -34,7 +35,7 @@ export function Race({ lanes, goal, safe }: { lanes: { name: string; score: numb
               {/* 跑者 */}
               <div className="absolute top-1/2 -translate-y-1/2 transition-[left] duration-700 ease-out" style={{ left: `calc(${pct * 0.84}% + 0.8vh)` }}>
                 <div className="flex h-[7.4vh] w-[7.4vh] items-center justify-center rounded-full border-[0.4vh] border-[#0d1117] text-[3.4vh] shadow-[0_0_3vh_rgba(0,0,0,.5)]" style={{ background: LANE[i] }}>
-                  <span style={{ color: LANE_INK[i] }}>♪</span>
+                  <IconRequest size={26} style={{ color: LANE_INK[i] }} />
                 </div>
               </div>
               <Floaters bumps={bumps} lane={i} className="!left-auto !right-[12%]" />

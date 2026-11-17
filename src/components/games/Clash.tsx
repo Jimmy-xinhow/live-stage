@@ -1,5 +1,6 @@
 "use client";
 
+import { IconTroops } from "@/components/icons";
 import { Floaters, LANE, useBumps } from "./bits";
 
 /**
@@ -49,7 +50,7 @@ export function Clash({ lanes, pk, safe }: { lanes: { name: string; score: numbe
         {/* 戰線 */}
         <div className="absolute inset-y-0 w-[0.6vh] -translate-x-1/2 transition-[left] duration-700 ease-out" style={{ left: `${front}%`, background: "#f2efe9", boxShadow: "0 0 3vh rgba(242,239,233,.6)" }}>
           <div className={`absolute top-1/2 left-1/2 h-[6vh] w-[6vh] -translate-x-1/2 -translate-y-1/2 rounded-full border-[0.35vh] border-[#0d1117] bg-[#f2efe9] ${hit ? "animate-shake" : ""}`}>
-            <span className="absolute inset-0 flex items-center justify-center text-[2.4vh] font-black text-[#0d1117]">⚔</span>
+            <IconTroops size={22} className="absolute inset-0 m-auto text-[#0d1117]" />
           </div>
         </div>
       </div>
