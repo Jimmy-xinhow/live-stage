@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { PayMethod } from "@/lib/db/schema";
 import { PayMethodsEditor } from "./PayMethodsEditor";
 import { AREAS } from "@/lib/areas";
+import { PageHead } from "@/components/back/Shell";
 
 type Profile = {
   slug: string; displayName: string; avatarUrl: string; bio: string; category: "busker" | "service" | "creator" | "other"; themeColor: string;
@@ -33,7 +34,7 @@ export function SettingsForm({ initial, gatewayLabel, merchantId, payMethods: pm
 
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">收款與點歌設定</h1><p className="small">對外介紹、表演類型、直播網址在「對外頁面」設定。</p></div>
+      <PageHead title="收款與設定" desc="對外介紹、表演類型、直播網址在「對外頁面」那一頁設定。" />
 
       <section className="sec flex flex-col gap-3">
         <div><h2 className="h2">收款碼</h2><p className="small max-w-[600px]">免申請，馬上能用。放上你平常用的 LINE Pay／街口收款碼；觀眾點歌後拿到 4 碼點歌碼，轉帳時填在備註，你看到入帳後按「已收到」，那首歌就排進隊伍。</p></div>

@@ -5,6 +5,7 @@ import { pointLedger } from "@/lib/db/schema";
 import { canAcceptOrders, fmtPoints } from "@/lib/billing";
 import { POINT_PACKAGES } from "@/lib/env";
 import { BuyButton } from "./BuyButton";
+import { PageHead } from "@/components/back/Shell";
 
 const REASON: Record<string, string> = { event_promo: "活動曝光", event_notify: "活動通知", signup_bonus: "新手贈點", purchase: "儲值", fee: "服務費", live_notify: "開演通知", broadcast: "粉絲訊息", adjust: "平台調整", promo: "曝光版位" };
 
@@ -15,11 +16,8 @@ export default async function Points() {
   return (
     <div className="flex flex-col gap-8">
       <section>
-        <h1 className="h1">點數</h1>
-        <div className="mt-3 flex items-baseline gap-2"><strong className={`num text-[44px] leading-[52px] ${canAcceptOrders(p.pointsCents) ? "" : "text-err"}`}>{fmtPoints(p.pointsCents)}</strong><span className="h3">點</span></div>
-        <p className="small mt-2 max-w-[600px]">
-          1 點 = NT$1。活動曝光版位與通知表演者粉絲時扣點。平台不收成交抽成，也不經手門票或演出費。
-        </p>
+        <PageHead title="點數" desc="1 點 = NT$1。活動曝光版位與通知表演者粉絲時扣點。平台不收成交抽成，也不經手門票或演出費。" />
+        <div className="flex items-baseline gap-2"><strong className={`num text-[44px] leading-[52px] ${canAcceptOrders(p.pointsCents) ? "" : "text-err"}`}>{fmtPoints(p.pointsCents)}</strong><span className="h3">點</span></div>
       </section>
       <section className="sec">
         <h2 className="h2">購買點數</h2>

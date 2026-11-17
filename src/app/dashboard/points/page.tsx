@@ -5,6 +5,7 @@ import { pointLedger } from "@/lib/db/schema";
 import { canAcceptOrders, fmtPoints } from "@/lib/billing";
 import { env, POINT_PACKAGES } from "@/lib/env";
 import { BuyButton } from "./BuyButton";
+import { PageHead } from "@/components/back/Shell";
 
 const REASON: Record<string, string> = { signup_bonus: "新手贈點", purchase: "儲值", fee: "服務費", live_notify: "開演通知", broadcast: "粉絲訊息", adjust: "平台調整", promo: "曝光版位", event_promo: "活動曝光" };
 
@@ -16,12 +17,11 @@ export default async function Points() {
   return (
     <div className="flex flex-col gap-8">
       <section>
-        <h1 className="h1">點數</h1>
-        <div className="mt-3 flex items-baseline gap-2"><strong className={`num text-[44px] leading-[52px] ${canAcceptOrders(p.pointsCents) ? "" : "text-err"}`}>{fmtPoints(p.pointsCents)}</strong><span className="h3">點</span></div>
-        <p className="small mt-2 max-w-[600px]">
-          1 點 = NT$1。每筆成交的點歌或打賞扣金額的 {rate}%（NT$100 扣 {rate} 點）；曝光版位、粉絲通知也用點數。款項本身直接進你的帳戶，平台不經手。
-          點數用完後可再透支 {env.billing.overdraftCents / 100} 點，避免演出到一半被暫停。
-        </p>
+        <PageHead
+          title="點數"
+          desc={<>1 點 = NT$1。每筆成交扣金額的 {rate}%（NT$100 扣 {rate} 點）；曝光版位與粉絲通知也用點數。款項本身直接進你的帳戶，平台不經手。用完後可再透支 {env.billing.overdraftCents / 100} 點，避免演出到一半被暫停。</>}
+        />
+        <div className="flex items-baseline gap-2"><strong className={`num text-[44px] leading-[52px] ${canAcceptOrders(p.pointsCents) ? "" : "text-err"}`}>{fmtPoints(p.pointsCents)}</strong><span className="h3">點</span></div>
       </section>
       <section className="sec">
         <h2 className="h2">購買點數</h2>

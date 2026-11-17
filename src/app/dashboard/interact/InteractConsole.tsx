@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { PublicGame } from "@/lib/games";
 import type { consoleState } from "@/lib/hub";
 import { LANE_COLORS, remain } from "@/components/gameui";
+import { PageHead } from "@/components/back/Shell";
 
 type State = { hub: Awaited<ReturnType<typeof consoleState>>; game: PublicGame | null };
 type GT = { id: string; name: string; desc: string; min: number; max: number; goal: number };
@@ -54,7 +55,7 @@ export function InteractConsole({ slug, initial, types, liveNow }: { slug: strin
 
   return (
     <div className="flex flex-col gap-6">
-      <div><h1 className="h1">互動與遊戲</h1><p className="small">{hub.live ? `演出中・${hub.present} 人簽到` : "開演後才能使用抽獎、舉手與遊戲。許願池隨時可以管理。"}　大螢幕遊戲畫面：<Link href={`/live/${slug}/game`} target="_blank" className="underline">另開視窗</Link></p></div>
+      <PageHead title="互動與遊戲" desc={hub.live ? `演出中・${hub.present} 人簽到` : "開演後才能使用抽獎、舉手與遊戲。許願池隨時可以管理。"} actions={<Link href={`/live/${slug}/game`} target="_blank" className="btn btn-secondary btn-sm">開大螢幕</Link>} />
       {msg && <p className="rounded-[12px] bg-sunken px-3 py-2">{msg}</p>}
 
       <section className="sec flex flex-col gap-2">

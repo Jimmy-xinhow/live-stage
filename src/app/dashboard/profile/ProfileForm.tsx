@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ACTS, OCCASIONS, streamInfo } from "@/lib/acts";
 import { AREAS } from "@/lib/areas";
+import { PageHead } from "@/components/back/Shell";
 
 type Init = { actType: string; bio: string; genres: string; bookable: boolean; priceFrom: number | null; occasions: string[]; serviceAreas: string[]; coverUrl: string; videoUrl: string; streamUrl: string; lat: string; lng: string };
 
@@ -30,7 +31,7 @@ export function ProfileForm(props: { slug: string; baseUrl: string; city: string
 
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">對外頁面</h1><p className="small">這些資料會出現在你的作品集頁與搜尋結果。<Link href={`/u/${props.slug}`} className="underline">看我的頁面</Link>{!props.city && <>　還沒選演出縣市，請先到<Link href="/dashboard/settings" className="underline">設定</Link>選擇，才會被找到。</>}</p></div>
+      <PageHead title="對外頁面" desc={<>這些資料會出現在作品集頁與搜尋結果。{!props.city && <>　還沒選演出縣市，請先到<Link href="/dashboard/settings" className="underline">設定</Link>選，才會被找到。</>}</>} actions={<Link href={`/u/${props.slug}`} target="_blank" className="btn btn-secondary btn-sm">看我的頁面</Link>} />
 
       <section className="sec grid gap-4 md:grid-cols-2">
         <label className="field">表演類型<select value={f.actType} onChange={(e) => set("actType", e.target.value)}>{ACTS.map((a) => <option key={a.slug} value={a.slug}>{a.name}</option>)}</select></label>

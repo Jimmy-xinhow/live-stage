@@ -2,6 +2,7 @@ import { requireAccount } from "@/lib/auth";
 import { EVENT_PROMO, eventPromotions, myEvents } from "@/lib/events";
 import { fmtPoints } from "@/lib/billing";
 import { EventPromoteForm } from "./EventPromoteForm";
+import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
 const day = (iso: string) => new Date(iso).toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei", month: "numeric", day: "numeric" });
@@ -13,10 +14,10 @@ export default async function OrgPromote() {
   const now = Date.now();
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="h1">活動曝光</h1>
-        <p className="small max-w-[600px]">用點數把活動推到列表最上面或首頁。每個地區的版位有限，一律標示「付費推薦」。不保證到場人數。餘額 <span className="num font-semibold text-ink">{fmtPoints(p.pointsCents)}</span> 點。</p>
-      </div>
+      <PageHead
+        title="活動曝光"
+        desc={<>用點數把活動推到列表最上面或首頁。每個地區的版位有限，一律標示「付費推薦」，不保證到場人數。餘額 <span className="num font-semibold text-ink">{fmtPoints(p.pointsCents)}</span> 點。</>}
+      />
 
       <EventPromoteForm
         events={upcoming.map((e) => ({ id: e.id, title: e.title }))}

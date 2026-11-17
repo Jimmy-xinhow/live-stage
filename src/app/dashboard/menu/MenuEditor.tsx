@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { nt } from "@/lib/format";
+import { PageHead } from "@/components/back/Shell";
 
 type Item = { id: string; title: string; subtitle: string; category: string; price: number; enabled: boolean; requestCount: number };
 
@@ -49,7 +50,7 @@ export function MenuEditor({ items }: { items: Item[] }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <div><h1 className="h1">歌單與服務</h1><p className="small">只放你真的會的，觀眾就不會點到你不會的歌。</p></div>
+      <PageHead title="歌單與服務" desc="只放你真的會的，觀眾就不會點到你不會的歌。" />
       <section className="card flex flex-col gap-3 p-5">
         <h2 className="h3">新增</h2>
         <label className="field">一行一項，可以整份貼上：歌名 / 歌手 / 分類 / 價格（後三項可省略）

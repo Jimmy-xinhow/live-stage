@@ -6,6 +6,7 @@ import { fanList, SEGMENT_LABEL } from "@/lib/fans";
 import { env } from "@/lib/env";
 import { FansManager } from "./FansManager";
 import { ShowsManager } from "./ShowsManager";
+import { PageHead } from "@/components/back/Shell";
 
 export default async function Fans() {
   const { performer: p } = (await requirePerformer())!;
@@ -17,7 +18,7 @@ export default async function Fans() {
   const costPerFan = env.billing.liveNotifyCents / 100;
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="h1">粉絲</h1>
+      <PageHead title="粉絲" desc="追蹤你的人、他們的支持紀錄，以及演出預告的發布。" />
       <ShowsManager
         upcoming={upcoming.map((s) => ({ id: s.id, startsAt: s.startsAt.toISOString(), location: s.location, note: s.note, notified: s.notifiedCount }))}
         followers={list.filter((f) => f.notifyLive).length}
