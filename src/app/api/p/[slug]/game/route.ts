@@ -14,7 +14,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
   if (off) return off;
   const p = await getPerformerBySlug((await params).slug);
   if (!p) return NextResponse.json({ error: "not found" }, { status: 404 });
-  if (!battleGamesOn(await sessionMode(p.liveSessionId))) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!battleGamesOn(await sessionMode(p.liveSessionId), p.plan)) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ game: publicGame(await currentGame(p.id), await getFanId(), p.id) });
 }
 
@@ -25,7 +25,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   if (rl) return rl;
   const p = await getPerformerBySlug((await params).slug);
   if (!p) return NextResponse.json({ error: "not found" }, { status: 404 });
-  if (!battleGamesOn(await sessionMode(p.liveSessionId))) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!battleGamesOn(await sessionMode(p.liveSessionId), p.plan)) return NextResponse.json({ error: "not found" }, { status: 404 });
   const fanId = await getFanId();
   if (!fanId) return NextResponse.json({ error: "請先用 LINE 登入" }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as { action?: string; lane?: number; count?: number; pick?: number; text?: string; name?: string };

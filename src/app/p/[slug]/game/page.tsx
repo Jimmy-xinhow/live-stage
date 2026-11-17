@@ -14,7 +14,7 @@ export const metadata = { title: `互動遊戲｜${APP_NAME}`, robots: { index: 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const p = await getPerformerBySlug((await params).slug);
   if (!p || p.status === "suspended") notFound();
-  if (!battleGamesOn(await sessionMode(p.liveSessionId))) notFound();
+  if (!battleGamesOn(await sessionMode(p.liveSessionId), p.plan)) notFound();
   const fanId = await getFanId();
   const fan = await getFan(fanId);
   const opts = payOptions(p);

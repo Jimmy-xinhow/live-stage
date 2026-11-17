@@ -1,3 +1,5 @@
+import { planHasGames } from "./plans";
+
 /**
  * 功能開關。
  *
@@ -50,12 +52,18 @@ export function featureGate(f: Feature): Response | null {
 }
 
 /**
- * 對戰、派兵、團體戰：只在室內直播模式開。
+ * 對戰、派兵、團體戰要同時過三關：
  *
- * 街頭的聽眾站三到十分鐘、注意力在表演者身上，手機只是付款工具；
- * 直播觀眾看三十分鐘到兩小時，螢幕本身就是場地。
- * 同一個機制在兩邊的結果完全相反，所以它跟著模式走，不是全域開關。
+ * 1. 全域開關還開著
+ * 2. 演出模式是室內直播
+ *    街頭的聽眾站三到十分鐘、注意力在表演者身上，手機只是付款工具；
+ *    直播觀眾看三十分鐘到兩小時，螢幕本身就是場地。
+ *    同一個機制在兩邊的結果完全相反，所以它跟著模式走，不是全域開關。
+ * 3. 表演者的方案有買互動
+ *    這是我們花最多力氣做、也最難被抄的部分，不應該當贈品送。見 lib/plans.ts。
  */
-export function battleGamesOn(mode: string | null | undefined) {
-  return FEATURES.games && mode === "indoor";
+export function battleGamesOn(mode: string | null | undefined, plan?: string | null) {
+  if (!FEATURES.games || mode !== "indoor") return false;
+  // 沒傳 plan 就只檢查前兩關（給還沒接上方案的舊呼叫點用，之後都要傳）
+  return plan === undefined ? true : planHasGames(plan);
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "performers" ADD COLUMN "plan" varchar(10) DEFAULT 'free' NOT NULL;

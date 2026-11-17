@@ -33,7 +33,7 @@ export async function seedDemo(db: DB) {
   const [p] = await db
     .insert(performers)
     .values({
-      slug: "demo", kind: "street",
+      slug: "demo", kind: "street", plan: "all",
       lineUserId: "Udev-demo",
       displayName: "阿哲的街頭吉他",
       bio: "每週五六晚上在駁二大勇倉庫前，民謠、流行、台語老歌。歌單上的我都會唱，直接點！",
@@ -113,7 +113,7 @@ export async function seedDemo(db: DB) {
   for (const e of extra) {
     const [x] = await db
       .insert(performers)
-      .values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, lineUserId: `Udev-${e.slug}`, actType: e.slug === "demo-band" ? "band" : "busker", coverUrl: e.slug === "demo-band" ? "/demo/band-1.jpg" : "/demo/uku-1.jpg", avatarUrl: e.slug === "demo-band" ? "/demo/av-band-1.jpg" : "/demo/av-uku-1.jpg", genres: e.slug === "demo-band" ? "台語老歌、搖滾" : "日系、華語抒情", priceFrom: e.slug === "demo-band" ? 15000 : 4000, occasions: ["婚禮", "尾牙春酒", "企業活動"], status: "active", gateway: "mock", payMethods: [{ type: "linepay", label: "LINE Pay", qrText: "DEMO", imageData: null }] })
+      .values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, lineUserId: `Udev-${e.slug}`, plan: "all", actType: e.slug === "demo-band" ? "band" : "busker", coverUrl: e.slug === "demo-band" ? "/demo/band-1.jpg" : "/demo/uku-1.jpg", avatarUrl: e.slug === "demo-band" ? "/demo/av-band-1.jpg" : "/demo/av-uku-1.jpg", genres: e.slug === "demo-band" ? "台語老歌、搖滾" : "日系、華語抒情", priceFrom: e.slug === "demo-band" ? 15000 : 4000, occasions: ["婚禮", "尾牙春酒", "企業活動"], status: "active", gateway: "mock", payMethods: [{ type: "linepay", label: "LINE Pay", qrText: "DEMO", imageData: null }] })
       .returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     await db.insert(menuItems).values(e.songs.map(([title, subtitle, category, price], i) => ({ performerId: x.id, title, subtitle, category, price, sort: i })));
@@ -129,7 +129,7 @@ export async function seedDemo(db: DB) {
   ];
   for (const e of more) {
     const kind = e.act === "singer" || e.act === "band" ? "venue" : e.act === "dj" ? "streamer" : "street";
-    const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, kind, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", coverUrl: e.cover, avatarUrl: e.cover.replace("/demo/", "/demo/av-"), lineUserId: `Udev-${e.slug}` }).returning();
+    const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, kind, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", coverUrl: e.cover, avatarUrl: e.cover.replace("/demo/", "/demo/av-"), lineUserId: `Udev-${e.slug}`, plan: "all" }).returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     if (e.act === "singer") {
       // Mia 也在演出中，首頁「現在演出中」才有兩個以上

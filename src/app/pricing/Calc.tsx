@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PLANS, breakEven } from "@/lib/plans";
+import { PLANS, boughtForFeatures, breakEven } from "@/lib/plans";
 
 const nt = (n: number) => `NT$${Math.round(n).toLocaleString()}`;
 
@@ -9,7 +9,8 @@ const nt = (n: number) => `NT$${Math.round(n).toLocaleString()}`;
 export function Calc() {
   const [gmv, setGmv] = useState(20000);
   const rows = PLANS.map((p) => ({ p, cost: Math.round(gmv * p.feeRate) + p.price }));
-  const best = rows.reduce((a, b) => (b.cost < a.cost ? b : a));
+  // 只在「不買額外功能」的兩層之間比便宜；互動與全部是買功能，拿來比價會誤導
+  const best = rows.filter((r) => !boughtForFeatures(r.p.slug)).reduce((a, b) => (b.cost < a.cost ? b : a));
   const be = breakEven();
 
   return (
@@ -41,14 +42,20 @@ export function Calc() {
                 {p.price > 0 ? `月費 ${nt(p.price)}＋` : ""}成交 {(p.feeRate * 100).toFixed(0)}%
               </span>
             </span>
-            <span className={`num text-[18px] font-bold ${best.p.slug === p.slug ? "text-[color:var(--sodium)]" : ""}`}>{nt(cost)}</span>
+            <span className="flex items-baseline gap-2">
+              {boughtForFeatures(p.slug) && <span className="text-[12px] text-[color:var(--dim)]">買功能</span>}
+              <span className={`num text-[18px] font-bold ${best.p.slug === p.slug ? "text-[color:var(--sodium)]" : ""}`}>{nt(cost)}</span>
+            </span>
           </div>
         ))}
       </div>
 
       <p className="text-[15px] leading-7">
-        以一個月 {nt(gmv)} 來算，<strong>{best.p.name}方案</strong>比較划算，一個月付 {nt(best.cost)}。
-        分界點在 {nt(be)}：超過就換月費。
+        光看費用，一個月 {nt(gmv)} 的話<strong>{best.p.name}</strong>比較便宜，付 {nt(best.cost)}。
+        分界點在 {nt(be)}，超過就換月費。
+      </p>
+      <p className="text-[14px] leading-6 text-[color:var(--dim)]">
+        互動與全部這兩層的費率跟點歌台一樣，所以永遠不會在這裡算贏——要不要升級看的是你需不需要那些功能，不是量。
       </p>
     </div>
   );

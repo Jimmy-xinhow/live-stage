@@ -12,6 +12,6 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   const p = await getPerformerBySlug((await params).slug);
   if (!p) notFound();
-  if (!battleGamesOn(await sessionMode(p.liveSessionId))) notFound();
+  if (!battleGamesOn(await sessionMode(p.liveSessionId), p.plan)) notFound();
   return <GameScreen slug={p.slug} name={p.displayName} initial={publicGame(await currentGame(p.id), null, p.id)} />;
 }

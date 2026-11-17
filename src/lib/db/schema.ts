@@ -50,6 +50,8 @@ export const performers = pgTable("performers", {
   actType: varchar("act_type", { length: 12 }).notNull().default("busker"),
   /** 情境型態（lib/kinds.ts）：street（街頭）| venue（駐唱／樂團）| streamer（線上直播）。決定預設值與後台顯示哪些設定 */
   kind: varchar("kind", { length: 10 }).notNull().default("street"),
+  // 方案：free / base / play / all。見 lib/plans.ts
+  plan: varchar("plan", { length: 10 }).notNull().default("free"),
   /** 線上直播平台，只有 kind=streamer 用：youtube | twitch | self | instagram */
   streamPlatform: varchar("stream_platform", { length: 12 }),
   /** 粉絲單場花費上限（分）。0 = 用系統預設 */
