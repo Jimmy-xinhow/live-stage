@@ -29,7 +29,12 @@ export async function resetDemo(db: DB) {
 }
 
 export async function seedDemo(db: DB) {
-  if ((await db.select({ id: performers.id }).from(performers).where(eq(performers.slug, "demo"))).length) return;
+  if ((await db.select({ id: performers.id }).from(performers).where(eq(performers.slug, "demo"))).length) {
+    // 示範帳號要能展示全部功能。plan 欄位是後來才加的，既有的示範帳號會停在免費方案，
+    // 互動遊戲就打不開。這裡每次開機補一次，重跑無害。
+    await db.update(performers).set({ plan: "all" }).where(like(performers.slug, "demo%"));
+    return;
+  }
   const [p] = await db
     .insert(performers)
     .values({
