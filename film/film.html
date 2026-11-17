@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>安可｜宣傳片</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&family=Iansui&family=Archivo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* 宣傳片。1920×1080、30fps、約 42 秒。
+   每一幕都是真實的產品畫面，不是示意圖。
+   節奏：開場 3 秒定調，中間每幕 5-7 秒（足夠讀完一句字卡），結尾 5 秒留 CTA。 */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#0d1117;
+  font-family:"Noto Sans TC",sans-serif;color:#f2efe9;-webkit-font-smoothing:antialiased}
+.stage{position:relative;width:1920px;height:1080px;overflow:hidden}
+
+/* 舞台燈：三道光，跟產品視覺同一組 */
+.lamp{position:absolute;inset:0;pointer-events:none;transition:opacity 1.2s ease}
+.lamp.a{background:radial-gradient(52% 62% at 18% 0%,rgba(255,176,58,.30),transparent 70%)}
+.lamp.b{background:radial-gradient(48% 58% at 84% 8%,rgba(232,53,109,.26),transparent 70%);opacity:0}
+.lamp.c{background:radial-gradient(60% 62% at 50% 100%,rgba(95,208,227,.20),transparent 70%);opacity:0}
+.stage.s4 .lamp.b,.stage.s5 .lamp.b{opacity:1}
+.stage.s5 .lamp.c,.stage.s6 .lamp.c{opacity:1}
+
+/* 顆粒：整片一致，讓畫面不像平面色塊 */
+.grain{position:absolute;inset:0;z-index:40;pointer-events:none;opacity:.26;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E")}
+.vig{position:absolute;inset:0;z-index:39;pointer-events:none;
+  background:radial-gradient(118% 92% at 50% 44%,transparent 46%,rgba(0,0,0,.62) 100%)}
+
+.scene{position:absolute;inset:0;opacity:0;transition:opacity .62s ease}
+.scene.on{opacity:1}
+
+/* 字卡 */
+.card{position:absolute;left:132px;max-width:880px}
+.kicker{font-size:21px;letter-spacing:.2em;color:#ffb03a;opacity:0;transform:translateY(12px);
+  transition:all .7s cubic-bezier(.2,.9,.3,1)}
+.line{font-family:"Noto Serif TC",serif;font-weight:700;font-size:82px;line-height:1.18;
+  letter-spacing:-.02em;margin-top:18px;opacity:0;transform:translateY(22px);
+  transition:all .8s cubic-bezier(.2,.9,.3,1) .12s}
+.sub{font-size:26px;line-height:1.75;color:#9ba6b4;margin-top:22px;max-width:30em;opacity:0;
+  transform:translateY(16px);transition:all .8s cubic-bezier(.2,.9,.3,1) .26s}
+.on .kicker,.on .line,.on .sub{opacity:1;transform:none}
+
+/* 素材：手機與螢幕 */
+.shot{position:absolute;opacity:0;transform:translateY(34px) scale(.985);
+  transition:all .9s cubic-bezier(.2,.9,.3,1) .18s}
+.on .shot{opacity:1;transform:none}
+.phone{border-radius:34px;overflow:hidden;
+  box-shadow:0 0 0 8px #0a0d12,0 0 0 9px rgba(242,239,233,.2),0 60px 120px -40px rgba(255,176,58,.5)}
+.screen{border-radius:18px;overflow:hidden;border:1px solid rgba(242,239,233,.14);
+  box-shadow:0 60px 130px -50px rgba(0,0,0,1)}
+.shot img{display:block;width:100%}
+
+/* 開場與結尾 */
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px}
+.mark{display:flex;align-items:center;gap:18px;opacity:0;transform:scale(.94);
+  transition:all 1s cubic-bezier(.2,1.1,.3,1)}
+.on .mark{opacity:1;transform:none}
+.mark .nm{font-family:"Noto Serif TC",serif;font-weight:900;font-size:108px;letter-spacing:-.03em}
+.badge{width:58px;height:58px;border-radius:17px;background:#ffb03a;display:grid;place-items:center;
+  font-family:Archivo,sans-serif;font-weight:800;font-size:26px;color:#15110a}
+.tag{font-size:30px;color:#9ba6b4;letter-spacing:.06em;opacity:0;transform:translateY(14px);
+  transition:all .9s cubic-bezier(.2,.9,.3,1) .4s}
+.on .tag{opacity:1;transform:none}
+.url{margin-top:10px;font-family:Archivo,sans-serif;font-size:25px;color:#ffb03a;letter-spacing:.04em;
+  opacity:0;transition:opacity .9s ease .7s}
+.on .url{opacity:1}
+.note{font-size:21px;color:#6b7684;opacity:0;transition:opacity .9s ease .9s}
+.on .note{opacity:1}
+
+/* 觀眾留言用手寫體 */
+.hand{font-family:Iansui,sans-serif}
+.msg{position:absolute;background:#f2efe9;color:#15110a;border-radius:16px;padding:20px 26px;
+  font-size:27px;max-width:440px;box-shadow:0 30px 70px -24px rgba(0,0,0,.9);opacity:0;
+  transform:translateY(18px) rotate(-1.4deg);transition:all .8s cubic-bezier(.2,1.1,.3,1) .5s}
+.on .msg{opacity:1;transform:rotate(-1.4deg)}
+.msg b{display:block;font-size:17px;color:#6b665c;font-weight:700;margin-bottom:6px;font-family:"Noto Sans TC"}
+
+/* 數字強調 */
+.big{font-family:Archivo,sans-serif;font-weight:800;font-size:132px;letter-spacing:-.04em;
+  background:linear-gradient(180deg,#fff 6%,#ffb03a 54%,#b9741f 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(0,0,0,.5)) drop-shadow(0 0 34px rgba(255,176,58,.42))}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="lamp a"></div><div class="lamp b"></div><div class="lamp c"></div>
+
+  <!-- 0 開場 -->
+  <div class="scene" id="s0">
+    <div class="center">
+      <div class="mark"><span class="nm">安可</span><span class="badge">+1</span></div>
+      <div class="tag">讓聽眾點歌給你</div>
+    </div>
+  </div>
+
+  <!-- 1 街頭 -->
+  <div class="scene" id="s1">
+    <div class="card" style="top:300px">
+      <div class="kicker">晚上八點・駁二大勇倉庫</div>
+      <div class="line">你把立牌<br>放在吉他盒旁邊</div>
+      <div class="sub">沒有設備要接，沒有電要插。一張 A5 的 QR 立牌，上面是你的名字。</div>
+    </div>
+    <div class="shot phone" style="right:190px;top:168px;width:360px">
+      <img src="../public/shots/fan-top-c.png" alt="">
+    </div>
+  </div>
+
+  <!-- 2 點歌 -->
+  <div class="scene" id="s2">
+    <div class="card" style="top:280px">
+      <div class="kicker">20:18</div>
+      <div class="line">他挑了一首，<br>寫了一句話</div>
+      <div class="sub">不用下載 App、不用註冊。掃碼、選歌、付款，三十秒。</div>
+    </div>
+    <div class="shot phone" style="right:560px;top:150px;width:330px">
+      <img src="../public/shots/fan-menu-c.png" alt="">
+    </div>
+    <div class="msg" style="right:120px;top:520px">
+      <b>Kevin 點了〈海闊天空〉</b>
+      <span class="hand">我女朋友很喜歡這首，拜託了</span>
+    </div>
+  </div>
+
+  <!-- 3 控制台 -->
+  <div class="scene" id="s3">
+    <div class="card" style="top:300px">
+      <div class="kicker">20:19</div>
+      <div class="line">歌自己排好，<br>你只要唱</div>
+      <div class="sub">不用再盯聊天室、抄紙條、記在腦子裡。開始唱、唱完了、跳過——站著單手就能按完。</div>
+    </div>
+    <div class="shot phone" style="right:200px;top:150px;width:340px">
+      <img src="../public/shots/console-c.png" alt="">
+    </div>
+  </div>
+
+  <!-- 4 大螢幕 -->
+  <div class="scene" id="s4">
+    <div class="card" style="top:148px">
+      <div class="kicker">全場都看得到</div>
+      <div class="line">他的名字<br>會出現在所有人面前</div>
+    </div>
+    <div class="shot screen" style="left:132px;right:132px;bottom:92px;width:auto">
+      <img src="../public/shots/bigscreen.png" alt="">
+    </div>
+  </div>
+
+  <!-- 5 遊戲 -->
+  <div class="scene" id="s5">
+    <div class="card" style="top:138px">
+      <div class="kicker">線上開播</div>
+      <div class="line">還能讓他們下場</div>
+      <div class="sub">八款現場遊戲。觀眾一旦加入了一場正在跑的對戰，就會留下來看結果。</div>
+    </div>
+    <div class="shot screen" style="left:132px;bottom:86px;width:830px">
+      <img src="../public/shots/game-wheel.png" alt="">
+    </div>
+    <div class="shot screen" style="right:132px;bottom:86px;width:830px;transition-delay:.34s">
+      <img src="../public/shots/game-battle.png" alt="">
+    </div>
+  </div>
+
+  <!-- 6 錢 -->
+  <div class="scene" id="s6">
+    <div class="center" style="gap:14px">
+      <div class="card" style="position:static;text-align:center;max-width:1100px">
+        <div class="kicker" style="letter-spacing:.24em">平台不經手</div>
+        <div class="line" style="font-size:88px">錢直接進你的帳戶</div>
+        <div class="sub" style="margin:26px auto 0">聽眾付給你，不是付給平台。我們只在成交時收服務費。</div>
+      </div>
+      <div class="shot" style="margin-top:26px;position:static">
+        <div class="big">3%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7 結尾 -->
+  <div class="scene" id="s7">
+    <div class="center">
+      <div class="mark"><span class="nm">安可</span><span class="badge">+1</span></div>
+      <div class="tag">街頭・駐唱樂團・線上直播</div>
+      <div class="url">web-production-95b3751c.up.railway.app</div>
+      <div class="note">免費開始，不綁約，核心功能全部都有</div>
+    </div>
+  </div>
+
+  <div class="vig"></div><div class="grain"></div>
+</div>
+
+<script>
+/* 時間軸。每一幕的進場各自有 transition delay，所以這裡只管「什麼時候換幕」。
+   停留時間照字數給：字多的多停一點，讀得完才有用。 */
+const CUES = [
+  ["s0", 3400],
+  ["s1", 6200],
+  ["s2", 7000],
+  ["s3", 6400],
+  ["s4", 5600],
+  ["s5", 6400],
+  ["s6", 5400],
+  ["s7", 5200],
+];
+const stage = document.getElementById("stage");
+let t = 0;
+CUES.forEach(([id, dur], i) => {
+  setTimeout(() => {
+    document.querySelectorAll(".scene.on").forEach((e) => e.classList.remove("on"));
+    document.getElementById(id).classList.add("on");
+    stage.className = "stage " + id;
+  }, t);
+  t += dur;
+});
+window.FILM_MS = t + 600;
+</script>
+</body>
+</html>

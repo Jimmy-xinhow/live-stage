@@ -69,9 +69,9 @@ export function GameHead({ title, sub, timer, qr, safe }: { title: string; sub: 
 
 export function Clock({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[18px] border-2 border-[#2b3542] bg-[#151b24] px-[2vw] py-[1vh] text-center">
+    <div className="bc rounded-[20px] px-[2vw] py-[1vh] text-center">
       <div className="text-[1.1vw] text-[#9ba6b4]">{label}</div>
-      <div className="num text-[3.4vw] leading-none font-black">{value}</div>
+      <div className="bc-num text-[3.4vw] leading-none">{value}</div>
     </div>
   );
 }
@@ -79,7 +79,7 @@ export function Clock({ label, value }: { label: string; value: string | number 
 /** 貢獻前三名。大螢幕上唸得到名字是觀眾最想要的東西 */
 export function TopThree({ top, color, safe }: { top: { name: string; score: number }[]; color: string; safe?: boolean }) {
   return (
-    <div className="rounded-[18px] border border-[#2b3542] bg-[#151b24]/70 p-[1.2vw]">
+    <div className="bc bc-edge rounded-[20px] p-[1.2vw]" style={{ "--edge": color } as React.CSSProperties}>
       <div className="mb-[0.5vh] text-[1.15vw] font-bold" style={{ color }}>出力最多的三位</div>
       {top.length ? (
         top.map((t, k) => (

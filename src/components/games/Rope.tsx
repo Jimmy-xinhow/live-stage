@@ -1,6 +1,7 @@
 "use client";
 
 import { Floaters, LANE, useBumps } from "./bits";
+import { Roll } from "./Roll";
 
 /**
  * 拔河：真的畫一條繩子。
@@ -21,7 +22,7 @@ export function Rope({ lanes, goal, safe }: { lanes: { name: string; score: numb
           <div key={i} className={`relative ${i ? "text-right" : ""}`}>
             <div className="text-[1.3vw] text-[#9ba6b4]">{l.players} 人在拉</div>
             <div className="truncate text-[3vw] leading-tight font-black" style={{ color: LANE[i] }}>{l.name}</div>
-            {!safe && <div className="num text-[2.2vw] leading-none font-bold text-[#9ba6b4]">{l.score.toLocaleString()}</div>}
+            {!safe && <div className="bc-num text-[2.6vw] leading-none" style={{ "--numc": LANE[i] } as React.CSSProperties}><Roll value={l.score} /></div>}
             <Floaters bumps={bumps} lane={i} />
           </div>
         ))}
@@ -36,7 +37,7 @@ export function Rope({ lanes, goal, safe }: { lanes: { name: string; score: numb
         <div className="absolute top-[1vh] left-[88%] -translate-x-1/2 text-[1.1vw] font-bold" style={{ color: LANE[1] }}>勝利線</div>
 
         {/* 繩子本體：兩段不同顏色，交界就是繩結 */}
-        <div className="absolute top-1/2 right-[4%] left-[4%] h-[1.7vh] -translate-y-1/2 overflow-hidden rounded-full bg-[#23303d]">
+        <div className="bc-bar absolute top-1/2 right-[4%] left-[4%] h-[1.9vh] -translate-y-1/2">
           <div className="h-full transition-[width] duration-700 ease-out" style={{ width: `${knot}%`, background: `repeating-linear-gradient(115deg, ${LANE[0]} 0 1.1vh, ${LANE[0]}bb 1.1vh 2.2vh)` }} />
           <div className="absolute inset-y-0 right-0 transition-[width] duration-700 ease-out" style={{ width: `${100 - knot}%`, background: `repeating-linear-gradient(65deg, ${LANE[1]} 0 1.1vh, ${LANE[1]}bb 1.1vh 2.2vh)` }} />
         </div>

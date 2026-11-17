@@ -24,10 +24,11 @@ export function GameView({ g, now, qr, safe }: { g: PublicGame; now: number; qr:
   if (g.quiz) return <QuizScreen g={g} now={now} qr={qr} safe={safe} />;
   if (g.wheel) return <WheelScreen g={g} qr={qr} safe={safe} />;
 
-  const sub = g.reward ? (g.lanes.length > 1 ? `贏的那邊：${g.reward}` : `達標就：${g.reward}`) : "現場互動";
+  // 單隊的遊戲獎勵寫在畫面裡了，頁首不要再講一次
+  const sub = g.lanes.length > 1 && g.reward ? `贏的那邊：${g.reward}` : `${g.lanes.reduce((n, l) => n + l.players, 0)} 人正在參與`;
 
   return (
-    <div className="flex h-full flex-col gap-[2vh] p-[3vw]">
+    <div className="bc-scan flex h-full flex-col gap-[2vh] p-[3vw]">
       <GameHead title={g.name} sub={sub} timer={timer} qr={qr} safe={safe} />
 
       {!running && <Result g={g} />}
@@ -76,7 +77,7 @@ function QuizScreen({ g, now, qr, safe }: { g: PublicGame; now: number; qr: stri
   const ring = q.phase === "open" ? (left / Math.max(1, q.secs)) * 100 : 100;
 
   return (
-    <div className="flex h-full flex-col gap-[2vh] p-[3vw]">
+    <div className="bc-scan flex h-full flex-col gap-[2vh] p-[3vw]">
       <GameHead
         title={g.name}
         sub={`第 ${q.idx + 1} / ${q.total} 題${g.reward ? `・${g.reward}` : ""}`}
@@ -140,7 +141,7 @@ function WheelScreen({ g, qr, safe }: { g: PublicGame; qr: string | null; safe?:
   const fresh = w.spunAt > 0 && Date.now() - w.spunAt < 7000;
 
   return (
-    <div className="flex h-full flex-col gap-[2vh] p-[3vw]">
+    <div className="bc-scan flex h-full flex-col gap-[2vh] p-[3vw]">
       <GameHead title={g.name} sub={g.reward || "觀眾投稿挑戰，表演者審核過才會進轉盤"} qr={qr} safe={safe} />
       <div className="grid flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-[3.5vw] pt-[2vh]">
         <Wheel entries={ok} resultId={w.resultId} spunAt={w.spunAt} size={62} />

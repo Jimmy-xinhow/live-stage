@@ -3,3 +3,6 @@ node_modules
 .data
 .env*.local
 tsconfig.tsbuildinfo
+
+# 錄影與量測的暫存產出
+/film/out/

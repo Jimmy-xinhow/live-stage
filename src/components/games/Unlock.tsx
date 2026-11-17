@@ -39,7 +39,7 @@ export function Unlock({ lane, goal, reward, safe }: { lane: { name: string; sco
       </div>
 
       <div className="w-[62%] text-center">
-        <div className="num text-[4.4vw] leading-none font-black" style={{ color: open ? "#4ade80" : "#ffb03a" }}>
+        <div className="bc-num text-[4.8vw] leading-none" style={{ "--numc": open ? "#4ade80" : "#ffb03a" } as React.CSSProperties}>
           {safe ? `${Math.round(pct)}%` : `NT$${lane.score.toLocaleString()}`}
         </div>
         <div className="mt-[0.6vh] text-[1.5vw] text-[#9ba6b4]">

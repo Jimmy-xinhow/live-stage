@@ -39,8 +39,8 @@ export const IconScreen = ({ size = 24, className = "" }: P) => (
   </svg>
 );
 /** 派兵：旗子，加成道具的共同符號 */
-export const IconTroops = ({ size = 24, className = "" }: P) => (
-  <svg {...base(size, className)}>
+export const IconTroops = ({ size, className = "" }: P) => (
+  <svg {...base(size ?? 24, className)} width={size} height={size}>
     <path d="M6 21V3" /><path d="M6 4.2h11l-2.4 3.4L17 11H6" />
     <path d="M10.5 21h7" />
   </svg>

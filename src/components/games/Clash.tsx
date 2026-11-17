@@ -2,6 +2,7 @@
 
 import { IconTroops } from "@/components/icons";
 import { Floaters, LANE, useBumps } from "./bits";
+import { Roll } from "./Roll";
 
 /**
  * 兵團對戰與跨表演者 PK：兩軍對推，中間有一條戰線。
@@ -23,7 +24,7 @@ export function Clash({ lanes, pk, safe }: { lanes: { name: string; score: numbe
           <div key={i} className={`relative ${i ? "text-right" : ""}`}>
             <div className="text-[1.25vw] text-[#9ba6b4]">{pk ? "表演者" : "隊伍"}・{l.players} 人</div>
             <div className="truncate text-[3.1vw] leading-tight font-black" style={{ color: LANE[i] }}>{l.name}</div>
-            {!safe && <div className="num text-[3.4vw] leading-none font-black">{l.score.toLocaleString()}</div>}
+            {!safe && <div className="bc-num text-[3.6vw] leading-none" style={{ "--numc": LANE[i] } as React.CSSProperties}><Roll value={l.score} /></div>}
             <Floaters bumps={bumps} lane={i} />
           </div>
         ))}
@@ -49,8 +50,8 @@ export function Clash({ lanes, pk, safe }: { lanes: { name: string; score: numbe
 
         {/* 戰線 */}
         <div className="absolute inset-y-0 w-[0.6vh] -translate-x-1/2 transition-[left] duration-700 ease-out" style={{ left: `${front}%`, background: "#f2efe9", boxShadow: "0 0 3vh rgba(242,239,233,.6)" }}>
-          <div className={`absolute top-1/2 left-1/2 h-[6vh] w-[6vh] -translate-x-1/2 -translate-y-1/2 rounded-full border-[0.35vh] border-[#0d1117] bg-[#f2efe9] ${hit ? "animate-shake" : ""}`}>
-            <IconTroops size={22} className="absolute inset-0 m-auto text-[#0d1117]" />
+          <div className={`absolute top-1/2 left-1/2 flex h-[6.4vh] w-[6.4vh] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[0.35vh] border-[#0d1117] bg-[#f2efe9] ${hit ? "animate-shake" : ""}`}>
+            <IconTroops className="h-[3.4vh] w-[3.4vh] text-[#0d1117]" />
           </div>
         </div>
       </div>
