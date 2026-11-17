@@ -4,6 +4,7 @@ import { getFanId } from "@/lib/session";
 import { createInquiry, MarketError } from "@/lib/market";
 import { AREAS } from "@/lib/areas";
 import { ACTS, OCCASIONS } from "@/lib/acts";
+import { LIMITS, guard } from "@/lib/ratelimit";
 
 const Body = z.object({
   contactName: z.string().trim().min(1).max(30),
@@ -21,6 +22,8 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  const rl = guard(req, "inquiry", LIMITS.submit);
+  if (rl) return rl;
   const fanId = await getFanId();
   if (!fanId) return NextResponse.json({ error: "請先用 LINE 登入，報價會傳到你的 LINE" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => null));

@@ -163,7 +163,11 @@ export const orders = pgTable(
     claimedAt: ts("claimed_at"),
     /** 付款確認後自動追蹤藝人（點歌表單預設勾選） */
     followOnPay: boolean("follow_on_pay").notNull().default(true),
-    status: varchar("status", { length: 10 }).notNull().default("pending"), // pending（刷卡中）| awaiting（等藝人確認）| paid | failed | expired
+    status: varchar("status", { length: 10 }).notNull().default("pending"), // pending（刷卡中）| awaiting（等藝人確認）| paid | failed | expired | refunded
+    refundedAt: ts("refunded_at"),
+    /** 誰退的：performer | admin */
+    refundBy: varchar("refund_by", { length: 10 }),
+    refundNote: varchar("refund_note", { length: 120 }),
     queueStatus: varchar("queue_status", { length: 10 }), // waiting | playing | done | skipped
     queueSeq: integer("queue_seq"),
     startedAt: ts("started_at"),
@@ -251,7 +255,7 @@ export const pointLedger = pgTable(
     performerId: uuid("performer_id").notNull().references(() => performers.id, { onDelete: "cascade" }),
     deltaCents: integer("delta_cents").notNull(),
     balanceAfterCents: integer("balance_after_cents").notNull(),
-    reason: varchar("reason", { length: 20 }).notNull(), // signup_bonus | purchase | fee | live_notify | broadcast | adjust
+    reason: varchar("reason", { length: 20 }).notNull(), // signup_bonus | purchase | fee | fee_refund | live_notify | broadcast | adjust
     orderId: uuid("order_id"),
     purchaseId: uuid("purchase_id"),
     note: varchar("note", { length: 120 }).notNull().default(""),
@@ -476,7 +480,51 @@ export const games = pgTable(
   (t) => [index("games_performer_idx").on(t.performerId, t.status), index("games_opponent_idx").on(t.opponentId, t.status)],
 );
 
+/** 後台操作稽核：誰、在什麼時候、對誰做了什麼。只寫不改 */
+export const adminLogs = pgTable(
+  "admin_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** 操作者：LINE user id，或用密碼登入時記 password */
+    actor: varchar("actor", { length: 60 }).notNull(),
+    /** suspend | activate | adjust_points | refund | hide_review | unhide_review | unpublish_event | publish_event */
+    action: varchar("action", { length: 24 }).notNull(),
+    /** 被操作的對象：performer / order / event / review 的 id */
+    targetType: varchar("target_type", { length: 12 }).notNull(),
+    targetId: uuid("target_id"),
+    /** 對象的可讀名稱，方便事後查看（對象被刪也還看得到） */
+    targetName: varchar("target_name", { length: 60 }).notNull().default(""),
+    detail: varchar("detail", { length: 200 }).notNull().default(""),
+    ip: varchar("ip", { length: 45 }).notNull().default(""),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("admin_logs_at_idx").on(t.createdAt), index("admin_logs_target_idx").on(t.targetType, t.targetId)],
+);
+
+/** 內容檢舉：留言、作品頁、活動頁 */
+export const reports = pgTable(
+  "reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** order（留言牆）| performer（作品頁）| event（活動）| chat（聊天室） */
+    targetType: varchar("target_type", { length: 12 }).notNull(),
+    targetId: uuid("target_id").notNull(),
+    /** 檢舉人（有登入才有） */
+    fanId: uuid("fan_id").references(() => fans.id, { onDelete: "set null" }),
+    reason: varchar("reason", { length: 20 }).notNull(), // spam | abuse | sexual | fake | other
+    note: varchar("note", { length: 200 }).notNull().default(""),
+    /** new | reviewed | dismissed */
+    status: varchar("status", { length: 10 }).notNull().default("new"),
+    handledAt: ts("handled_at"),
+    ip: varchar("ip", { length: 45 }).notNull().default(""),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("reports_status_idx").on(t.status, t.createdAt), index("reports_target_idx").on(t.targetType, t.targetId)],
+);
+
 export type Performer = typeof performers.$inferSelect;
+export type AdminLog = typeof adminLogs.$inferSelect;
+export type Report = typeof reports.$inferSelect;
 export type Game = typeof games.$inferSelect;
 export type EventRow = typeof events.$inferSelect;
 export type MenuItem = typeof menuItems.$inferSelect;

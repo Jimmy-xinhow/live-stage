@@ -3,6 +3,7 @@ import { getPerformerBySlug } from "@/lib/orders";
 import { getFanId } from "@/lib/session";
 import { getFan } from "@/lib/fans";
 import { currentGame, GameError, publicGame, quizAnswer, tap, wheelSubmit } from "@/lib/games";
+import { LIMITS, guard } from "@/lib/ratelimit";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const rl = guard(req, "game", LIMITS.interact);
+  if (rl) return rl;
   const p = await getPerformerBySlug((await params).slug);
   if (!p) return NextResponse.json({ error: "not found" }, { status: 404 });
   const fanId = await getFanId();

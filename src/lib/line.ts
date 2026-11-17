@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { env } from "./env";
+import { reportError } from "./errors";
 
 type Msg = { type: "text"; text: string } | Record<string, unknown>;
 
@@ -13,7 +14,7 @@ async function call(path: string, body: unknown) {
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.line.messagingAccessToken}` },
     body: JSON.stringify(body),
   });
-  if (!res.ok) console.error(`[LINE] ${path} ${res.status}`, await res.text());
+  if (!res.ok) reportError("line", new Error(`[LINE] ${path} ${res.status}`), { body: await res.text() });
 }
 
 export const pushMessage = (to: string, messages: Msg[]) => call("push", { to, messages });

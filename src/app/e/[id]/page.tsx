@@ -7,6 +7,7 @@ import { actName } from "@/lib/acts";
 import { APP_NAME } from "@/lib/env";
 import { JsonLd, absUrl, breadcrumb } from "@/lib/seo";
 import { Photo, SiteFooter, SiteHeader } from "@/components/Site";
+import { ReportButton } from "@/components/ReportButton";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
               </dl>
               {ev.link && ev.status === "published" && !past && <a href={ev.link} target="_blank" rel="noreferrer nofollow" className="btn btn-primary btn-block">購票／報名</a>}
               <p className="small text-center text-ink3">活動由主辦自行刊登，{APP_NAME}不經手票務</p>
+              <div className="mt-2 text-center"><ReportButton targetType="event" targetId={ev.id} label="檢舉這場活動" /></div>
             </div>
           </aside>
         </div>

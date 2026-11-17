@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { mapPins } from "@/lib/map";
-import { AREAS, areaBySlug, TAIWAN_CENTER } from "@/lib/areas";
+import { areaBySlug, TAIWAN_CENTER } from "@/lib/areas";
 import { APP_NAME } from "@/lib/env";
 import { JsonLd, breadcrumb } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/Site";
 import { MapView } from "./MapView";
+import { AreaSelect } from "@/components/AreaSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -35,11 +36,8 @@ export default async function MapPage({ searchParams }: { searchParams: Promise<
           <span className="num font-semibold text-ink">{pins.length - live}</span> 場近兩週的活動。沒有填精確地點的，會標在縣市中心。
         </p>
 
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-          <Link href="/map" className={`tag !h-9 shrink-0 !px-3 !text-[14px] ${area ? "tag-quiet" : "!bg-ink !text-paper"}`}>全台</Link>
-          {AREAS.map((a) => (
-            <Link key={a.slug} href={`/map?city=${a.slug}`} className={`tag !h-9 shrink-0 !px-3 !text-[14px] ${area?.slug === a.slug ? "!bg-ink !text-paper" : "tag-quiet"}`}>{a.short}</Link>
-          ))}
+        <div className="mt-4 max-w-[240px]">
+          <AreaSelect value={area?.slug} base="/map" />
         </div>
 
         <MapView pins={pins} center={center} />

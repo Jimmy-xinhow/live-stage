@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 型別檢查
+        run: npx tsc --noEmit
+      - name: 建置
+        run: npx next build
+        env:
+          APP_BASE_URL: http://localhost:3000
+      - name: 安裝測試瀏覽器
+        run: npx playwright install --with-deps chromium
+      - name: 啟動開發伺服器（內嵌 PGlite，不需要外部資料庫）
+        run: |
+          npm run dev > /tmp/dev.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:3000/ > /dev/null && break
+            sleep 2
+          done
+        env:
+          APP_BASE_URL: http://localhost:3000
+          DEV_LOGIN: "true"
+          ECPAY_ALLOW_MOCK: "true"
+      - name: 冒煙測試
+        run: npm run test:smoke
+        env:
+          BASE: http://localhost:3000
+      - name: 失敗時印出伺服器 log
+        if: failure()
+        run: tail -100 /tmp/dev.log

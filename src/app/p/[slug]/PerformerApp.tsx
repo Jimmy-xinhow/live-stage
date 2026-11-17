@@ -7,6 +7,7 @@ import { Avatar } from "@/components/Avatar";
 import { submitForm } from "@/lib/liff-client";
 import { followApi, useFan, type FanInfo } from "@/components/useFan";
 import { RankTab } from "./RankTab";
+import { ReportButton } from "@/components/ReportButton";
 
 type MenuRow = { id: string; title: string; subtitle: string; category: string; price: number; enabled: boolean; hot: number };
 type Perf = { slug: string; name: string; avatar: string | null; cover?: string | null; bio: string; category: string; color: string; presets: number[]; min: number; max: number; manualLabel: string };
@@ -177,6 +178,7 @@ export function PerformerApp(props: {
                   <div className="small">{w.itemTitle ? `點了〈${w.itemTitle}〉` : "打賞"}</div>
                   {w.message && <p className="break-words">{w.message}</p>}
                   {w.reply && <div className="mt-1.5 rounded-[12px] bg-sunken px-3 py-2 text-[14px] leading-6"><strong>{p.name}：</strong>{w.reply}</div>}
+                  {w.message && <div className="mt-1"><ReportButton targetType="order" targetId={w.id} /></div>}
                 </div>
               </li>
             ))}

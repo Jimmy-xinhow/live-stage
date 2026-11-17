@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Empty, PageHead, Section } from "@/components/back/Shell";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { requirePerformer } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { liveSessions, menuItems, orders } from "@/lib/db/schema";
@@ -23,7 +23,7 @@ export default async function Dashboard() {
     totalsSince(p.id, today),
     totalsSince(p.id, new Date(today.getTime() - 6 * 86400_000)),
     totalsSince(p.id, new Date(today.getTime() - 29 * 86400_000)),
-    db.select().from(orders).where(and(eq(orders.performerId, p.id), eq(orders.status, "paid"))).orderBy(desc(orders.paidAt)).limit(30),
+    db.select().from(orders).where(and(eq(orders.performerId, p.id), inArray(orders.status, ["paid", "refunded"]))).orderBy(desc(orders.paidAt)).limit(30),
   ]);
 
   const opts = payOptions(p);
@@ -86,7 +86,7 @@ export default async function Dashboard() {
         {list.length ? (
           <ul className="mt-2">
             {list.map((o) => (
-              <OrderRow key={o.id} o={{ id: o.id, name: displayName(o), amount: o.amount, itemTitle: o.itemTitle, message: o.message, reply: o.reply, hidden: o.hidden, paidAt: (o.paidAt ?? o.createdAt).toISOString(), canPush: !!o.fanId, queueStatus: o.queueStatus }} />
+              <OrderRow key={o.id} o={{ id: o.id, name: displayName(o), amount: o.amount, itemTitle: o.itemTitle, message: o.message, reply: o.reply, hidden: o.hidden, paidAt: (o.paidAt ?? o.createdAt).toISOString(), canPush: !!o.fanId, queueStatus: o.queueStatus, status: o.status, payMode: o.payMode }} />
             ))}
           </ul>
         ) : (

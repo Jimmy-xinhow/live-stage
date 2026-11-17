@@ -8,6 +8,7 @@ import { applyPoints } from "./billing";
 import { pushMessage } from "./line";
 import { env } from "./env";
 import { nt } from "./format";
+import { reportError } from "./errors";
 
 export class MarketError extends Error {}
 
@@ -92,7 +93,7 @@ export async function bumpImpressions(ids: string[]) {
   try {
     await db.update(promotions).set({ impressions: sql`${promotions.impressions} + 1` }).where(inArray(promotions.id, ids));
   } catch (e) {
-    console.error("[promo impressions]", e);
+    reportError("[promo impressions]", e);
   }
 }
 
@@ -101,7 +102,7 @@ export async function bumpClick(id: string) {
   try {
     await db.update(promotions).set({ clicks: sql`${promotions.clicks} + 1` }).where(eq(promotions.id, id));
   } catch (e) {
-    console.error("[promo click]", e);
+    reportError("[promo click]", e);
   }
 }
 

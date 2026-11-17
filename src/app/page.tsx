@@ -57,18 +57,6 @@ export default async function Home() {
           </section>
         )}
 
-        <section className="sec pb-16 md:pb-24" aria-labelledby="cat">
-          <h2 id="cat" className="h2 mb-4">依表演類型</h2>
-          <div className="grid grid-cols-2 gap-x-6 md:grid-cols-5">
-            {ACTS.map((a) => (
-              <Link key={a.slug} href={`/find?act=${a.slug}`} className="row flex items-baseline justify-between py-3.5">
-                <span className="text-[17px] font-bold">{a.name}</span>
-                <span className="small text-ink3"><span className="num text-[15px] font-semibold text-ink2">{counts[a.slug] ?? 0}</span> 位</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
         {featured.length > 0 && (
           <section className="sec pb-16 md:pb-24" aria-labelledby="ad">
             <div className="mb-6 flex items-baseline justify-between"><h2 id="ad" className="h2">推薦表演者</h2><span className="label">付費推薦</span></div>
@@ -83,19 +71,30 @@ export default async function Home() {
           </section>
         )}
 
-        {activeAreas.length > 0 && (
-          <section className="sec pb-16 md:pb-24" aria-labelledby="area">
-            <h2 id="area" className="h2 mb-4">依地區</h2>
-            <div className="grid grid-cols-2 gap-x-6 md:grid-cols-5">
-              {activeAreas.map((a) => (
-                <Link key={a.slug} href={`/area/${a.slug}`} className="row flex items-baseline justify-between py-3.5">
-                  <span className="text-[17px] font-bold">{a.name}</span>
-                  <span className="small text-ink3">{a.live > 0 && <span className="mr-2 text-nowtext">{a.live} 演出中</span>}<span className="num text-[15px] font-semibold text-ink2">{a.performers}</span> 位</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+        <section className="sec pb-16 md:pb-24" aria-labelledby="browse">
+          <div className="mb-4 flex items-baseline justify-between"><h2 id="browse" className="h2">瀏覽</h2><Link href="/find" className="underline">進階搜尋</Link></div>
+          <div className="grid gap-x-10 gap-y-8 md:grid-cols-2">
+            <Browse
+              title="表演類型"
+              items={ACTS.filter((a) => (counts[a.slug] ?? 0) > 0)
+                .sort((a, b) => (counts[b.slug] ?? 0) - (counts[a.slug] ?? 0))
+                .map((a) => ({ key: a.slug, href: `/find?act=${a.slug}`, name: a.name, right: <><span className="num text-[15px] font-semibold text-ink2">{counts[a.slug]}</span> 位</> }))}
+              moreHref="/find"
+              moreLabel="全部類型"
+            />
+            <Browse
+              title="地區"
+              items={activeAreas.map((a) => ({
+                key: a.slug,
+                href: `/area/${a.slug}`,
+                name: a.name,
+                right: <>{a.live > 0 && <span className="mr-2 text-nowtext">{a.live} 演出中</span>}<span className="num text-[15px] font-semibold text-ink2">{a.performers}</span> 位</>,
+              }))}
+              moreHref="/area"
+              moreLabel="全台 22 縣市"
+            />
+          </div>
+        </section>
 
         <section className="sec grid md:grid-cols-2">
           <div className="flex flex-col items-start gap-4 pb-10 md:pr-8">
@@ -113,5 +112,29 @@ export default async function Home() {
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+/** 首頁的瀏覽區塊：只列有資料的前 6 筆，其餘收到「看全部」後面，不要整頁攤平 */
+function Browse({ title, items, moreHref, moreLabel }: {
+  title: string;
+  items: { key: string; href: string; name: string; right: React.ReactNode }[];
+  moreHref: string;
+  moreLabel: string;
+}) {
+  const top = items.slice(0, 6);
+  return (
+    <div>
+      <h3 className="label mb-1">{title}</h3>
+      <div className="border-t-2 border-ink">
+        {top.length ? top.map((it) => (
+          <Link key={it.key} href={it.href} className="row flex items-baseline justify-between py-3">
+            <span className="text-[16px] font-bold">{it.name}</span>
+            <span className="small text-ink3">{it.right}</span>
+          </Link>
+        )) : <p className="small py-3">還沒有資料。</p>}
+      </div>
+      <Link href={moreHref} className="small mt-2 inline-block underline">{moreLabel}{items.length > 6 ? `（還有 ${items.length - 6} 個）` : ""}</Link>
+    </div>
   );
 }

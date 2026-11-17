@@ -10,7 +10,7 @@ export async function applyPoints(
   tx: Tx | DB,
   performerId: string,
   deltaCents: number,
-  reason: "signup_bonus" | "purchase" | "fee" | "live_notify" | "broadcast" | "adjust" | "promo" | "event_promo" | "event_notify",
+  reason: "signup_bonus" | "purchase" | "fee" | "fee_refund" | "live_notify" | "broadcast" | "adjust" | "promo" | "event_promo" | "event_notify",
   extra: { orderId?: string; purchaseId?: string; note?: string } = {},
 ) {
   const [p] = await tx

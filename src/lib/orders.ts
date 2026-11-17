@@ -9,6 +9,7 @@ import { nt } from "./format";
 import { performerCreds, type PayResult } from "./payments";
 import { setFollow } from "./fans";
 import { badgesFor, evaluateAchievements, leaderboard, notifyOvertake } from "./rewards";
+import { reportError } from "./errors";
 
 export async function getPerformerBySlug(slug: string) {
   const db = await getDb();
@@ -256,7 +257,7 @@ export async function markOrderPaid(tradeNo: string, r: Pick<PayResult, "payment
     const balance = await applyPoints(tx, p.id, -fee, "fee", { orderId: o.id, note: `${o.itemTitle ?? "打賞"} ${nt(o.amount)} × ${env.billing.feeRate * 100}%` });
     return { order: o, performer: { ...p, pointsCents: balance } };
   });
-  if (result) await afterPaid(result.performer, result.order).catch((e) => console.error("afterPaid", e));
+  if (result) await afterPaid(result.performer, result.order).catch((e) => reportError("afterPaid", e));
   return result?.order ?? null;
 }
 
@@ -276,8 +277,8 @@ async function afterPaid(p: Performer, o: Order) {
   if (o.fanId && o.followOnPay) await setFollow(p.id, o.fanId, true);
   // 成就解鎖與本場榜超越通知
   if (o.fanId) {
-    await evaluateAchievements(p, o.fanId).catch((e) => console.error("achievements", e));
-    await notifyOvertake(p, o).catch((e) => console.error("overtake", e));
+    await evaluateAchievements(p, o.fanId).catch((e) => reportError("achievements", e));
+    await notifyOvertake(p, o).catch((e) => reportError("overtake", e));
   }
   const who = displayName(o);
   if (o.gameId) {
@@ -285,7 +286,7 @@ async function afterPaid(p: Performer, o: Order) {
     // 跨表演者 PK：加成一律算在付款頁面所屬的那位表演者
     const g = await currentGame(o.performerId).catch(() => null);
     const lane = g?.opponentId ? (g.performerId === o.performerId ? 0 : 1) : o.gameLane ?? 0;
-    await applyBoost(o.gameId, o.fanId, who, lane, o.gameUnit ?? "", o.amount).catch((e) => console.error("boost", e));
+    await applyBoost(o.gameId, o.fanId, who, lane, o.gameUnit ?? "", o.amount).catch((e) => reportError("boost", e));
   }
   const queue = o.sessionId && o.kind === "request" ? await sessionQueue(o.sessionId) : [];
   const ahead = o.kind === "request" ? positionIn(queue, o) : 0;
@@ -491,4 +492,45 @@ export async function orderStatus(tradeNo: string) {
     performerId: p.id,
     performer: { slug: p.slug, name: p.displayName, color: p.themeColor, avatar: p.avatarUrl, thankYou: p.thankYouText },
   };
+}
+
+/**
+ * 退款。平台不經手款項，所以這裡做的是：把訂單標成已退款、把排隊項目移出隊伍、
+ * 並退還當初扣掉的服務費點數。實際的錢由表演者自行退還給觀眾。
+ *
+ * 之後接上正式金流時，auto 付款的訂單要在這裡多呼叫一次金流商的退刷 API；
+ * 現在回傳的 needsGatewayRefund 就是給呼叫端提示用的。
+ */
+export async function refundOrder(opts: {
+  orderId: string;
+  by: "performer" | "admin";
+  note?: string;
+  /** 限制只能退這位表演者的訂單（表演者自己操作時帶） */
+  performerId?: string;
+}) {
+  const db = await getDb();
+  return await db.transaction(async (tx) => {
+    const conds = [eq(orders.id, opts.orderId), eq(orders.status, "paid")];
+    if (opts.performerId) conds.push(eq(orders.performerId, opts.performerId));
+    const [o0] = await tx.select().from(orders).where(and(...conds));
+    if (!o0) return null;
+    const [o] = await tx
+      .update(orders)
+      .set({
+        status: "refunded",
+        refundedAt: new Date(),
+        refundBy: opts.by,
+        refundNote: (opts.note ?? "").slice(0, 120),
+        queueStatus: o0.queueStatus === "waiting" || o0.queueStatus === "playing" ? "skipped" : o0.queueStatus,
+      })
+      .where(eq(orders.id, o0.id))
+      .returning();
+    if (o0.feeCents > 0) {
+      await applyPoints(tx, o0.performerId, o0.feeCents, "fee_refund", {
+        orderId: o0.id,
+        note: `退款退回服務費・${o0.itemTitle ?? "打賞"} ${nt(o0.amount)}`,
+      });
+    }
+    return { order: o, needsGatewayRefund: o0.payMode === "auto" };
+  });
 }

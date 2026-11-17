@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPerformerBySlug } from "@/lib/orders";
 import { getFanId } from "@/lib/session";
 import { addWish, checkIn, cheer, HubError, hubState, joinLottery, raiseHand, voteWish } from "@/lib/hub";
+import { LIMITS, guard } from "@/lib/ratelimit";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const rl = guard(req, "hub", LIMITS.interact);
+  if (rl) return rl;
   const p = await getPerformerBySlug((await params).slug);
   if (!p) return NextResponse.json({ error: "not found" }, { status: 404 });
   const b = (await req.json().catch(() => ({}))) as { action?: string; n?: number; kind?: string; text?: string; title?: string; id?: string; on?: boolean };

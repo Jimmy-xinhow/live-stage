@@ -253,3 +253,44 @@ export function systemChecks() {
     { name: "管理密碼登入", ok: !!env.adminPassword, value: env.adminPassword ? "已設定" : "未設定（只能用 LINE 管理員帳號）" },
   ];
 }
+
+/** 檢舉清單，附上被檢舉對象的可讀資訊 */
+export async function reportsData(status = "new") {
+  const db = await getDb();
+  const { reports, orders: ord, events: ev, performers: pf, fans: fn } = await import("./db/schema");
+  const rows = await db
+    .select({ r: reports, fan: fn.name })
+    .from(reports)
+    .leftJoin(fn, eq(fn.id, reports.fanId))
+    .where(status ? eq(reports.status, status) : undefined)
+    .orderBy(desc(reports.createdAt))
+    .limit(200);
+  if (!rows.length) return [];
+  // 一次把對象的名稱補齊
+  const byType = (t: string) => rows.filter((x) => x.r.targetType === t).map((x) => x.r.targetId);
+  const [ordRows, evRows, pfRows] = await Promise.all([
+    byType("order").length ? db.select({ id: ord.id, title: ord.itemTitle, msg: ord.message, who: pf.displayName }).from(ord).innerJoin(pf, eq(pf.id, ord.performerId)).where(inArray(ord.id, byType("order"))) : [],
+    byType("event").length ? db.select({ id: ev.id, title: ev.title }).from(ev).where(inArray(ev.id, byType("event"))) : [],
+    byType("performer").length ? db.select({ id: pf.id, title: pf.displayName }).from(pf).where(inArray(pf.id, byType("performer"))) : [],
+  ]);
+  return rows.map(({ r, fan }) => {
+    let label = "（對象已刪除）";
+    let href: string | null = null;
+    if (r.targetType === "order") {
+      const o = ordRows.find((x) => x.id === r.targetId);
+      if (o) { label = `${o.who}・${o.title ? `〈${o.title}〉` : "打賞"}${o.msg ? `「${o.msg}」` : ""}`; href = null; }
+    } else if (r.targetType === "event") {
+      const e = evRows.find((x) => x.id === r.targetId);
+      if (e) { label = e.title; href = `/e/${e.id}`; }
+    } else if (r.targetType === "performer") {
+      const p = pfRows.find((x) => x.id === r.targetId);
+      if (p) { label = p.title; href = null; }
+    } else if (r.targetType === "chat") {
+      label = "聊天室訊息";
+    }
+    return {
+      id: r.id, targetType: r.targetType, targetId: r.targetId, reason: r.reason, note: r.note,
+      status: r.status, at: r.createdAt.toISOString(), by: fan ?? "未登入", label, href,
+    };
+  });
+}

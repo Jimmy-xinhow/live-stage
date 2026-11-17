@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createOrder, getPerformerBySlug, OrderError } from "@/lib/orders";
 import { buildCheckout, performerCreds } from "@/lib/payments";
 import { getFanId } from "@/lib/session";
+import { LIMITS, guard } from "@/lib/ratelimit";
 
 const Body = z.object({
   slug: z.string().min(1).max(40),
@@ -20,6 +21,8 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  const rl = guard(req, "order", LIMITS.order);
+  if (rl) return rl;
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "資料格式不正確" }, { status: 400 });
   const b = parsed.data;

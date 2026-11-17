@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { upcomingEvents } from "@/lib/events";
-import { AREAS, areaBySlug } from "@/lib/areas";
+import { areaBySlug } from "@/lib/areas";
 import { APP_NAME } from "@/lib/env";
 import { JsonLd, breadcrumb } from "@/lib/seo";
 import { EventLine, SiteFooter, SiteHeader } from "@/components/Site";
+import { AreaSelect } from "@/components/AreaSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -30,11 +31,8 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
         <h1 className="h1">{area ? `${area.name}演出活動` : "近期演出活動"}</h1>
         <p className="small mt-1">店家與主辦刊登的演出。想刊登自己的活動？<Link href="/login" className="underline">用店家／主辦帳號登入</Link>。</p>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Link href="/events" className={`tag !h-9 !px-3 !text-[14px] ${area ? "tag-quiet" : "!bg-ink !text-paper"}`}>全台</Link>
-          {AREAS.slice(0, 8).map((a) => (
-            <Link key={a.slug} href={`/events?city=${a.slug}`} className={`tag !h-9 !px-3 !text-[14px] ${area?.slug === a.slug ? "!bg-ink !text-paper" : "tag-quiet"}`}>{a.short}</Link>
-          ))}
+        <div className="mt-5 max-w-[240px]">
+          <AreaSelect value={area?.slug} base="/events" />
         </div>
 
         <div className="sec mt-6">

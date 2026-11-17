@@ -75,3 +75,10 @@ export async function isAdmin() {
   if (await adminCookie()) return true;
   return !!(await getSession())?.isAdmin;
 }
+
+/** 稽核紀錄要記的操作者身分：有 LINE 帳號就記 LINE user id，否則記 password */
+export async function adminActor() {
+  const s = await getSession();
+  if (s?.isAdmin && s.lineUserId) return s.lineUserId;
+  return (await adminCookie()) ? "password" : "unknown";
+}

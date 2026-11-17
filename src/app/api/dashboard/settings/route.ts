@@ -6,6 +6,7 @@ import { performers } from "@/lib/db/schema";
 import { requirePerformer } from "@/lib/auth";
 import { encrypt } from "@/lib/crypto";
 import { AREAS } from "@/lib/areas";
+import { checkDataUrlImage } from "@/lib/imagecheck";
 
 const RESERVED = new Set(["admin", "api", "dashboard", "login", "live", "p", "o", "me", "mock-pay", "www"]);
 
@@ -32,8 +33,16 @@ const Body = z.object({
         type: z.enum(["linepay", "jkopay", "pxpay", "other"]),
         label: z.string().trim().min(1).max(20),
         qrText: z.string().max(1000).nullable(),
-        // 無法解碼時存壓縮圖，限 300KB
-        imageData: z.string().startsWith("data:image/").max(400_000).nullable(),
+        // 無法解碼時存壓縮圖；檔頭、MIME 與大小都要對得上
+        imageData: z
+          .string()
+          .max(450_000)
+          .nullable()
+          .superRefine((v, ctx) => {
+            if (!v) return;
+            const r = checkDataUrlImage(v);
+            if (!r.ok) ctx.addIssue({ code: "custom", message: r.reason });
+          }),
       }).refine((m) => m.qrText || m.imageData, "收款碼內容不可為空"),
     )
     .max(4),
