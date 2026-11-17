@@ -22,7 +22,8 @@ const SONGS: [string, string, string, number][] = [
 
 /** 清掉所有示範帳號（lineUserId 以 Udev- 開頭），外鍵都是 cascade，相關資料會一起刪 */
 export async function resetDemo(db: DB) {
-  await db.delete(performers).where(like(performers.lineUserId, "Udev-%"));
+  // 示範帳號的 slug 一律以 demo 開頭；外鍵都是 cascade，相關資料會一起刪
+  await db.delete(performers).where(like(performers.slug, "demo%"));
   await db.delete(fans).where(like(fans.lineUserId, "Udev-%"));
 }
 
@@ -111,7 +112,7 @@ export async function seedDemo(db: DB) {
   for (const e of extra) {
     const [x] = await db
       .insert(performers)
-      .values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.slug === "demo-band" ? "band" : "busker", coverUrl: e.slug === "demo-band" ? "/demo/band-1.jpg" : "/demo/uku-1.jpg", avatarUrl: e.slug === "demo-band" ? "/demo/av-band-1.jpg" : "/demo/av-uku-1.jpg", genres: e.slug === "demo-band" ? "台語老歌、搖滾" : "日系、華語抒情", priceFrom: e.slug === "demo-band" ? 15000 : 4000, occasions: ["婚禮", "尾牙春酒", "企業活動"], status: "active", gateway: "mock", payMethods: [{ type: "linepay", label: "LINE Pay", qrText: "DEMO", imageData: null }] })
+      .values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, lineUserId: `Udev-${e.slug}`, actType: e.slug === "demo-band" ? "band" : "busker", coverUrl: e.slug === "demo-band" ? "/demo/band-1.jpg" : "/demo/uku-1.jpg", avatarUrl: e.slug === "demo-band" ? "/demo/av-band-1.jpg" : "/demo/av-uku-1.jpg", genres: e.slug === "demo-band" ? "台語老歌、搖滾" : "日系、華語抒情", priceFrom: e.slug === "demo-band" ? 15000 : 4000, occasions: ["婚禮", "尾牙春酒", "企業活動"], status: "active", gateway: "mock", payMethods: [{ type: "linepay", label: "LINE Pay", qrText: "DEMO", imageData: null }] })
       .returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     await db.insert(menuItems).values(e.songs.map(([title, subtitle, category, price], i) => ({ performerId: x.id, title, subtitle, category, price, sort: i })));
