@@ -47,7 +47,7 @@ export function BackShell({
 /** 每一頁的頁首：標題、說明、右側動作 */
 export function PageHead({ title, desc, actions }: { title: string; desc?: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b-2 border-ink pb-4">
+    <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         <h1 className="h1">{title}</h1>
         {desc && <p className="small mt-1 max-w-[600px]">{desc}</p>}
@@ -60,7 +60,7 @@ export function PageHead({ title, desc, actions }: { title: string; desc?: React
 /** 區塊：標題、說明與內容的固定組合 */
 export function Section({ title, desc, actions, children }: { title: string; desc?: React.ReactNode; actions?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="mb-9">
+    <section className="sec mb-9">
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="h2">{title}</h2>
         {actions}

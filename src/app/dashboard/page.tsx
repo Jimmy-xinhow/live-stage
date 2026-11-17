@@ -11,6 +11,7 @@ import { env } from "@/lib/env";
 import { GATEWAY_LABEL } from "@/lib/payments";
 import { performerShareUrl } from "@/lib/share";
 import { OrderRow } from "./OrderRow";
+import { CopyLink } from "./CopyLink";
 
 export default async function Dashboard() {
   const { performer: p } = (await requirePerformer())!;
@@ -36,16 +37,22 @@ export default async function Dashboard() {
   const left = steps.filter((x) => !x.done).length;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div>
       <PageHead
         title="總覽"
-        desc={<>作品頁 {performerShareUrl(p.slug).replace("/p/", "/u/")}・點歌頁 {performerShareUrl(p.slug)}・收款碼 {p.payMethods.length} 個・刷卡 {GATEWAY_LABEL[p.gateway]}</>}
+        desc={<>歌單 {menu} 首・累計 {shows} 場演出・收款碼 {p.payMethods.length} 個・刷卡 {GATEWAY_LABEL[p.gateway]}</>}
         actions={<><Link href="/dashboard/stage" className="btn btn-primary btn-sm">開演出控制台</Link><Link href="/dashboard/poster" className="btn btn-secondary btn-sm">列印 QR 立牌</Link></>}
       />
+      <div className="-mt-4 mb-7 flex flex-wrap items-center gap-2">
+        <Link href={`/p/${p.slug}`} className="tag tag-quiet !h-8">點歌頁</Link>
+        <Link href={`/u/${p.slug}`} className="tag tag-quiet !h-8">作品頁</Link>
+        <Link href={`/live/${p.slug}`} className="tag tag-quiet !h-8">大螢幕</Link>
+        <CopyLink url={performerShareUrl(p.slug)} />
+      </div>
       {!canAcceptOrders(p.pointsCents) && (
-        <Link href="/dashboard/points" className="rounded-[12px] border-[1.5px] border-err px-4 py-3 text-[14px] text-err">點數用完了（{fmtPoints(p.pointsCents)} 點），點歌與打賞已暫停。按這裡補充點數。</Link>
+        <Link href="/dashboard/points" className="mb-7 block rounded-[12px] border-[1.5px] border-err px-4 py-3 text-[14px] text-err">點數用完了（{fmtPoints(p.pointsCents)} 點），點歌與打賞已暫停。按這裡補充點數。</Link>
       )}
-      {env.line.oaAddFriendUrl && <a href={env.line.oaAddFriendUrl} className="rounded-[12px] bg-sunken px-4 py-3 text-[14px] underline">加入官方帳號好友，才能收到即時點歌通知</a>}
+      {env.line.oaAddFriendUrl && <a href={env.line.oaAddFriendUrl} className="mb-7 block rounded-[12px] bg-sunken px-4 py-3 text-[14px] underline">加入官方帳號好友，才能收到即時點歌通知</a>}
 
       {left > 0 && (
         <Section title="開始使用" desc={`還剩 ${left} 步。`}>
@@ -72,11 +79,6 @@ export default async function Dashboard() {
               <span className="small num">{s.count} 筆・服務費 {fmtPoints(s.feeCents)} 點</span>
             </div>
           ))}
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={`/p/${p.slug}`} className="btn btn-secondary btn-sm">看點歌頁</Link>
-          <Link href={`/live/${p.slug}`} className="btn btn-secondary btn-sm">大螢幕</Link>
-          <Link href={`/u/${p.slug}`} className="btn btn-secondary btn-sm">看作品頁</Link>
         </div>
       </Section>
 

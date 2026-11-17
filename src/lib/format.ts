@@ -19,9 +19,9 @@ export const initial = (name: string) => (name.trim()[0] ?? "♪").toUpperCase()
 
 const WD = ["日", "一", "二", "三", "四", "五", "六"];
 /** 台北時間格式化：自己算 UTC+8，避免伺服器與瀏覽器的 Intl 差異造成 hydration 不一致 */
-export function fmtTaipei(iso: string | Date, withTime = true) {
+export function fmtTaipei(iso: string | Date, withTime = true, withWeekday = true) {
   const d = new Date(new Date(iso).getTime() + 8 * 3600_000);
-  const date = `${d.getUTCMonth() + 1}/${d.getUTCDate()}（週${WD[d.getUTCDay()]}）`;
+  const date = `${d.getUTCMonth() + 1}/${d.getUTCDate()}${withWeekday ? `（週${WD[d.getUTCDay()]}）` : ""}`;
   if (!withTime) return date;
   return `${date} ${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 }

@@ -14,6 +14,7 @@ export default async function Promotions() {
       <PageHead title="曝光版位" desc={<>刊登中 {live.length} 筆、累計收入 <span className="num font-semibold text-ink">{pts} 點</span>。曝光＝版位被看到的次數，點擊＝從版位點進去的次數。</>} />
       <Table
         head={["期間", "買的人", "版位", "對象", "地區", "費用", "曝光", "點擊", "點擊率", "狀態"]}
+          right={[5,6,7,8]}
         rows={list.map((p) => {
           const ctr = p.impressions ? `${((p.clicks / p.impressions) * 100).toFixed(1)}%` : "—";
           const on = new Date(p.endsAt).getTime() > Date.now();

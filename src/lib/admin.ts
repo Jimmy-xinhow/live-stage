@@ -94,7 +94,7 @@ export async function dailyRevenue(days = 14) {
 }
 
 export type AccountRow = {
-  id: string; slug: string; name: string; kind: string; status: string; city: string; act: string;
+  id: string; slug: string; name: string; kind: string; status: string; city: string; act: string; avatar: string | null;
   points: number; shows: number; gmv: number; fans: number; events: number; createdAt: string; live: boolean;
 };
 
@@ -113,7 +113,7 @@ export async function accounts(kind: "performer" | "organizer", q = ""): Promise
     db.select({ id: events.organizerId, n: sql<number>`count(*)::int` }).from(events).where(inArray(events.organizerId, ids)).groupBy(events.organizerId),
   ]);
   return list.map((p) => ({
-    id: p.id, slug: p.slug, name: p.displayName, kind: p.accountType, status: p.status,
+    id: p.id, slug: p.slug, name: p.displayName, kind: p.accountType, status: p.status, avatar: p.avatarUrl ?? p.coverUrl,
     city: areaBySlug(p.city)?.short ?? "—", act: p.accountType === "performer" ? actName(p.actType) : p.orgKind,
     points: p.pointsCents / 100,
     shows: n(shows.find((x) => x.id === p.id)?.n),

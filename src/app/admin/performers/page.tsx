@@ -1,6 +1,6 @@
 import { accounts } from "@/lib/admin";
 import { AccountActions } from "../AccountActions";
-import { Money, Out, Table, Tag, When } from "../Bits";
+import { Money, Table, Tag, When, Who } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,9 @@ export default async function Performers({ searchParams }: { searchParams: Promi
       <form className="flex gap-2"><input name="q" defaultValue={q} placeholder="搜尋名稱或網址代號" className="input max-w-[320px]" /><button className="btn btn-secondary">搜尋</button></form>
       <Table
         head={["名稱", "類型", "縣市", "點數", "場次", "累計成交", "粉絲", "加入", "狀態", ""]}
+        right={[3, 4, 5, 6]}
         rows={list.map((p) => [
-          <span key="n" className="flex items-center gap-2 whitespace-nowrap"><Out href={`/u/${p.slug}`}>{p.name}</Out>{p.live && <Tag on>演出中</Tag>}</span>,
+          <Who key="n" src={p.avatar} name={p.name} href={`/u/${p.slug}`} tag={p.live ? <Tag on>演出中</Tag> : null} />,
           p.act,
           p.city,
           <span key="pt" className="num">{p.points}</span>,

@@ -17,6 +17,7 @@ export default async function Match() {
         <h2 className="h2">邀約</h2>
         <Table
           head={["送出時間", "找表演的人", "場合", "日期", "地區", "預算", "送給", "已回覆", "有報價"]}
+          right={[5,6,7,8]}
           rows={inquiries.map((i) => [
             <When key="w" v={i.at} />, i.by, i.occasion, <span key="d" className="num">{i.date}</span>, i.city, i.budget || "未填",
             <span key="t" className="num">{i.targets}</span>,

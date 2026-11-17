@@ -1,5 +1,5 @@
 import { pointsData } from "@/lib/admin";
-import { Money, Pts, Table, Tag, When } from "../Bits";
+import { Code, Money, Pts, Table, Tag, When } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +19,11 @@ export default async function Points() {
         <h2 className="h2">購點紀錄</h2>
         <Table
           head={["時間", "帳號", "金額", "點數", "狀態", "訂單號"]}
+          right={[2,3]}
           rows={buys.map((b) => [
             <When key="w" v={b.at} />, b.name, <Money key="m" v={b.nt} />, <Pts key="p" v={b.points} />,
             b.status === "paid" ? <Tag on>已付款</Tag> : <Tag>{b.status === "pending" ? "等待付款" : "失敗"}</Tag>,
-            <span key="t" className="num text-[12px] text-ink3">{b.tradeNo}</span>,
+            <Code key="t" v={b.tradeNo} />,
           ])}
           empty="還沒有人買點數。"
         />
@@ -32,6 +33,7 @@ export default async function Points() {
         <h2 className="h2">點數異動</h2>
         <Table
           head={["時間", "帳號", "項目", "增減", "餘額", "備註"]}
+          right={[3,4]}
           rows={ledger.map((l) => [
             <When key="w" v={l.at} />, l.name, REASON[l.reason] ?? l.reason,
             <span key="d" className={`num ${l.delta < 0 ? "" : "text-ok"}`}>{l.delta > 0 ? "+" : ""}{l.delta}</span>,

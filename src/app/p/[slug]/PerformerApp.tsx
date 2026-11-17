@@ -9,7 +9,7 @@ import { followApi, useFan, type FanInfo } from "@/components/useFan";
 import { RankTab } from "./RankTab";
 
 type MenuRow = { id: string; title: string; subtitle: string; category: string; price: number; enabled: boolean; hot: number };
-type Perf = { slug: string; name: string; avatar: string | null; bio: string; category: string; color: string; presets: number[]; min: number; max: number; manualLabel: string };
+type Perf = { slug: string; name: string; avatar: string | null; cover?: string | null; bio: string; category: string; color: string; presets: number[]; min: number; max: number; manualLabel: string };
 type Sheet = { kind: "request"; item: MenuRow } | { kind: "tip" } | null;
 
 export function PerformerApp(props: {
@@ -64,9 +64,16 @@ export function PerformerApp(props: {
   const TABS = [["menu", "歌單"], ["queue", waiting ? `排隊 ${waiting}` : "排隊"], ["rank", "排行"], ["wall", "留言"]] as const;
   return (
     <main className="mx-auto min-h-dvh max-w-[480px] pb-32">
-      <header className="px-5 pt-6 pb-5">
+      {p.cover && (
+        <div className="relative overflow-hidden bg-ink" style={{ aspectRatio: "16 / 7" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={p.cover} alt="" className="h-full w-full object-cover" />
+          <span className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(21,20,18,0) 40%, rgba(21,20,18,.55) 100%)" }} />
+        </div>
+      )}
+      <header className={`px-5 pb-5 ${p.cover ? "pt-4" : "pt-6"}`}>
         <div className="flex items-start gap-4">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sunken text-[22px] font-bold">
+          <span className={`relative z-10 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sunken text-[22px] font-bold ${p.cover ? "-mt-11 border-2 border-paper shadow-[0_2px_10px_rgba(21,20,18,.3)]" : ""}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {p.avatar ? <img src={p.avatar} alt="" className="h-full w-full object-cover" /> : initialOf(p.name)}
           </span>

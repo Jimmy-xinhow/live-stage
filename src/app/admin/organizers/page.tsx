@@ -1,6 +1,6 @@
 import { accounts } from "@/lib/admin";
 import { AccountActions } from "../AccountActions";
-import { Table, When } from "../Bits";
+import { Table, When, Who } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
@@ -15,8 +15,9 @@ export default async function Organizers({ searchParams }: { searchParams: Promi
       <form className="flex gap-2"><input name="q" defaultValue={q} placeholder="搜尋名稱或網址代號" className="input max-w-[320px]" /><button className="btn btn-secondary">搜尋</button></form>
       <Table
         head={["名稱", "類型", "縣市", "點數", "活動數", "加入", "狀態", ""]}
+        right={[3, 4]}
         rows={list.map((p) => [
-          p.name,
+          <Who key="n" src={p.avatar} name={p.name} />,
           KIND[p.act] ?? p.act,
           p.city,
           <span key="pt" className="num">{p.points}</span>,

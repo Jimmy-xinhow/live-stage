@@ -80,13 +80,14 @@ export function PerfRow({ c }: { c: Card }) {
 const WD = ["日", "一", "二", "三", "四", "五", "六"];
 
 /** 活動列：店家／主辦刊登的演出 */
-export function EventLine({ e }: { e: { id: string; title: string; city: string; place: string; startsAt: string; priceText: string; organizer: string; acts: { slug: string; name: string }[]; guestActs: string; promoted: boolean; promoId?: string | null } }) {
+export function EventLine({ e }: { e: { id: string; title: string; city: string; place: string; startsAt: string; priceText: string; cover?: string | null; organizer: string; acts: { slug: string; name: string }[]; guestActs: string; promoted: boolean; promoId?: string | null } }) {
   const d = new Date(new Date(e.startsAt).getTime() + 8 * 3600_000);
   const hm = `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
   const who = [...e.acts.map((a) => a.name), e.guestActs].filter(Boolean).join("、");
   return (
-    <PromoLink promoId={e.promoId ?? null} href={`/e/${e.id}`} className="row grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-4 py-4 md:grid-cols-[72px_minmax(0,1fr)_200px] md:gap-6">
-      <span className="flex flex-col"><span className="label">週{WD[d.getUTCDay()]}</span><strong className="num text-[36px] leading-9 font-extrabold md:text-[52px] md:leading-[52px]">{d.getUTCDate()}</strong></span>
+    <PromoLink promoId={e.promoId ?? null} href={`/e/${e.id}`} className="row grid grid-cols-[52px_56px_minmax(0,1fr)_auto] items-center gap-3 py-4 md:grid-cols-[68px_88px_minmax(0,1fr)_200px] md:gap-6">
+      <span className="flex flex-col"><span className="label">週{WD[d.getUTCDay()]}</span><strong className="num text-[34px] leading-9 font-extrabold md:text-[50px] md:leading-[50px]">{d.getUTCDate()}</strong></span>
+      <Photo src={e.cover} ratio="1 / 1" label="" className="!rounded-[12px]" />
       <span className="min-w-0">
         {e.promoted && <span className="label block">付費推薦</span>}
         <span className="h3 block truncate">{e.title}</span>

@@ -81,7 +81,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
     {ns && <JsonLd data={showEvent({ startsAt: ns.startsAt.toISOString(), location: ns.location, note: ns.note, name: p.displayName, slug: p.slug, cityOfficial: area?.official })} />}
     <PerformerApp
       performer={{
-        slug: p.slug, name: p.displayName, avatar: p.avatarUrl, bio: p.bio, category: p.category, color: p.themeColor,
+        slug: p.slug, name: p.displayName, avatar: p.avatarUrl, cover: p.coverUrl, bio: p.bio, category: p.category, color: p.themeColor,
         presets: p.presetAmounts, min: p.minAmount, max: p.maxAmount, manualLabel: payMethodSummary(p.payMethods) || "LINE Pay",
       }}
       menu={menu.map((m) => ({ id: m.id, title: m.title, subtitle: m.subtitle, category: m.category, price: m.price, enabled: m.enabled, hot: m.requestCount }))}

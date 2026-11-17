@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { recentOrders } from "@/lib/admin";
-import { Money, Out, Table, Tag, When } from "../Bits";
+import { Code, Money, Out, State, Table, When } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +22,7 @@ export default async function Orders({ searchParams }: { searchParams: Promise<{
       </div>
       <Table
         head={["時間", "表演者", "項目", "金額", "服務費", "付款方式", "狀態", "訂單號"]}
+          right={[3,4]}
         rows={list.map((o) => [
           <When key="w" v={o.at} />,
           <Out key="p" href={`/u/${o.slug}`}>{o.performer}</Out>,
@@ -29,8 +30,8 @@ export default async function Orders({ searchParams }: { searchParams: Promise<{
           <Money key="a" v={o.amount} />,
           <span key="f" className="num">{o.fee}</span>,
           o.payMode === "manual" ? "收款碼" : "刷卡",
-          o.status === "paid" ? <Tag on>已付款</Tag> : <Tag>{STATUS[o.status] ?? o.status}</Tag>,
-          <span key="t" className="num text-[12px] text-ink3">{o.tradeNo}</span>,
+          <State key="s" kind={o.status === "paid" ? "ok" : o.status === "failed" || o.status === "expired" ? "bad" : "warn"}>{STATUS[o.status] ?? o.status}</State>,
+          <Code key="t" v={o.tradeNo} />,
         ])}
         empty="還沒有交易。"
       />
