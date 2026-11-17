@@ -5,9 +5,10 @@ import { requireAccount } from "@/lib/auth";
 import { fmtPoints, canAcceptOrders } from "@/lib/billing";
 import { APP_NAME } from "@/lib/env";
 import { getDb } from "@/lib/db";
-import { orders } from "@/lib/db/schema";
+import { menuItems, orders } from "@/lib/db/schema";
 import { BackShell } from "@/components/back/Shell";
 import { FEATURES } from "@/lib/features";
+import { needsOnboarding } from "@/lib/onboard";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,10 @@ export default async function DashLayout({ children }: { children: React.ReactNo
   if (auth.performer.accountType === "organizer") redirect(FEATURES.events ? "/org" : "/");
   const p = auth.performer;
   const db = await getDb();
+
+  // 還沒走過引導的新帳號先去設定（該頁在 (onboard) 群組，不吃這個 layout，不會繞圈）
+  const [mc] = await db.select({ n: sql<number>`count(*)::int` }).from(menuItems).where(eq(menuItems.performerId, p.id));
+  if (needsOnboarding({ displayName: p.displayName, menuCount: Number(mc.n) })) redirect("/dashboard/start");
 
   // 側欄上的待辦數字：待確認的轉帳收款
   const [pay] = await db

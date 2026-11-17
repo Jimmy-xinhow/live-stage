@@ -4,6 +4,7 @@ import { APP_NAME, env } from "@/lib/env";
 import { liveList } from "@/lib/discover";
 import { JsonLd, absUrl } from "@/lib/seo";
 import { Photo, SiteFooter, SiteHeader } from "@/components/Site";
+import { KINDS } from "@/lib/kinds";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -43,8 +44,9 @@ export default async function Home() {
               讓現場的聽眾<br />點歌給你
             </h1>
             <p className="mt-5 max-w-[560px] text-[17px] leading-8 text-ink2 md:text-[19px]">
-              聽眾掃你的 QR，點一首想聽的歌、順手給點什麼。歌直接進你的排隊清單，
+              聽眾點一首想聽的歌、順手給點什麼。歌直接進你的排隊清單，
               錢直接進你自己的帳戶——平台不經手，也不抽演出費。
+              街頭、駐唱、線上直播都能用。
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link href="/login" className="btn btn-primary">建立我的點歌頁</Link>
@@ -54,14 +56,32 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* 三種情境：讓人自己對號入座，不要只給一句泛泛的主張 */}
+        <section className="sec pb-16 md:pb-20" aria-labelledby="kinds">
+          <h2 id="kinds" className="h2 mb-5">你是哪一種？</h2>
+          <div className="grid gap-5 md:grid-cols-3">
+            {KINDS.map((k) => (
+              <div key={k.slug} className="card flex flex-col gap-3 p-6">
+                <span className="label">{k.name}</span>
+                <strong className="text-[19px] leading-7">{k.pitch}</strong>
+                <p className="small leading-7">{k.desc}</p>
+                <span className="small mt-auto pt-2 text-ink3">
+                  預設排隊 {k.maxQueue} 首・金額 {k.amounts.map((a) => `NT$${a}`).join("／")}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="small mt-4">註冊時選一個，排隊上限、金額、歌單範本就都設好了，之後都能改。</p>
+        </section>
+
         {/* 三步驟：把整條流程講完，不要讓人猜 */}
         <section className="sec pb-16 md:pb-20" aria-labelledby="how">
           <h2 id="how" className="h2 mb-6">現場怎麼運作</h2>
           <ol className="grid gap-x-10 gap-y-8 md:grid-cols-3">
             {[
-              ["01", "開演，亮出 QR", "在後台按開始演出，手機或立牌上的 QR 就會指向你的點歌頁。歌單是你自己設定的。"],
-              ["02", "聽眾點歌", "掃碼、挑一首、填想說的話、付款。不用下載 App，也不用註冊帳號。"],
-              ["03", "你看到、你唱", "歌進到演出控制台的排隊清單，唱完按一下結單。大螢幕和直播畫面會同步顯示現在這首。"],
+              ["01", "開演，亮出入口", "在後台按開始演出。現場演出用立牌或桌卡的 QR，線上直播就把連結放進直播描述，OBS 畫面上也會顯示。"],
+              ["02", "聽眾點歌", "挑一首、填想說的話、付款。不用下載 App，也不用註冊帳號。"],
+              ["03", "你看到、你唱", "歌進到演出控制台的排隊清單，唱完按一下結單。大螢幕和 OBS 畫面會同步顯示現在這首。"],
             ].map(([n, t, d]) => (
               <li key={n}>
                 <span className="num text-[15px] font-bold text-now">{n}</span>

@@ -5,15 +5,16 @@ import { currentGame, publicGame } from "@/lib/games";
 import { APP_NAME, LIFF_ID, env } from "@/lib/env";
 import { GameApp } from "./GameApp";
 import { notFound } from "next/navigation";
-import { FEATURES } from "@/lib/features";
+import { battleGamesOn } from "@/lib/features";
+import { sessionMode } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: `互動遊戲｜${APP_NAME}`, robots: { index: false } };
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-  if (!FEATURES.games) notFound();
   const p = await getPerformerBySlug((await params).slug);
   if (!p || p.status === "suspended") notFound();
+  if (!battleGamesOn(await sessionMode(p.liveSessionId))) notFound();
   const fanId = await getFanId();
   const fan = await getFan(fanId);
   const opts = payOptions(p);

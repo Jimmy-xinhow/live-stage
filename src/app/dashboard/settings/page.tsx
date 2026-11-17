@@ -1,6 +1,7 @@
 import { requirePerformer } from "@/lib/auth";
 import { SettingsForm } from "./SettingsForm";
 import { GATEWAY_LABEL } from "@/lib/payments";
+import type { KindSlug } from "@/lib/kinds";
 
 export default async function Settings() {
   const { performer: p } = (await requirePerformer())!;
@@ -13,7 +14,7 @@ export default async function Settings() {
       }}
       gatewayLabel={GATEWAY_LABEL[p.gateway] ?? p.gateway}
       merchantId={p.gatewayMerchantId}
-      payMethods={p.payMethods}
+      payMethods={p.payMethods} kind={p.kind as KindSlug}
     />
   );
 }

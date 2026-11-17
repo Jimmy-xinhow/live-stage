@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { PublicState } from "@/lib/orders";
+import { MODES, type ModeSlug } from "@/lib/kinds";
 import { PendingPayments } from "./PendingPayments";
 import { PendingRewards } from "../rewards/PendingRewards";
 
 /** 演出中用手機操作：開唱／收工、暫停點播、開始唱／完成／跳過 */
-export function StageConsole({ slug, initial }: { slug: string; initial: PublicState }) {
+export function StageConsole({ slug, initial, modes, defaultMode }: { slug: string; initial: PublicState; modes: ModeSlug[]; defaultMode: ModeSlug }) {
   const [s, setS] = useState(initial);
   const [location, setLocation] = useState("");
+  const [mode, setMode] = useState<ModeSlug>(defaultMode);
   const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -46,11 +48,26 @@ export function StageConsole({ slug, initial }: { slug: string; initial: PublicS
         {pending}
         <section className="card flex flex-col gap-4 p-5">
           <div><h2 className="h2">開始演出</h2><p className="small">開始後觀眾才能點歌，排隊從第 1 首算起。</p></div>
-          <label className="field">今天在哪裡演出<input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="例：駁二大勇倉庫 C5 前" /></label>
+          {modes.length > 1 && (
+            <div>
+              <span className="label">今天的形式</span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {MODES.filter((m) => modes.includes(m.slug)).map((m) => (
+                  <button key={m.slug} type="button" onClick={() => setMode(m.slug)} className={`tag !h-10 !px-4 !text-[15px] ${mode === m.slug ? "!bg-ink !text-paper" : "tag-quiet"}`}>
+                    {m.name}
+                  </button>
+                ))}
+              </div>
+              <p className="small mt-2">{MODES.find((m) => m.slug === mode)?.desc}{mode === "indoor" ? "・可以開對戰與派兵" : ""}</p>
+            </div>
+          )}
+          {mode !== "indoor" && (
+            <label className="field">今天在哪裡演出<input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="例：駁二大勇倉庫 C5 前" /></label>
+          )}
           <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={notify} onChange={(e) => setNotify(e.target.checked)} />用 LINE 通知追蹤我的 <span className="num">{s.followers}</span> 位粉絲</label>
           <button
             disabled={busy}
-            onClick={async () => { const j = await post("/api/dashboard/live", { action: "start", location, notifyFans: notify }); setMsg(j.notified ? `已開始演出，通知了 ${j.notified} 位粉絲` : "已開始演出"); }}
+            onClick={async () => { const j = await post("/api/dashboard/live", { action: "start", location, notifyFans: notify, mode }); setMsg(j.notified ? `已開始，通知了 ${j.notified} 位粉絲` : "已開始"); }}
             className="btn btn-now btn-lg"
           >
             開始演出
@@ -68,7 +85,7 @@ export function StageConsole({ slug, initial }: { slug: string; initial: PublicS
       <div className="flex flex-wrap items-center gap-2">
         <div className="mr-auto">
           <h1 className="h1">演出控制台</h1>
-          <span className="small flex items-center gap-2"><span className="dot-now" />演出中{s.live.location ? `・${s.live.location}` : ""}・今天 <span className="num">{s.today.count}</span> 筆</span>
+          <span className="small flex items-center gap-2"><span className="dot-now" />{s.live.mode === "indoor" ? "直播中" : "演出中"}{s.live.location ? `・${s.live.location}` : ""}・今天 <span className="num">{s.today.count}</span> 筆</span>
         </div>
         <button disabled={busy} onClick={() => post("/api/dashboard/live", { action: "queue", queueOpen: !s.queueOpen })} className={`btn btn-sm ${s.queueOpen ? "btn-secondary" : "btn-quiet"}`}>{s.queueOpen ? "點歌開放中" : "點歌已暫停"}</button>
         <button disabled={busy} onClick={() => confirm("確定結束演出？排隊中的點歌會保留在紀錄裡") && post("/api/dashboard/live", { action: "end" })} className="btn btn-primary btn-sm">結束演出</button>

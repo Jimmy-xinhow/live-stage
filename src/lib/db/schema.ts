@@ -48,6 +48,12 @@ export const performers = pgTable("performers", {
   status: varchar("status", { length: 12 }).notNull().default("active"), // active | suspended
   /** 表演類型（lib/acts.ts）：busker | singer | band | dj | magic | dance | mc | instrument | acrobat | comedy */
   actType: varchar("act_type", { length: 12 }).notNull().default("busker"),
+  /** 情境型態（lib/kinds.ts）：street（街頭）| venue（駐唱／樂團）| streamer（線上直播）。決定預設值與後台顯示哪些設定 */
+  kind: varchar("kind", { length: 10 }).notNull().default("street"),
+  /** 線上直播平台，只有 kind=streamer 用：youtube | twitch | self | instagram */
+  streamPlatform: varchar("stream_platform", { length: 12 }),
+  /** 粉絲單場花費上限（分）。0 = 用系統預設 */
+  fanCapCents: integer("fan_cap_cents").notNull().default(0),
   /** 對外邀約資訊（作品集頁） */
   bookable: boolean("bookable").notNull().default(true),
   priceFrom: integer("price_from"),
@@ -114,6 +120,8 @@ export const liveSessions = pgTable("live_sessions", {
   notifiedCount: integer("notified_count").notNull().default(0),
   /** 應援能量（觀眾免費點按累積，100 滿） */
   hype: integer("hype").notNull().default(0),
+  /** 演出模式：onsite（純現場）| outdoor（室外直播）| indoor（室內直播）。決定互動強度 */
+  mode: varchar("mode", { length: 10 }).notNull().default("onsite"),
   /** 直播聊天室：平台、聊天室 id、下一頁 token、上次輪詢時間 */
   chatPlatform: varchar("chat_platform", { length: 10 }),
   chatId: varchar("chat_id", { length: 120 }),

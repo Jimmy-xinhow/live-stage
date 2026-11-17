@@ -33,7 +33,7 @@ export async function seedDemo(db: DB) {
   const [p] = await db
     .insert(performers)
     .values({
-      slug: "demo",
+      slug: "demo", kind: "street",
       lineUserId: "Udev-demo",
       displayName: "阿哲的街頭吉他",
       bio: "每週五六晚上在駁二大勇倉庫前，民謠、流行、台語老歌。歌單上的我都會唱，直接點！",
@@ -128,11 +128,12 @@ export async function seedDemo(db: DB) {
     { slug: "demo-dj", name: "DJ KAI", act: "dj", cover: "/demo/dj-1.jpg", city: "taipei", district: "大安區", genres: "House、City Pop", price: 6000, bio: "派對與品牌活動 DJ，自備控台，可依場地準備歌單。", occ: ["生日派對", "企業活動", "市集活動"] },
   ];
   for (const e of more) {
-    const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", coverUrl: e.cover, avatarUrl: e.cover.replace("/demo/", "/demo/av-"), lineUserId: `Udev-${e.slug}` }).returning();
+    const kind = e.act === "singer" || e.act === "band" ? "venue" : e.act === "dj" ? "streamer" : "street";
+    const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, kind, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", coverUrl: e.cover, avatarUrl: e.cover.replace("/demo/", "/demo/av-"), lineUserId: `Udev-${e.slug}` }).returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     if (e.act === "singer") {
       // Mia 也在演出中，首頁「現在演出中」才有兩個以上
-      const [ls] = await db.insert(liveSessions).values({ performerId: x.id, location: "鹽埕區・Bar Jade" }).returning();
+      const [ls] = await db.insert(liveSessions).values({ performerId: x.id, location: "鹽埕區・Bar Jade", mode: "onsite" }).returning();
       await db.update(performers).set({ liveSessionId: ls.id, lat: "22.6241", lng: "120.2810" }).where(eq(performers.id, x.id));
     }
     if (e.act === "singer") await db.insert(menuItems).values([["小幸運", "田馥甄"], ["Perfect", "Ed Sheeran"], ["如果可以", "韋禮安"]].map(([title, subtitle], i) => ({ performerId: x.id, title, subtitle, category: "華語", price: 100, sort: i })));

@@ -10,6 +10,7 @@ import { performerCreds, type PayResult } from "./payments";
 import { setFollow } from "./fans";
 import { badgesFor, evaluateAchievements, leaderboard, notifyOvertake } from "./rewards";
 import { reportError } from "./errors";
+import type { ModeSlug } from "./kinds";
 
 export async function getPerformerBySlug(slug: string) {
   const db = await getDb();
@@ -105,7 +106,7 @@ export async function publicState(p: Performer) {
   const today = await totalsSince(p.id, startOfTodayTaipei());
 
   return {
-    live: session ? { location: session.location, startedAt: session.startedAt.toISOString() } : null,
+    live: session ? { location: session.location, startedAt: session.startedAt.toISOString(), mode: session.mode } : null,
     queueOpen: p.queueOpen,
     accepting: canAcceptOrders(p.pointsCents) && p.status === "active" && (payOptions(p).manual || payOptions(p).auto),
     payOptions: payOptions(p),
@@ -160,6 +161,28 @@ export async function createOrder(
   if (!Number.isInteger(input.amount) || input.amount < p.minAmount || input.amount > p.maxAmount)
     throw new OrderError(`金額需介於 ${nt(p.minAmount)}～${nt(p.maxAmount)}`);
   const db = await getDb();
+
+  // 花費防護：同一位粉絲在同一場的累計上限。
+  // 對戰與派兵是用競爭情緒推升花費的機制，沒有上限很容易出現事後爭議或爭議款，
+  // 而一位粉絲衝動花太多、隔天要求退款，那位表演者就不會再用了。
+  if (fanId && p.liveSessionId) {
+    const cap = p.fanCapCents > 0 ? p.fanCapCents : env.billing.fanSessionCapCents;
+    if (cap > 0) {
+      const [spent] = await db
+        .select({ sum: sql<number>`coalesce(sum(${orders.amount}), 0)::int` })
+        .from(orders)
+        .where(and(eq(orders.sessionId, p.liveSessionId), eq(orders.fanId, fanId), inArray(orders.status, ["paid", "awaiting", "pending"])));
+      const already = Number(spent.sum) * 100;
+      if (already + input.amount * 100 > cap) {
+        const left = Math.max(0, Math.floor((cap - already) / 100));
+        throw new OrderError(
+          left > 0
+            ? `這場你已經支持 ${nt(Math.floor(already / 100))}，今晚還可以再 ${nt(left)}。想再多支持的話，下次開演見。`
+            : `這場你已經支持 ${nt(Math.floor(already / 100))}，到今晚的上限了。謝謝你，下次開演見。`,
+        );
+      }
+    }
+  }
 
   let kind: "request" | "tip" = "tip";
   let itemTitle: string | null = null;
@@ -400,10 +423,10 @@ export async function claimOrder(tradeNo: string) {
 
 /* ────────────── 演出控制 ────────────── */
 
-export async function goLive(p: Performer, location: string, notifyFans: boolean) {
+export async function goLive(p: Performer, location: string, notifyFans: boolean, mode: ModeSlug = "onsite") {
   const db = await getDb();
   if (p.liveSessionId) return { notified: 0 };
-  const [s] = await db.insert(liveSessions).values({ performerId: p.id, location: location.slice(0, 60) }).returning();
+  const [s] = await db.insert(liveSessions).values({ performerId: p.id, location: location.slice(0, 60), mode }).returning();
   await db.update(performers).set({ liveSessionId: s.id, queueOpen: true }).where(eq(performers.id, p.id));
   if (!notifyFans) return { notified: 0 };
 
@@ -415,7 +438,13 @@ export async function goLive(p: Performer, location: string, notifyFans: boolean
   const ids = rows.map((r) => r.line);
   if (!ids.length) return { notified: 0 };
   await multicast(ids, [
-    { type: "text", text: `🎤 ${p.displayName} 開唱了！${location ? `\n📍 ${location}` : ""}\n現在就能點歌：${env.baseUrl}/p/${p.slug}` },
+    {
+      type: "text",
+      text:
+        mode === "indoor"
+          ? `🔴 ${p.displayName} 開播了！\n現在就能點歌：${env.baseUrl}/p/${p.slug}`
+          : `🎤 ${p.displayName} 開唱了！${location ? `\n📍 ${location}` : ""}\n現在就能點歌：${env.baseUrl}/p/${p.slug}`,
+    },
   ]);
   const cost = ids.length * env.billing.liveNotifyCents;
   if (cost) await applyPoints(db, p.id, -cost, "live_notify", { note: `開唱通知 ${ids.length} 位粉絲` });
@@ -533,4 +562,12 @@ export async function refundOrder(opts: {
     }
     return { order: o, needsGatewayRefund: o0.payMode === "auto" };
   });
+}
+
+/** 這場演出的模式（決定能不能開對戰與派兵） */
+export async function sessionMode(sessionId: string | null) {
+  if (!sessionId) return null;
+  const db = await getDb();
+  const [s] = await db.select({ mode: liveSessions.mode }).from(liveSessions).where(eq(liveSessions.id, sessionId));
+  return s?.mode ?? null;
 }

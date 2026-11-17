@@ -30,6 +30,8 @@ export const env = {
     lowBalanceCents: Number(process.env.LOW_BALANCE_POINTS ?? "50") * 100,
     /** 開唱通知每位粉絲扣點（LINE 推播成本） */
     liveNotifyCents: Math.round(Number(process.env.LIVE_NOTIFY_POINTS ?? "0.2") * 100),
+    /** 同一位粉絲在同一場的累計花費上限（分）。0 = 不限制。表演者可以自己調低 */
+    fanSessionCapCents: Math.round(Number(process.env.FAN_SESSION_CAP ?? "5000") * 100),
   },
   /** 直播聊天室：設了 YouTube Data API 金鑰才會啟用，沒設就整個功能關閉 */
   chat: {

@@ -16,8 +16,11 @@ export const FEATURES = {
   events: false,
   /** 付費曝光版位與推薦表演者 */
   promote: false,
-  /** 互動遊戲：問答、轉盤、賽道類、跨表演者 PK */
-  games: false,
+  /**
+   * 互動遊戲。與歌相關的互動（許願、投票下一首、簽到、燈海）跟著這個開關；
+   * 對戰、派兵、團體戰另外由演出模式決定，只在室內直播開——見 battleGamesOn()。
+   */
+  games: true,
   /** 表演地圖 */
   map: false,
   /** 地區 × 類型的 SEO 著陸頁 */
@@ -44,4 +47,15 @@ export function featureGate(f: Feature): Response | null {
     status: 404,
     headers: { "content-type": "application/json" },
   });
+}
+
+/**
+ * 對戰、派兵、團體戰：只在室內直播模式開。
+ *
+ * 街頭的聽眾站三到十分鐘、注意力在表演者身上，手機只是付款工具；
+ * 直播觀眾看三十分鐘到兩小時，螢幕本身就是場地。
+ * 同一個機制在兩邊的結果完全相反，所以它跟著模式走，不是全域開關。
+ */
+export function battleGamesOn(mode: string | null | undefined) {
+  return FEATURES.games && mode === "indoor";
 }
