@@ -116,6 +116,47 @@ export default async function Home() {
           </div>
         </Band>
 
+        {/* 互動：只有線上直播用得到，所以放在情境之前當作差異點 */}
+        <Band light="wash" className="rule pt-20 pb-20 md:pt-24 md:pb-28">
+          <h2 className="d2">線上直播還能開對戰</h2>
+          <p className="body mt-4">
+            YouTube 和 Twitch 都沒有 PK。觀眾分兩隊、各自助攻，時間到戰力高的那隊決定你唱什麼。
+            街頭場不會出現這些——站著聽三分鐘的人不會想玩遊戲，這是只有直播才成立的互動。
+          </p>
+
+          <div className="mt-10 grid items-end gap-8 md:grid-cols-[1fr_210px] md:gap-12">
+            <div className="pane glow-screen overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/shots/game-screen.png" alt="OBS 畫面上的兵團對戰：兩隊戰力、倒數計時、加入用的 QR，以及各隊貢獻前三名" className="block w-full" />
+            </div>
+            <div className="glow-phone mx-auto w-[190px] overflow-hidden md:mx-0 md:w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/shots/game-fan-c.png" alt="觀眾手機上的對戰畫面：選一邊加入，看兩隊目前戰力" className="block w-full" />
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-x-12 gap-y-9 md:grid-cols-3">
+            <div>
+              <h3 className="d3">兵團對戰與拔河</h3>
+              <p className="body mt-3">觀眾分兩隊，免費點擊助攻，也可以用付費單位加大戰力。贏的那隊決定下一首。</p>
+            </div>
+            <div>
+              <h3 className="d3">跨表演者 PK</h3>
+              <p className="body mt-3">和另一位同時在線的表演者對決，兩邊粉絲各自助攻。這是大平台抽五成才給你的玩法。</p>
+            </div>
+            <div>
+              <h3 className="d3">花費有上限，不是越刺激越好</h3>
+              <p className="body mt-3">
+                同一位觀眾在同一場有累計上限，超過會擋下來並告訴他還剩多少。
+                觀眾衝動花過頭、隔天要求退款，走掉的是你，所以這條我們寫死在系統裡。
+              </p>
+            </div>
+          </div>
+          <div className="mt-9">
+            <Link href="/for/streamer" className="sbtn sbtn-ghost">直播怎麼接</Link>
+          </div>
+        </Band>
+
         {/* 三種情境 */}
         <Band className="rule pt-20 pb-20 md:pt-24 md:pb-28">
           <h2 className="d2">你是哪一種？</h2>
