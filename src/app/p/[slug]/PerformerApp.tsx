@@ -189,7 +189,6 @@ export function PerformerApp(props: {
 
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-[480px] flex-col gap-1.5 border-t-2 border-ink bg-raised px-5 pt-3 pb-4">
         <div className="flex gap-3">
-          {state.live && <a href={`/p/${p.slug}/hub`} className="btn btn-secondary btn-lg !px-5">互動</a>}
           <button disabled={!state.accepting} onClick={() => setSheet({ kind: "tip" })} className="btn btn-primary btn-lg flex-1">打賞 {p.name}</button>
         </div>
         <p className="text-center text-[12px] leading-4 text-ink3">款項直接付給表演者，{props.appName}不經手</p>

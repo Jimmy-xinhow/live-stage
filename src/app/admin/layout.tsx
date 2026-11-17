@@ -25,8 +25,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       title="營運後台"
       actions={<Link href="/dashboard" className="small underline">表演者後台</Link>}
       groups={[
-        { label: "營運", items: [{ href: "/admin", label: "總覽" }, { href: "/admin/orders", label: "交易", badge: Number(awaiting.n) }, { href: "/admin/points", label: "點數" }, { href: "/admin/promotions", label: "曝光版位" }] },
-        { label: "內容", items: [{ href: "/admin/performers", label: "表演者" }, { href: "/admin/organizers", label: "店家主辦" }, { href: "/admin/events", label: "活動" }, { href: "/admin/match", label: "邀約與評價" }, { href: "/admin/reports", label: "內容檢舉", badge: Number(newReports.n) }] },
+        {
+          label: "營運",
+          items: [
+            { href: "/admin", label: "總覽" },
+            { href: "/admin/orders", label: "交易", badge: Number(awaiting.n) },
+            { href: "/admin/points", label: "點數" },
+          ],
+        },
+        {
+          label: "內容",
+          items: [
+            { href: "/admin/performers", label: "表演者" },
+            { href: "/admin/reports", label: "內容檢舉", badge: Number(newReports.n) },
+          ],
+        },
         { label: "設定", items: [{ href: "/admin/logs", label: "操作紀錄" }, { href: "/admin/system", label: "系統" }] },
       ]}
     >

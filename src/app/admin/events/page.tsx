@@ -2,10 +2,13 @@ import { eventsData } from "@/lib/admin";
 import { EventActions } from "./EventActions";
 import { Out, Table, Tag, When } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminEvents() {
+  if (!FEATURES.events) notFound();
   const list = await eventsData();
   return (
     <div className="flex flex-col gap-5">

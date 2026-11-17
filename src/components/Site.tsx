@@ -10,20 +10,10 @@ export function SiteHeader() {
     <header className="row no-print">
       <div className="wrap flex h-16 items-center gap-6">
         <Link href="/" className="text-[19px] font-bold tracking-wide">{APP_NAME}</Link>
-        <nav aria-label="主選單" className="hidden flex-1 gap-7 md:flex">
-          <Link href="/find">找表演</Link>
-          <Link href="/find?live=1">正在演出</Link>
-          <Link href="/map">地圖</Link>
-          <Link href="/events">活動</Link>
-          <Link href="/invite">邀請演出</Link>
-          <Link href="/me">我的護照</Link>
-        </nav>
-        <span className="flex-1 md:hidden" />
-        <Link href="/login" className="btn btn-secondary btn-sm">我是表演者</Link>
+        <span className="flex-1" />
+        <Link href="/me" className="hidden text-[15px] md:block">我的護照</Link>
+        <Link href="/login" className="btn btn-secondary btn-sm">表演者登入</Link>
       </div>
-      <nav aria-label="主選單" className="wrap flex gap-5 overflow-x-auto pb-3 text-[14px] md:hidden">
-        <Link href="/find">找表演</Link><Link href="/find?live=1">正在演出</Link><Link href="/map">地圖</Link><Link href="/events">活動</Link><Link href="/invite">邀請演出</Link><Link href="/me">我的護照</Link>
-      </nav>
     </header>
   );
 }
@@ -31,13 +21,13 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="no-print mt-16 border-t border-rule">
-      <div className="wrap"><div className="grid grid-cols-2 gap-6 pt-10 pb-6 text-[13px] leading-7 md:grid-cols-4">
-        <nav aria-label="表演類型" className="flex flex-col"><span className="label mb-1">表演類型</span>{ACTS.slice(0, 5).map((a) => <Link key={a.slug} href={`/find?act=${a.slug}`}>{a.name}</Link>)}</nav>
-        <nav aria-label="更多類型" className="flex flex-col"><span className="label mb-1">更多類型</span>{ACTS.slice(5).map((a) => <Link key={a.slug} href={`/find?act=${a.slug}`}>{a.name}</Link>)}</nav>
-        <nav aria-label="地區" className="flex flex-col"><span className="label mb-1">地區</span><Link href="/map">表演地圖</Link><Link href="/area/taipei">台北</Link><Link href="/area/taichung">台中</Link><Link href="/area/tainan">台南</Link><Link href="/area/kaohsiung">高雄</Link><Link href="/area">全台 22 縣市</Link></nav>
-        <nav aria-label="平台" className="flex flex-col"><span className="label mb-1">平台</span><Link href="/events">演出活動</Link><Link href="/invite">邀請演出</Link><Link href="/login">表演者登入</Link><Link href="/login">店家主辦登入</Link><Link href="/me">我的護照</Link></nav>
-      </div></div>
-      <div className="wrap pb-8 text-[13px] text-ink3">{APP_NAME}・星昊科技有限公司・平台只提供資訊與媒合，不經手演出款項</div>
+      <div className="wrap flex flex-wrap items-center gap-x-6 gap-y-2 pt-8 pb-4 text-[14px]">
+        <Link href="/login">表演者登入</Link>
+        <Link href="/me">我的護照</Link>
+      </div>
+      <div className="wrap pb-8 text-[13px] text-ink3">
+        {APP_NAME}・星昊科技有限公司・款項由觀眾直接付給表演者，平台不經手
+      </div>
     </footer>
   );
 }

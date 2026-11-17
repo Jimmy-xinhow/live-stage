@@ -1,13 +1,15 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAccount } from "@/lib/auth";
 import { fmtPoints } from "@/lib/billing";
 import { APP_NAME } from "@/lib/env";
 import { BackShell } from "@/components/back/Shell";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrgLayout({ children }: { children: React.ReactNode }) {
+  if (!FEATURES.events) notFound();
   const auth = await requireAccount();
   if (!auth) redirect("/login");
   if (auth.performer.accountType !== "organizer") redirect("/dashboard");

@@ -5,8 +5,11 @@ import { achievements, fanAchievements } from "@/lib/db/schema";
 import { AchievementsManager } from "./AchievementsManager";
 import { PendingRewards } from "./PendingRewards";
 import { Empty, PageHead, Section } from "@/components/back/Shell";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export default async function Rewards() {
+  if (!FEATURES.rewards) notFound();
   const { performer: p } = (await requirePerformer())!;
   const db = await getDb();
   const list = await db.select().from(achievements).where(eq(achievements.performerId, p.id)).orderBy(asc(achievements.kind), asc(achievements.threshold));

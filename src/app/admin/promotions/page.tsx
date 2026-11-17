@@ -1,11 +1,14 @@
 import { promotionsData } from "@/lib/admin";
 import { Pts, Table, Tag, When } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 const SLOT: Record<string, string> = { search: "搜尋置頂", home: "首頁推薦", event_top: "活動列表置頂", event_home: "首頁活動推薦" };
 
 export default async function Promotions() {
+  if (!FEATURES.promote) notFound();
   const list = await promotionsData();
   const live = list.filter((p) => new Date(p.endsAt).getTime() > Date.now());
   const pts = list.reduce((a, p) => a + p.cost, 0);

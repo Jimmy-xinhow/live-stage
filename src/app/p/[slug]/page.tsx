@@ -14,7 +14,6 @@ import { JsonLd, absUrl, breadcrumb, showEvent } from "@/lib/seo";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { streamInfo } from "@/lib/acts";
-import { currentGame } from "@/lib/games";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +50,6 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const area = areaBySlug(p.city);
   const stream = state.live ? streamInfo(p.streamUrl) : null;
   const host = (await headers()).get("host")?.split(":")[0] ?? "localhost";
-  const game = state.live ? await currentGame(p.id) : null;
   return (
     <>
     {state.live && (
@@ -61,9 +59,6 @@ export default async function Page({ params, searchParams }: { params: Promise<{
         ) : stream && p.streamUrl ? (
           <a href={p.streamUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 bg-ink px-4 py-3 text-paper"><span>在 {stream.name} 直播中</span><span className="underline">前往觀看</span></a>
         ) : null}
-        <Link href={game?.status === "running" ? `/p/${p.slug}/game` : `/p/${p.slug}/hub`} className="flex items-center justify-between gap-3 bg-now px-4 py-3 text-ink">
-          <strong>{game?.status === "running" ? "遊戲進行中，一起玩" : "現場互動：應援、簽到、抽獎、舉手"}</strong><span className="btn btn-primary btn-sm">進入</span>
-        </Link>
       </div>
     )}
     <JsonLd

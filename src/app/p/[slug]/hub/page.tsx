@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { getPerformerBySlug, publicState } from "@/lib/orders";
 import { getFan } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
@@ -6,11 +5,14 @@ import { hubState } from "@/lib/hub";
 import { currentGame, publicGame } from "@/lib/games";
 import { APP_NAME, LIFF_ID, env } from "@/lib/env";
 import { HubApp } from "./HubApp";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: `現場互動｜${APP_NAME}`, robots: { index: false } };
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+  if (!FEATURES.games) notFound();
   const p = await getPerformerBySlug((await params).slug);
   if (!p || p.status === "suspended") notFound();
   const fanId = await getFanId();

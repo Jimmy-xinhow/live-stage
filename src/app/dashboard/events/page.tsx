@@ -2,10 +2,13 @@ import { requirePerformer } from "@/lib/auth";
 import { taggedEvents } from "@/lib/events";
 import { TaggedEvents } from "./TaggedEvents";
 import { Empty, PageHead, Section } from "@/components/back/Shell";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
+  if (!FEATURES.events) notFound();
   const auth = await requirePerformer();
   if (!auth) return null;
   return (

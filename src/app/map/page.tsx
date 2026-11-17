@@ -7,6 +7,8 @@ import { JsonLd, breadcrumb } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/Site";
 import { MapView } from "./MapView";
 import { AreaSelect } from "@/components/AreaSelect";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 }
 
 export default async function MapPage({ searchParams }: { searchParams: Promise<{ city?: string }> }) {
+  if (!FEATURES.map) notFound();
   const area = areaBySlug((await searchParams).city);
   const pins = await mapPins(area?.slug);
   const center = area ? { lat: area.lat, lng: area.lng, zoom: 11 } : TAIWAN_CENTER;

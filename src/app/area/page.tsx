@@ -5,6 +5,8 @@ import { REGIONS } from "@/lib/areas";
 import { APP_NAME } from "@/lib/env";
 import { JsonLd, breadcrumb } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/Site";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 // 即時資料（誰正在表演），每次請求產生；也避免建置時需要連資料庫
 export const dynamic = "force-dynamic";
@@ -16,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AreaIndex() {
+  if (!FEATURES.seoAreas) notFound();
   const areas = await areaCounts();
   return (
     <>

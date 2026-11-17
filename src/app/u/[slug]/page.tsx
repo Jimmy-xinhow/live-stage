@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const area = areaBySlug(p.city);
   const what = `${area?.short ?? ""}${actName(p.actType)}`;
   return {
-    title: `${p.displayName}｜${what}・演出紀錄與邀約｜${APP_NAME}`,
+    title: `${p.displayName}｜${what}・點歌歌單與演出紀錄｜${APP_NAME}`,
     description: `${p.bio ? p.bio.slice(0, 70) + "　" : ""}${what}。平台累積的演出場次、歌單與接下來的演出，可以直接邀請演出。`,
     alternates: { canonical: `/u/${p.slug}` },
     openGraph: { title: `${p.displayName}｜${what}`, description: p.bio.slice(0, 80), type: "profile", images: p.coverUrl || p.avatarUrl ? [(p.coverUrl || p.avatarUrl)!] : undefined },
@@ -39,31 +39,37 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   if (!p || p.status === "suspended") notFound();
   const db = await getDb();
   const fan = await getFan(await getFanId());
-  const [rec, menu, upcoming, [session], following, reviews, evs] = await Promise.all([
+  const [rec, menu, upcoming, [session], following] = await Promise.all([
     trackRecord(p),
     db.select().from(menuItems).where(and(eq(menuItems.performerId, p.id), eq(menuItems.enabled, true))).orderBy(desc(menuItems.requestCount), asc(menuItems.sort)).limit(60),
     db.select().from(shows).where(and(eq(shows.performerId, p.id), gte(shows.startsAt, new Date()))).orderBy(asc(shows.startsAt)).limit(5),
     p.liveSessionId ? db.select().from(liveSessions).where(eq(liveSessions.id, p.liveSessionId)) : [],
     fan ? isFollowing(p.id, fan.id) : false,
-    reviewsOf(p.id),
-    taggedEvents(p.id),
   ]);
-  const myEvents = evs.filter((e) => e.status === "confirmed" && !e.cancelled && new Date(e.startsAt).getTime() > Date.now());
   const area = areaBySlug(p.city);
   const act = actName(p.actType);
   const video = streamInfo(p.videoUrl);
   const serve = p.serviceAreas.map((s) => areaBySlug(s)?.short).filter(Boolean).join("、");
-  const invite = (
+  const live = !!session;
+  const sidebar = (
     <div className="card flex flex-col gap-4 p-5 md:sticky md:top-6 md:p-6">
-      <div>{p.priceFrom != null ? <><span className="num text-[28px] leading-9 font-extrabold">{nt(p.priceFrom)}</span> <span className="small">起／場</span></> : <span className="h3">報價面議</span>}</div>
+      <div>
+        <span className="label">點歌</span>
+        <p className="mt-1 text-[15px] leading-7">
+          {live
+            ? `${p.displayName} 現在正在演出，可以直接點歌。`
+            : `到了現場掃 ${p.displayName} 的 QR 就能點歌。追蹤後，開演時會收到 LINE 通知。`}
+        </p>
+      </div>
       <dl className="flex flex-col gap-2.5 text-[14px]">
-        {p.occasions.length > 0 && <div><dt className="label mb-1">可接場合</dt><dd className="flex flex-wrap gap-1.5">{p.occasions.map((o) => <span key={o} className="tag tag-quiet">{o}</span>)}</dd></div>}
-        <div className="flex justify-between gap-3"><dt className="text-ink3">服務地區</dt><dd>{serve || area?.short || "未設定"}</dd></div>
-        {rec.replyRate != null && <div className="flex justify-between gap-3"><dt className="text-ink3">邀約回覆率</dt><dd className="num font-semibold">{rec.replyRate}%</dd></div>}
-        {reviews.average != null && <div className="flex justify-between gap-3"><dt className="text-ink3">邀約評價</dt><dd className="num font-semibold">{reviews.average} / 5（{reviews.count}）</dd></div>}
+        <div className="flex justify-between gap-3"><dt className="text-ink3">常出沒</dt><dd>{p.district || area?.short || "未設定"}</dd></div>
+        {menu.length > 0 && <div className="flex justify-between gap-3"><dt className="text-ink3">歌單</dt><dd className="num font-semibold">{menu.length} 首</dd></div>}
+        {rec.shows > 0 && <div className="flex justify-between gap-3"><dt className="text-ink3">平台紀錄</dt><dd className="num font-semibold">{rec.shows} 場</dd></div>}
       </dl>
-      {p.bookable ? <Link href={`/invite?to=${p.slug}`} className="btn btn-primary btn-block">邀請 {p.displayName} 演出</Link> : <p className="small">目前不接受邀約</p>}
-      <p className="small text-center text-ink3">免費送出・平台不抽成・報價傳到你的 LINE</p>
+      {live
+        ? <Link href={`/p/${p.slug}`} className="btn btn-primary btn-block">現在就去點歌</Link>
+        : <Link href={`/p/${p.slug}`} className="btn btn-secondary btn-block">看他的歌單</Link>}
+      <p className="small text-center text-ink3">款項直接付給表演者，平台不經手</p>
     </div>
   );
   return (
@@ -108,22 +114,13 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               <section className="mt-10"><h2 className="h2 mb-3">演出影片</h2><div className="overflow-hidden rounded-[20px] bg-sunken" style={{ aspectRatio: "16 / 9" }}><iframe src={video.embed} title={`${p.displayName} 演出影片`} className="h-full w-full" allowFullScreen loading="lazy" /></div></section>
             )}
 
-            {myEvents.length > 0 && (
-              <section className="sec mt-10">
-                <h2 className="h2 mb-1">接下來的活動</h2>
-                {myEvents.map((e) => (
-                  <EventLine key={e.id} e={{ id: e.id, title: e.title, city: e.cityName, place: e.place, startsAt: e.startsAt, priceText: "", organizer: e.organizer, acts: [], guestActs: "", promoted: false }} />
-                ))}
-              </section>
-            )}
-
             {upcoming.length > 0 && (
               <section className="sec mt-10"><h2 className="h2 mb-1">接下來的演出</h2>{upcoming.map((s) => <ShowRow key={s.id} s={{ startsAt: s.startsAt.toISOString(), location: s.location, note: s.note, slug: p.slug, name: s.location, city: area }} />)}</section>
             )}
 
             {menu.length > 0 && (
               <section className="sec mt-10">
-                <div className="mb-2 flex items-baseline justify-between gap-3"><h2 className="h2">會唱的歌・服務（{menu.length}）</h2><span className="small text-ink3">邀約時可以指定</span></div>
+                <div className="mb-2 flex items-baseline justify-between gap-3"><h2 className="h2">會唱的歌・服務（{menu.length}）</h2><span className="small text-ink3">現場掃碼就能點</span></div>
                 <div className="grid gap-x-6 md:grid-cols-2">
                   {menu.map((m, i) => (
                     <div key={m.id} className="row flex items-baseline gap-3 py-2.5"><span className="num w-6 text-ink3">{String(i + 1).padStart(2, "0")}</span><span className="min-w-0 flex-1"><span className="font-medium">{m.title}</span>{m.subtitle && <span className="small"> {m.subtitle}</span>}</span>{m.requestCount > 0 && <span className="small text-ink3">被點 <span className="num">{m.requestCount}</span> 次</span>}</div>
@@ -132,26 +129,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               </section>
             )}
 
-            {reviews.items.length > 0 && (
-              <section className="sec mt-10">
-                <div className="mb-2 flex items-baseline justify-between gap-3"><h2 className="h2">邀約評價</h2><span className="small text-ink3">只有實際送出邀約的人能評，表演者不能刪改</span></div>
-                <div className="border-t border-rule">
-                  {reviews.items.map((r, i) => (
-                    <div key={i} className="row flex flex-col gap-1 py-3.5">
-                      <div className="flex flex-wrap items-baseline gap-2">
-                        <strong className="num">{"★".repeat(r.rating)}<span className="text-rule">{"★".repeat(5 - r.rating)}</span></strong>
-                        <span className="small">{r.name}・{r.occasion}</span>
-                      </div>
-                      <p className="max-w-[600px] text-ink2">{r.review}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
-          <aside className="hidden md:col-span-4 md:block">{invite}</aside>
+          <aside className="hidden md:col-span-4 md:block">{sidebar}</aside>
         </div>
-        <div className="mt-10 md:hidden">{invite}</div>
+        <div className="mt-10 md:hidden">{sidebar}</div>
       </main>
       <SiteFooter />
     </>

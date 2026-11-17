@@ -71,7 +71,6 @@ export function StageConsole({ slug, initial }: { slug: string; initial: PublicS
           <span className="small flex items-center gap-2"><span className="dot-now" />演出中{s.live.location ? `・${s.live.location}` : ""}・今天 <span className="num">{s.today.count}</span> 筆</span>
         </div>
         <button disabled={busy} onClick={() => post("/api/dashboard/live", { action: "queue", queueOpen: !s.queueOpen })} className={`btn btn-sm ${s.queueOpen ? "btn-secondary" : "btn-quiet"}`}>{s.queueOpen ? "點歌開放中" : "點歌已暫停"}</button>
-        <a href="/dashboard/interact" className="btn btn-secondary btn-sm">互動與遊戲</a>
         <button disabled={busy} onClick={() => confirm("確定結束演出？排隊中的點歌會保留在紀錄裡") && post("/api/dashboard/live", { action: "end" })} className="btn btn-primary btn-sm">結束演出</button>
       </div>
       {msg && <button onClick={() => setMsg("")} className="rounded-[12px] bg-sunken px-4 py-2.5 text-left text-[14px]">{msg}</button>}

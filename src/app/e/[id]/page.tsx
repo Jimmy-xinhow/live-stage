@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { eventDetail, fmtWhen } from "@/lib/events";
 import { areaBySlug } from "@/lib/areas";
@@ -8,6 +7,8 @@ import { APP_NAME } from "@/lib/env";
 import { JsonLd, absUrl, breadcrumb } from "@/lib/seo";
 import { Photo, SiteFooter, SiteHeader } from "@/components/Site";
 import { ReportButton } from "@/components/ReportButton";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!FEATURES.events) notFound();
   const d = await eventDetail((await params).id);
   if (!d) notFound();
   const { ev, org, acts } = d;

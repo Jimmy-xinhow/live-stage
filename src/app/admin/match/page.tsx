@@ -2,10 +2,13 @@ import { matchData } from "@/lib/admin";
 import { ReviewActions } from "./ReviewActions";
 import { Out, Table, Tag, When } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
 export default async function Match() {
+  if (!FEATURES.matching) notFound();
   const { inquiries, reviews } = await matchData();
   const sent = inquiries.reduce((a, i) => a + i.targets, 0);
   const replied = inquiries.reduce((a, i) => a + i.replied, 0);

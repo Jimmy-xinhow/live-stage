@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/env";
 import { areaBySlug } from "@/lib/areas";
@@ -7,6 +6,8 @@ import { actCounts } from "@/lib/market";
 import { JsonLd, breadcrumb } from "@/lib/seo";
 import { Results } from "@/components/Results";
 import { SiteFooter, SiteHeader } from "@/components/Site";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 type P = { params: Promise<{ slug: string }> };
@@ -29,6 +30,7 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
 }
 
 export default async function Page({ params }: P) {
+  if (!FEATURES.seoAreas) notFound();
   const pr = await params;
   const area = areaBySlug(pr.slug);
   const act = null as ReturnType<typeof actBySlug>;

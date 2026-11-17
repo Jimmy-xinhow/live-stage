@@ -6,6 +6,7 @@ import { env } from "./env";
 import { applyPoints } from "./billing";
 import { createSession, getSession } from "./session";
 import type { LineProfile } from "./line";
+import { FEATURES } from "./features";
 
 /** 藝人用 LINE 登入；第一次登入自動建立頁面並贈送新手點數 */
 export async function loginWithLine(profile: LineProfile, role: "performer" | "organizer" = "performer") {
@@ -42,4 +43,6 @@ export async function requireOrganizer() {
   return a && a.performer.accountType === "organizer" ? a : null;
 }
 
-export const homeOf = (accountType: string) => (accountType === "organizer" ? "/org" : "/dashboard");
+// 店家主辦後台在這一輪收斂中關閉了；功能開回來之前，主辦帳號一律導回首頁
+export const homeOf = (accountType: string) =>
+  accountType === "organizer" ? (FEATURES.events ? "/org" : "/") : "/dashboard";

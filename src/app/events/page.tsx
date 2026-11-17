@@ -6,6 +6,8 @@ import { APP_NAME } from "@/lib/env";
 import { JsonLd, breadcrumb } from "@/lib/seo";
 import { EventLine, SiteFooter, SiteHeader } from "@/components/Site";
 import { AreaSelect } from "@/components/AreaSelect";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 }
 
 export default async function EventsPage({ searchParams }: { searchParams: Promise<{ city?: string }> }) {
+  if (!FEATURES.events) notFound();
   const city = (await searchParams).city;
   const area = areaBySlug(city);
   const list = await upcomingEvents({ city: area?.slug, limit: 50, slot: "event_top" });

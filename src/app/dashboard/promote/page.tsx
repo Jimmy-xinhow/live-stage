@@ -6,10 +6,13 @@ import { areaBySlug } from "@/lib/areas";
 import { actName } from "@/lib/acts";
 import { PromoteForm } from "./PromoteForm";
 import { Empty, PageHead, Section } from "@/components/back/Shell";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
+  if (!FEATURES.promote) notFound();
   const auth = await requirePerformer();
   if (!auth) return null;
   const p = auth.performer;

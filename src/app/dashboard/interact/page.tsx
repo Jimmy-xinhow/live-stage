@@ -3,10 +3,13 @@ import { consoleState } from "@/lib/hub";
 import { currentGame, GAME_TYPES, publicGame } from "@/lib/games";
 import { InteractConsole } from "./InteractConsole";
 import { liveNow } from "@/lib/fans";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
+  if (!FEATURES.games) notFound();
   const auth = await requirePerformer();
   if (!auth) return null;
   const p = auth.performer;

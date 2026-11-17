@@ -31,9 +31,15 @@ after(async () => { await browser?.close(); });
 
 test("公開頁面都開得起來", async () => {
   const p = await fan.newPage();
-  for (const path of ["/", "/find", "/events", "/map", "/area", "/u/demo", "/p/demo", "/invite"]) {
+  // 收斂後對外只留這幾頁（見 lib/features.ts）
+  for (const path of ["/", "/u/demo", "/p/demo", "/me", "/login"]) {
     const r = await p.goto(BASE + path, { waitUntil: "domcontentloaded" });
     assert.equal(r.status(), 200, `${path} 應該回 200，實際 ${r.status()}`);
+  }
+  // 收起來的功能應該回 404，不是半開著
+  for (const path of ["/find", "/events", "/map", "/invite", "/area", "/org"]) {
+    const r = await p.goto(BASE + path, { waitUntil: "domcontentloaded" });
+    assert.equal(r.status(), 404, `${path} 已收斂，應該回 404，實際 ${r.status()}`);
   }
   await p.close();
 });

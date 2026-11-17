@@ -2,11 +2,14 @@ import { accounts } from "@/lib/admin";
 import { AccountActions } from "../AccountActions";
 import { Table, When, Who } from "../Bits";
 import { PageHead } from "@/components/back/Shell";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 const KIND: Record<string, string> = { venue: "餐廳酒吧展演", organizer: "活動主辦", brand: "品牌企業", other: "其他" };
 
 export default async function Organizers({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  if (!FEATURES.events) notFound();
   const q = (await searchParams).q ?? "";
   const list = await accounts("organizer", q);
   return (

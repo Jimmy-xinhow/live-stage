@@ -7,11 +7,14 @@ import { areaBySlug } from "@/lib/areas";
 import { actBySlug, actName } from "@/lib/acts";
 import { SiteHeader } from "@/components/Site";
 import { InviteForm } from "./InviteForm";
+import { notFound } from "next/navigation";
+import { FEATURES } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: `邀請演出｜${APP_NAME}`, description: "免費送出演出邀約：婚禮、尾牙、餐廳駐唱、企業活動。符合條件的表演者會把報價傳到你的 LINE，平台不抽成。", alternates: { canonical: "/invite" } };
 
 export default async function Invite({ searchParams }: { searchParams: Promise<{ to?: string; city?: string; act?: string; occasion?: string }> }) {
+  if (!FEATURES.matching) notFound();
   const sp = await searchParams;
   const to = sp.to ? await getPerformerBySlug(sp.to) : null;
   const fan = await getFan(await getFanId());
