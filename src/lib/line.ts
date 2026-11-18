@@ -1,23 +1,47 @@
 import crypto from "node:crypto";
 import { env } from "./env";
 import { reportError } from "./errors";
+import { enqueue, record } from "./linequota";
 
 type Msg = { type: "text"; text: string } | Record<string, unknown>;
 
 async function call(path: string, body: unknown) {
   if (!env.line.messagingAccessToken) {
     console.info(`[LINE mock] ${path}`, JSON.stringify(body));
-    return;
+    return { ok: true, status: 0, text: "" };
   }
   const res = await fetch(`https://api.line.me/v2/bot/message/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.line.messagingAccessToken}` },
     body: JSON.stringify(body),
-  });
-  if (!res.ok) reportError("line", new Error(`[LINE] ${path} ${res.status}`), { body: await res.text() });
+  }).catch(() => null);
+  if (!res) return { ok: false, status: 0, text: "連不上 LINE" };
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    reportError("line", new Error(`[LINE] ${path} ${res.status}`), { body: text });
+    return { ok: false, status: res.status, text };
+  }
+  return { ok: true, status: res.status, text: "" };
 }
 
-export const pushMessage = (to: string, messages: Msg[]) => call("push", { to, messages });
+/**
+ * 推播一位。失敗時排進重送佇列，不是寫完 log 就算了——
+ * 開演通知推不出去，表演者就少了一場的人。
+ *
+ * 4xx 多半是對方封鎖了官方帳號或 userId 失效，重送沒有意義，直接記下來。
+ */
+export async function pushMessage(to: string, messages: Msg[], kind = "other", performerId?: string | null) {
+  const r = await call("push", { to, messages });
+  if (r.ok) {
+    await record(1).catch(() => {});
+    return true;
+  }
+  const permanent = r.status >= 400 && r.status < 500;
+  await record(0, 1).catch(() => {});
+  if (!permanent) await enqueue([to], messages, kind, performerId, r.text).catch(() => {});
+  return false;
+}
+
 export const replyMessage = (replyToken: string, messages: Msg[]) => call("reply", { replyToken, messages });
 
 export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
@@ -69,7 +93,21 @@ export async function exchangeCode(code: string): Promise<{ id_token: string } |
   return res.ok ? ((await res.json()) as { id_token: string }) : null;
 }
 
-/** 一次推給多位（最多 500 人一批） */
-export async function multicast(to: string[], messages: Msg[]) {
-  for (let i = 0; i < to.length; i += 500) await call("multicast", { to: to.slice(i, i + 500), messages });
+/**
+ * 一次推給多位（LINE 一批最多 500 人）。
+ * 整批失敗時，把這一批的每一位分開排進重送佇列——
+ * 下次重送是一人一則，才不會因為其中一位失效就全批重來。
+ */
+export async function multicast(to: string[], messages: Msg[], kind = "other", performerId?: string | null) {
+  let sent = 0, failed = 0;
+  for (let i = 0; i < to.length; i += 500) {
+    const batch = to.slice(i, i + 500);
+    const r = await call("multicast", { to: batch, messages });
+    if (r.ok) { sent += batch.length; continue; }
+    failed += batch.length;
+    const permanent = r.status >= 400 && r.status < 500;
+    if (!permanent) await enqueue(batch, messages, kind, performerId, r.text).catch(() => {});
+  }
+  await record(sent, failed).catch(() => {});
+  return { sent, failed };
 }

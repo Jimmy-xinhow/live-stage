@@ -12,6 +12,7 @@ import { badgesFor, evaluateAchievements, leaderboard, notifyOvertake } from "./
 import { reportError } from "./errors";
 import type { ModeSlug } from "./kinds";
 import { effectivePlan } from "./subscription";
+import { wouldExceed } from "./linequota";
 import { recordSplit } from "./band";
 import { planHasPro } from "./plans";
 
@@ -471,6 +472,8 @@ export async function goLive(p: Performer, location: string, notifyFans: boolean
     .where(and(eq(follows.performerId, p.id), eq(follows.notifyLive, true), isNotNull(fans.lineUserId)));
   const ids = rows.map((r) => r.line);
   if (!ids.length) return { notified: 0 };
+  // 額度不夠就不發，但演出照常開始——通知發不出去不該讓人無法上台
+  if (await wouldExceed(ids.length)) return { notified: 0, quotaBlocked: true };
   await multicast(ids, [
     {
       type: "text",
@@ -479,7 +482,7 @@ export async function goLive(p: Performer, location: string, notifyFans: boolean
           ? `🔴 ${p.displayName} 開播了！\n現在就能點歌：${env.baseUrl}/p/${p.slug}`
           : `🎤 ${p.displayName} 開唱了！${location ? `\n📍 ${location}` : ""}\n現在就能點歌：${env.baseUrl}/p/${p.slug}`,
     },
-  ]);
+  ], "live", p.id);
   const cost = ids.length * env.billing.liveNotifyCents;
   if (cost) await applyPoints(db, p.id, -cost, "live_notify", { note: `開唱通知 ${ids.length} 位粉絲` });
   await db.update(liveSessions).set({ notifiedCount: ids.length }).where(eq(liveSessions.id, s.id));

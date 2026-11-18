@@ -4,6 +4,7 @@ import { fans, follows, liveSessions, orders, performers, shows, type Performer 
 import type { LineProfile } from "./line";
 import { multicast, pushMessage } from "./line";
 import { applyPoints, canAcceptOrders } from "./billing";
+import { wouldExceed } from "./linequota";
 import { env } from "./env";
 
 export async function upsertFan(profile: LineProfile) {
@@ -130,9 +131,11 @@ export async function createShow(p: Performer, input: { startsAt: Date; location
   if (!notify) return { show: s, notified: 0 };
   const ids = await followerLineIds(p.id);
   if (!ids.length) return { show: s, notified: 0 };
+  const over = await wouldExceed(ids.length);
+  if (over) throw new FanError(`這個月的 LINE 推播額度只剩 ${over.left} 則，這一發需要 ${over.need} 則。演出已經建立，等下個月或提高額度後再手動通知粉絲。`);
   await multicast(ids, [
     { type: "text", text: `📅 ${p.displayName} 演出預告\n${fmtShowTime(input.startsAt)}\n📍 ${input.location}${input.note ? `\n${input.note}` : ""}\n先看歌單：${env.baseUrl}/p/${p.slug}` },
-  ]);
+  ], "show", p.id);
   const cost = ids.length * env.billing.liveNotifyCents;
   if (cost) await applyPoints(db, p.id, -cost, "broadcast", { note: `演出預告 ${ids.length} 位粉絲` });
   await db.update(shows).set({ notifiedCount: ids.length }).where(eq(shows.id, s.id));
@@ -209,9 +212,11 @@ export async function messageFans(p: Performer, target: { segment?: Segment | "a
     ? (await db.select({ l: fans.lineUserId }).from(fans).where(eq(fans.id, target.fanId))).map((r) => r.l)
     : await followerLineIds(p.id, picked.map((f) => f.id));
   if (!ids.length) throw new FanError("這些粉絲關閉了通知");
+  const over = await wouldExceed(ids.length);
+  if (over) throw new FanError(`這個月的 LINE 推播額度只剩 ${over.left} 則，這一發需要 ${over.need} 則。`);
   const body = `💌 ${p.displayName}：\n${text}\n\n${env.baseUrl}/p/${p.slug}`;
-  if (ids.length === 1) await pushMessage(ids[0], [{ type: "text", text: body }]);
-  else await multicast(ids, [{ type: "text", text: body }]);
+  if (ids.length === 1) await pushMessage(ids[0], [{ type: "text", text: body }], "broadcast", p.id);
+  else await multicast(ids, [{ type: "text", text: body }], "broadcast", p.id);
   const cost = ids.length * env.billing.liveNotifyCents;
   if (cost) await applyPoints(db, p.id, -cost, "broadcast", { note: target.fanId ? "一對一感謝" : `粉絲訊息 ${ids.length} 人` });
   return { sent: ids.length };

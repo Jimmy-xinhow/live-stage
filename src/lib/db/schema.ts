@@ -624,3 +624,41 @@ export type Fan = typeof fans.$inferSelect;
 export type Show = typeof shows.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+
+/**
+ * LINE 推播用量，一個月一列。
+ * LINE 官方帳號的免費訊息有每月上限，而且是**按收件人數**算，
+ * 不是按發送次數。超量會被擋或變成收費，所以我們自己也要記一份。
+ */
+export const lineUsage = pgTable("line_usage", {
+  /** 台北時間的 YYYY-MM */
+  month: varchar("month", { length: 7 }).primaryKey(),
+  sent: integer("sent").notNull().default(0),
+  failed: integer("failed").notNull().default(0),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+});
+
+/**
+ * 推播失敗的重送佇列。
+ * 開演通知推不出去，表演者就少了一場的人——所以失敗不能只寫進 log 就算了。
+ */
+export const lineOutbox = pgTable(
+  "line_outbox",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** 收件人的 LINE userId。一次一個人，重送才不會把已經成功的再推一次 */
+    to: varchar("to", { length: 64 }).notNull(),
+    messages: jsonb("messages").$type<unknown[]>().notNull(),
+    /** 用途，給後台看：live｜show｜broadcast｜order｜refund｜plan｜pk */
+    kind: varchar("kind", { length: 16 }).notNull().default("other"),
+    performerId: uuid("performer_id").references(() => performers.id, { onDelete: "set null" }),
+    attempts: integer("attempts").notNull().default(0),
+    /** pending｜sent｜dead（重送到放棄） */
+    status: varchar("status", { length: 8 }).notNull().default("pending"),
+    error: varchar("error", { length: 200 }).notNull().default(""),
+    nextAt: ts("next_at").notNull().defaultNow(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    sentAt: ts("sent_at"),
+  },
+  (t) => [index("line_outbox_due_idx").on(t.status, t.nextAt)],
+);

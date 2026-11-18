@@ -150,3 +150,69 @@ describe("粉絲群發", () => {
     expect(line.recipients()).toEqual([myFan.lineUserId]);
   });
 });
+
+describe("推播額度與重送", () => {
+  it("用量按收件人數累計，不是按發送次數", async () => {
+    const { usage, record, monthKey } = await import("@/lib/linequota");
+    const before = (await usage()).sent;
+    const p = await mkPerformer({ pointsCents: 1000_00 });
+    const [a, b, c] = await Promise.all([mkFan(), mkFan(), mkFan()]);
+    for (const f of [a, b, c]) await follow(p.id, f.id, true);
+    await messageFans(p, { segment: "all" }, "三個人");
+
+    const after = await usage();
+    expect(after.sent - before).toBe(3);
+    expect(after.month).toBe(monthKey());
+    await record(0, 0); // 不該因為零而寫入
+  });
+
+  it("沒設上限就不擋，只記錄", async () => {
+    const { wouldExceed, usage } = await import("@/lib/linequota");
+    expect((await usage()).quota).toBe(0);
+    expect(await wouldExceed(100_000)).toBeNull();
+  });
+
+  it("月份用台北時間算，跨月才會換一本帳", async () => {
+    const { monthKey } = await import("@/lib/linequota");
+    // 台北 2026-02-01 00:30 => UTC 2026-01-31 16:30
+    expect(monthKey(new Date("2026-01-31T16:30:00Z"))).toBe("2026-02");
+    expect(monthKey(new Date("2026-01-31T15:30:00Z"))).toBe("2026-01");
+  });
+
+  it("推不出去的訊息會排進重送佇列，一人一則", async () => {
+    const { enqueue, outboxStats } = await import("@/lib/linequota");
+    const before = (await outboxStats()).pending;
+    await enqueue(["Ua", "Ub"], [{ type: "text", text: "補送" }], "live", null, "503");
+    const after = await outboxStats();
+    expect(after.pending - before).toBe(2);
+  });
+
+  it("沒有 LINE 權杖時重送不會亂跑", async () => {
+    const { retryOutbox } = await import("@/lib/linequota");
+    const r = await retryOutbox();
+    expect(r.checked).toBe(0);
+  });
+});
+
+describe("額度滿了會擋住", () => {
+  it("超過當月上限就不發，訊息講得出剩幾則", async () => {
+    vi.resetModules();
+    vi.stubEnv("LINE_MONTHLY_QUOTA", "2");
+    const q = await import("@/lib/linequota");
+    const used = (await q.usage()).sent;
+    vi.unstubAllEnvs();
+    vi.resetModules();
+
+    // 以目前用量為基準，設一個剛好只剩 1 則的上限
+    vi.stubEnv("LINE_MONTHLY_QUOTA", String(used + 1));
+    const q2 = await import("@/lib/linequota");
+    expect(await q2.wouldExceed(1)).toBeNull();
+    const over = await q2.wouldExceed(5);
+    expect(over).not.toBeNull();
+    expect(over!.left).toBe(1);
+    expect(over!.need).toBe(5);
+
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+});

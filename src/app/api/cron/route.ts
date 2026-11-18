@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runMaintenance } from "@/lib/maintenance";
 import { runPlanRenewals } from "@/lib/subscription";
+import { retryOutbox } from "@/lib/linequota";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,9 @@ export async function POST(req: Request) {
   const result = await runMaintenance();
   // 方案到期：能續的從點數續一期，不能續的降回免費並通知
   const plans = await runPlanRenewals();
-  return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result, plans });
+  // 推播重送：LINE 端出錯或網路斷掉的通知，在這裡補送
+  const line = await retryOutbox();
+  return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result, plans, line });
 }
 
 export const GET = POST;
