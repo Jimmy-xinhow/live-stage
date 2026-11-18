@@ -21,6 +21,8 @@ jobs:
         run: npx next build
         env:
           APP_BASE_URL: http://localhost:3000
+      - name: 單元與整合測試（記憶體 PGlite）
+        run: npm test
       - name: 安裝測試瀏覽器
         run: npx playwright install --with-deps chromium
       - name: 啟動開發伺服器（內嵌 PGlite，不需要外部資料庫）

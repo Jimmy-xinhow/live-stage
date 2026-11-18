@@ -145,3 +145,59 @@ test("頻率限制會擋住連續下單", async () => {
   assert.ok(codes.includes(429), `連續 20 次下單應該出現 429，實際 ${[...new Set(codes)].join(",")}`);
   await p.close();
 });
+
+/**
+ * 授權邊界。用一個完全沒有 cookie 的 context 打後台與 API，
+ * 每一條都應該被擋下來——這類洞不會在畫面上看出來，只能靠測試守。
+ */
+test("沒登入進不了後台，API 也拿不到資料", async () => {
+  const anon = await browser.newContext();
+  const p = await anon.newPage();
+
+  for (const path of ["/dashboard", "/dashboard/band", "/dashboard/ledger", "/dashboard/plan", "/dashboard/interact", "/dashboard/settings", "/dashboard/fans"]) {
+    const r = await p.goto(BASE + path, { waitUntil: "domcontentloaded" });
+    const url = p.url();
+    assert.ok(
+      url.includes("/login") || r.status() === 404 || r.status() === 401 || r.status() === 403,
+      `${path} 沒登入應該被擋，實際停在 ${url}（${r.status()}）`,
+    );
+    assert.ok(!url.includes("/dashboard/"), `${path} 沒登入不該留在後台頁，實際 ${url}`);
+  }
+
+  // 平台後台
+  const admin = await p.goto(`${BASE}/admin`, { waitUntil: "domcontentloaded" });
+  assert.ok(p.url().includes("/admin/login") || admin.status() === 404, `/admin 沒登入應該被擋，實際 ${p.url()}`);
+
+  // 寫入型 API 一律要身分
+  for (const path of ["/api/dashboard/ledger", "/api/dashboard/band", "/api/dashboard/plan", "/api/dashboard/settings"]) {
+    const r = await anon.request.get(BASE + path);
+    assert.ok([401, 403, 404, 405].includes(r.status()), `${path} 沒登入應該被擋，實際 ${r.status()}`);
+  }
+
+  // 團員頁要先登入才看得到拆帳
+  await p.goto(`${BASE}/band/me`, { waitUntil: "domcontentloaded" });
+  assert.ok(!p.url().endsWith("/band/me") || (await p.content()).includes("登入"), "團員頁沒登入應該要求登入");
+
+  await anon.close();
+});
+
+test("互動遊戲只在室內直播開，街頭場的端點不存在", async () => {
+  const anon = await browser.newContext();
+  // demo 是街頭場（kind=street），對戰類遊戲的 API 應該回 404 而不是半開著
+  const r = await anon.request.get(`${BASE}/api/p/demo/game`);
+  assert.equal(r.status(), 404, `街頭場的遊戲端點應該回 404，實際 ${r.status()}`);
+  await anon.close();
+});
+
+test("法務三份文件都開得起來，而且頁尾連得到", async () => {
+  const p = await fan.newPage();
+  for (const path of ["/terms", "/privacy", "/refund"]) {
+    const r = await p.goto(BASE + path, { waitUntil: "domcontentloaded" });
+    assert.equal(r.status(), 200, `${path} 應該回 200，實際 ${r.status()}`);
+  }
+  await p.goto(`${BASE}/pricing`, { waitUntil: "domcontentloaded" });
+  for (const label of ["服務條款", "隱私權政策", "退款與爭議"]) {
+    assert.ok(await p.locator(`footer a:has-text("${label}")`).count(), `頁尾應該要有「${label}」連結`);
+  }
+  await p.close();
+});

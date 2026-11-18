@@ -68,10 +68,12 @@ function needLive(p: Performer) {
 }
 
 /** 應援：免費，每次點按 +1，集滿 100 */
-export async function cheer(p: Performer, n: number) {
+export async function cheer(p: Performer, n = 1) {
   const sid = needLive(p);
   const db = await getDb();
-  const add = Math.max(1, Math.min(20, Math.floor(n)));
+  // 來路不明的 n（undefined、NaN、字串）一律當 1。不擋的話會變成 NaN 丟進 SQL，
+  // 整個請求 500，而且錯誤訊息完全看不出是這裡。
+  const add = Math.max(1, Math.min(20, Math.floor(Number(n)) || 1));
   const [s] = await db.update(liveSessions).set({ hype: sql`least(100, ${liveSessions.hype} + ${add})` }).where(eq(liveSessions.id, sid)).returning({ hype: liveSessions.hype });
   return s?.hype ?? 0;
 }
