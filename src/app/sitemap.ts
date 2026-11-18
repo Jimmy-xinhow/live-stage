@@ -18,6 +18,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${env.baseUrl}/`, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${env.baseUrl}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     ...KINDS.map((k) => ({ url: `${env.baseUrl}/for/${k.slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 })),
+    { url: `${env.baseUrl}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${env.baseUrl}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${env.baseUrl}/refund`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     ...perfs.map((p) => ({ url: `${env.baseUrl}/u/${p.slug}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.8 })),
     ...(FEATURES.seoAreas ? [{ url: `${env.baseUrl}/area`, lastModified: now, changeFrequency: "daily" as const, priority: 0.7 }] : []),
   ];

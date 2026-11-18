@@ -29,7 +29,13 @@ export function SiteFooter({ bare }: { bare?: boolean } = {}) {
   if (bare)
     return (
       <footer className="no-print mt-16 border-t border-rule">
-        <div className="wrap pt-8 pb-8 text-[13px] text-ink3">款項由觀眾直接付給表演者，平台不經手</div>
+        {/* 付費方案拿掉平台導覽與品牌，但法務連結不能拿掉——這是收款頁面 */}
+        <div className="wrap flex flex-wrap items-center gap-x-5 gap-y-1 pt-8 pb-8 text-[13px] text-ink3">
+          <span>款項由觀眾直接付給表演者，平台不經手</span>
+          <Link href="/terms" className="underline">服務條款</Link>
+          <Link href="/privacy" className="underline">隱私權</Link>
+          <Link href="/refund" className="underline">退款</Link>
+        </div>
       </footer>
     );
   return (
@@ -42,6 +48,9 @@ export function SiteFooter({ bare }: { bare?: boolean } = {}) {
         <Link href="/p/demo">看示範頁</Link>
         <Link href="/login">登入</Link>
         <Link href="/me">我的護照</Link>
+        <Link href="/terms">服務條款</Link>
+        <Link href="/privacy">隱私權</Link>
+        <Link href="/refund">退款與爭議</Link>
       </div>
       <div className="wrap pb-8 text-[13px] text-ink3">
         {APP_NAME}・星昊科技有限公司・款項由觀眾直接付給表演者，平台不經手

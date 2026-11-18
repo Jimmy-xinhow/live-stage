@@ -102,3 +102,36 @@ describe("方案", () => {
     expect(boughtForFeatures("all")).toBe(true);
   });
 });
+
+describe("上線前檢查", () => {
+  // 這組測試的目的不是驗證環境，是驗證「這個檢查真的會擋」。
+  // 它跑在沒有任何正式設定的測試環境，所以 block 項目本來就該全部沒過。
+  it("開發後門在 LIVE_MODE 下一定是 block 等級", async () => {
+    const { preflight } = await import("@/lib/preflight");
+    const byKey = new Map(preflight().map((c) => [c.key, c]));
+    for (const k of ["dev_login", "mock_pay", "seed_demo", "session_secret", "encryption_key", "admin_2fa", "payment_env"]) {
+      expect(byKey.get(k)?.level, k).toBe("block");
+    }
+  });
+
+  it("測試環境沒設正式值，所以檢查抓得到問題", async () => {
+    const { preflightSummary } = await import("@/lib/preflight");
+    const s = preflightSummary();
+    expect(s.blocking.length).toBeGreaterThan(0);
+    expect(s.launchable).toBe(false);
+  });
+
+  it("沒宣告 LIVE_MODE 就不擋啟動", async () => {
+    const { assertLaunchable, liveMode } = await import("@/lib/preflight");
+    expect(liveMode).toBe(false);
+    expect(() => assertLaunchable()).not.toThrow();
+  });
+
+  it("每個沒過的項目都講得出要做什麼", async () => {
+    const { preflight } = await import("@/lib/preflight");
+    for (const c of preflight()) {
+      expect(c.fix.length, c.key).toBeGreaterThan(10);
+      expect(c.title.length, c.key).toBeGreaterThan(4);
+    }
+  });
+});
