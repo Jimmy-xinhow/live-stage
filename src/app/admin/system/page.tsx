@@ -80,7 +80,7 @@ export default async function System() {
         <Table
           head={["項目", "數值"]}
           rows={[
-            ["平台名稱（APP_NAME）", APP_NAME],
+            ["平台名稱（lib/brand.ts）", APP_NAME],
             ["成交服務費", `${(env.billing.feeRate * 100).toFixed(1)}%`],
             ["新手贈點", `${env.billing.signupBonusCents / 100} 點`],
             ["可透支", `${env.billing.overdraftCents / 100} 點`],

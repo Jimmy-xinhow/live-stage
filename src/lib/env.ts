@@ -1,5 +1,14 @@
 // 集中管理環境變數。伺服器端專用的值不要用 NEXT_PUBLIC_ 前綴。
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "安可";
+import { BRAND } from "./brand";
+
+/**
+ * 品牌名稱只有一個來源：lib/brand.ts。
+ *
+ * 原本這裡讀 NEXT_PUBLIC_APP_NAME，結果正式環境的環境變數還停在舊的工作代號，
+ * 後台標題印出「平台管理｜現場｜安可」——同一個畫面上兩個名字。
+ * 改名字是改 brand.ts 一行的事，不該再多一個會不同步的地方。
+ */
+export const APP_NAME = BRAND.name;
 
 export const env = {
   baseUrl: (process.env.APP_BASE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
