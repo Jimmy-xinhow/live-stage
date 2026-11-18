@@ -5,6 +5,7 @@ import { PLANS, planBySlug } from "@/lib/plans";
 import { effectivePlan } from "@/lib/subscription";
 import { PageHead } from "@/components/back/Shell";
 import { PlanButton } from "./PlanButton";
+import { totalsSince } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,15 @@ export default async function Plan() {
   const now = effectivePlan(p);
   const current = planBySlug(now);
   const ending = now !== "free" && !p.planAutoRenew;
+
+  // 用他自己最近 30 天的成交去算，而不是給一張空的試算表讓他自己填。
+  // 要回答的只有一個問題：這個方案對我划不划算，而答案就在他的帳上。
+  const last30 = await totalsSince(p.id, new Date(Date.now() - 30 * 86400_000));
+  const costOf = (slug: string) => {
+    const pl = planBySlug(slug);
+    return Math.round(last30.sum * pl.feeRate) + pl.price;
+  };
+  const cheapest = last30.count ? PLANS.map((x) => x.slug).reduce((a, b) => (costOf(b) < costOf(a) ? b : a)) : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -47,6 +57,47 @@ export default async function Plan() {
           <p className="small mt-3">
             已取消續期。{d(p.planUntil)} 之後會回到免費方案，點歌收款不受影響，成交服務費回到 3%。
             想繼續的話在下面重新選一次就好，不會重複收費。
+          </p>
+        )}
+      </section>
+
+      <section className="sec">
+        <h2 className="h2">以你最近 30 天的成交來算</h2>
+        {last30.count ? (
+          <>
+            <p className="small mt-1">
+              這 30 天成交 <span className="num">{last30.count}</span> 筆、
+              共 <span className="num">NT${last30.sum.toLocaleString()}</span>。
+              如果下個月差不多，每個方案一個月要付這些（月費＋服務費）：
+            </p>
+            <ul className="mt-3 flex flex-col">
+              {PLANS.map((x) => {
+                const total = costOf(x.slug);
+                const best = x.slug === cheapest;
+                return (
+                  <li key={x.slug} className="row flex items-center gap-3 py-3">
+                    <strong className="w-20 shrink-0">{x.name}</strong>
+                    <span className="small flex-1">
+                      月費 <span className="num">NT${x.price.toLocaleString()}</span>
+                      　服務費 <span className="num">NT${Math.round(last30.sum * x.feeRate).toLocaleString()}</span>
+                      （{(x.feeRate * 100).toFixed(0)}%）
+                    </span>
+                    <span className={`num shrink-0 text-[17px] font-bold ${best ? "text-nowtext" : ""}`}>
+                      NT${total.toLocaleString()}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="small mt-3">
+              以你目前的量，<strong>{planBySlug(cheapest!).name}</strong>最省。
+              但便宜不是唯一理由——互動遊戲和樂團拆帳是看你要不要用，不是看划不划算。
+            </p>
+          </>
+        ) : (
+          <p className="small mt-1">
+            這 30 天還沒有成交紀錄，所以沒辦法幫你算。有幾筆之後再回來看，
+            這裡會用你自己的數字比，不是用範例。
           </p>
         )}
       </section>
