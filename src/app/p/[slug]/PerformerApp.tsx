@@ -15,7 +15,7 @@ type Sheet = { kind: "request"; item: MenuRow } | { kind: "tip" } | null;
 
 export function PerformerApp(props: {
   performer: Perf; menu: MenuRow[]; initialState: PublicState; fan: FanInfo; initialFollowing: boolean; nextShow: { when: string; location: string; note: string } | null;
-  liffId: string; devLogin: boolean; oaUrl: string; appName: string; initialTab?: "menu" | "queue" | "rank" | "wall";
+  liffId: string; devLogin: boolean; oaUrl: string; appName: string; hideBranding?: boolean; initialTab?: "menu" | "queue" | "rank" | "wall";
   area?: { slug: string; name: string } | null; district?: string;
 }) {
   const { performer: p, menu, liffId } = props;
@@ -191,7 +191,7 @@ export function PerformerApp(props: {
         <div className="flex gap-3">
           <button disabled={!state.accepting} onClick={() => setSheet({ kind: "tip" })} className="btn btn-primary btn-lg flex-1">打賞 {p.name}</button>
         </div>
-        <p className="text-center text-[12px] leading-4 text-ink3">款項直接付給表演者，{props.appName}不經手</p>
+        <p className="text-center text-[12px] leading-4 text-ink3">{props.hideBranding ? "款項直接付給表演者，平台不經手" : `款項直接付給表演者，${props.appName}不經手`}</p>
       </div>
 
       {toast && (

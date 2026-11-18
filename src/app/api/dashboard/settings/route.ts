@@ -7,6 +7,8 @@ import { requirePerformer } from "@/lib/auth";
 import { encrypt } from "@/lib/crypto";
 import { AREAS } from "@/lib/areas";
 import { checkDataUrlImage } from "@/lib/imagecheck";
+import { planIsPaid } from "@/lib/plans";
+import { effectivePlan } from "@/lib/subscription";
 
 const RESERVED = new Set(["admin", "api", "dashboard", "login", "live", "p", "o", "me", "mock-pay", "www"]);
 
@@ -26,6 +28,7 @@ const Body = z.object({
   maxQueue: z.number().int().min(1).max(100),
   avgSongMinutes: z.number().int().min(1).max(30),
   showAmounts: z.boolean(),
+  hideBranding: z.boolean().default(false),
   notifyLine: z.boolean(),
   payMethods: z
     .array(
@@ -71,6 +74,8 @@ export async function POST(req: Request) {
     .set({
       ...b,
       avatarUrl: b.avatarUrl || null,
+      // 免費方案不能關掉平台標記。在這裡擋，不能只靠前端藏按鈕
+      hideBranding: b.hideBranding && planIsPaid(effectivePlan(auth.performer)),
       presetAmounts: [...new Set(b.presetAmounts)].sort((x, y) => x - y),
       ...(gateway
         ? { gateway: gateway.gateway, gatewayMerchantId: gateway.merchantId, gatewayHashKeyEnc: encrypt(gateway.hashKey), gatewayHashIvEnc: encrypt(gateway.hashIV) }

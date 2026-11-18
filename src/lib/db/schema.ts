@@ -56,6 +56,8 @@ export const performers = pgTable("performers", {
   planUntil: timestamp("plan_until", { withTimezone: true }),
   // 取消續期：到期就降回免費，當期仍然用到底
   planAutoRenew: boolean("plan_auto_renew").notNull().default(true),
+  // 付費方案可以把點歌頁頁尾的平台標記收起來，讓頁面看起來是表演者自己的
+  hideBranding: boolean("hide_branding").notNull().default(false),
   /** 線上直播平台，只有 kind=streamer 用：youtube | twitch | self | instagram */
   streamPlatform: varchar("stream_platform", { length: 12 }),
   /** 粉絲單場花費上限（分）。0 = 用系統預設 */

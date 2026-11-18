@@ -24,7 +24,14 @@ export function SiteHeader() {
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({ bare }: { bare?: boolean } = {}) {
+  // bare：付費方案的表演者頁面不顯示平台導覽與標記
+  if (bare)
+    return (
+      <footer className="no-print mt-16 border-t border-rule">
+        <div className="wrap pt-8 pb-8 text-[13px] text-ink3">款項由觀眾直接付給表演者，平台不經手</div>
+      </footer>
+    );
   return (
     <footer className="no-print mt-16 border-t border-rule">
       <div className="wrap flex flex-wrap items-center gap-x-6 gap-y-2 pt-8 pb-4 text-[14px]">

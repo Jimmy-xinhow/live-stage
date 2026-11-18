@@ -99,6 +99,13 @@
       "when": 1794979785600,
       "tag": "0013_steady_darkstar",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794980729389,
+      "tag": "0014_wide_sprite",
+      "breakpoints": true
     }
   ]
 }

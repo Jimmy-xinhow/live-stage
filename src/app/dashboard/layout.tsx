@@ -58,6 +58,8 @@ export default async function DashLayout({ children }: { children: React.ReactNo
           label: "經營",
           items: [
             { href: "/dashboard/fans", label: "粉絲" },
+            { href: "/dashboard/announce", label: "開演公告" },
+            { href: "/dashboard/ledger", label: "收入對帳" },
             { href: "/dashboard/points", label: "點數" },
             { href: "/dashboard/plan", label: "方案" },
             { href: "/dashboard/settings", label: "收款與設定" },

@@ -59,7 +59,7 @@ export const PLANS: Plan[] = [
       "成交費 3% → 1%",
       "收入對帳明細匯出（報稅、跟店家核對）",
       "開演公告一鍵成圖，直接貼 IG 限動",
-      "自訂網址，移除頁尾平台標記",
+      "點歌頁移除平台標記，看起來是你自己的頁",
       "優先客服",
     ],
   },
@@ -99,6 +99,9 @@ export const PLANS: Plan[] = [
 ];
 
 export const planBySlug = (s: string | null | undefined) => PLANS.find((p) => p.slug === s) ?? PLANS[0];
+
+/** 有沒有付費。對帳匯出、公告成圖、移除平台標記這些經營工具的門檻 */
+export const planIsPaid = (s: string | null | undefined) => planBySlug(s).slug !== "free";
 
 /** 這個方案有沒有解鎖互動遊戲 */
 export function planHasGames(s: string | null | undefined) {

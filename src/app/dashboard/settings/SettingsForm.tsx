@@ -11,10 +11,10 @@ import { kindBySlug, type KindSlug } from "@/lib/kinds";
 type Profile = {
   slug: string; displayName: string; avatarUrl: string; bio: string; category: "busker" | "service" | "creator" | "other"; themeColor: string;
   city: string | null; district: string;
-  thankYouText: string; presetAmounts: number[]; minAmount: number; maxAmount: number; maxQueue: number; avgSongMinutes: number; showAmounts: boolean; notifyLine: boolean;
+  thankYouText: string; presetAmounts: number[]; minAmount: number; maxAmount: number; maxQueue: number; avgSongMinutes: number; showAmounts: boolean; hideBranding: boolean; notifyLine: boolean;
 };
 
-export function SettingsForm({ initial, gatewayLabel, merchantId, payMethods: pm0, kind }: { initial: Profile; gatewayLabel: string; merchantId: string | null; payMethods: PayMethod[]; kind: KindSlug }) {
+export function SettingsForm({ paid, initial, gatewayLabel, merchantId, payMethods: pm0, kind }: { paid: boolean; initial: Profile; gatewayLabel: string; merchantId: string | null; payMethods: PayMethod[]; kind: KindSlug }) {
   const router = useRouter();
   const [f, setF] = useState(initial);
   const [presets, setPresets] = useState(initial.presetAmounts.join(", "));
@@ -97,6 +97,11 @@ export function SettingsForm({ initial, gatewayLabel, merchantId, payMethods: pm
         <label className="field">打賞的預設金額（逗號分隔）<input className="num" value={presets} onChange={(e) => setPresets(e.target.value)} /></label>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
           <label className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.showAmounts} onChange={(e) => set("showAmounts", e.target.checked)} />公開顯示金額</label>
+          {paid ? (
+            <label className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.hideBranding} onChange={(e) => set("hideBranding", e.target.checked)} />點歌頁不顯示平台名稱</label>
+          ) : (
+            <p className="small">點歌頁移除平台標記是點歌台方案以上的功能。<a href="/dashboard/plan" className="underline">看方案</a></p>
+          )}
           <label className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.notifyLine} onChange={(e) => set("notifyLine", e.target.checked)} />有新點歌時用 LINE 通知我</label>
         </div>
       </section>

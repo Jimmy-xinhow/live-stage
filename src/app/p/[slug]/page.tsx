@@ -14,6 +14,8 @@ import { JsonLd, absUrl, breadcrumb, showEvent } from "@/lib/seo";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { streamInfo } from "@/lib/acts";
+import { planIsPaid } from "@/lib/plans";
+import { effectivePlan } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +90,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
       devLogin={env.allowDevLogin}
       oaUrl={env.line.oaAddFriendUrl}
       appName={APP_NAME}
+      hideBranding={p.hideBranding && planIsPaid(effectivePlan(p))}
       initialTab={tab === "rank" || tab === "queue" || tab === "wall" ? tab : "menu"}
       area={area ? { slug: area.slug, name: area.name } : null}
       district={p.district}
