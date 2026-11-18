@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { chatMessages, checkins, fans, hands, liveSessions, lotteries, lotteryEntries, performers, wishes, wishVotes, type Performer } from "./db/schema";
 import { pushMessage } from "./line";
+import { track } from "./usage";
 import { env } from "./env";
 
 export class HubError extends Error {}
@@ -83,6 +84,7 @@ export async function checkIn(p: Performer, fanId: string) {
   const sid = needLive(p);
   const db = await getDb();
   await db.insert(checkins).values({ sessionId: sid, performerId: p.id, fanId }).onConflictDoNothing();
+  track("checkin", p.id);
 }
 
 export async function raiseHand(p: Performer, fanId: string, kind: string, text: string) {
@@ -116,6 +118,7 @@ export async function addWish(p: Performer, fanId: string, title: string) {
   if (Number(n) >= WISH_WEEKLY) throw new HubError(`每週最多許 ${WISH_WEEKLY} 個願望`);
   const [same] = await db.select().from(wishes).where(and(eq(wishes.performerId, p.id), sql`lower(${wishes.title}) = lower(${t})`));
   if (same) return voteWish(p, fanId, same.id, true);
+  track("wish_add", p.id);
   const [w] = await db.insert(wishes).values({ performerId: p.id, title: t }).returning();
   await db.insert(wishVotes).values({ wishId: w.id, fanId });
 }

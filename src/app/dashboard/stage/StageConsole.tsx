@@ -107,9 +107,10 @@ export function StageConsole({ slug, initial, modes, defaultMode }: { slug: stri
         )}
       </section>
 
-      <section className="sec">
+      <section className="sec" aria-label="排隊">
         <h2 className="h2">排隊 <span className="num text-ink3">{waiting.length}／{s.maxQueue}</span></h2>
-        <ol className="mt-1">
+        {/* 新的點歌是自己冒出來的，不是表演者按出來的——要讓讀螢幕的人也知道 */}
+        <ol className="mt-1" aria-live="polite" aria-relevant="additions removals">
           {waiting.map((q, i) => (
             <li key={q.id} className="row flex min-h-[68px] items-center gap-3 py-3">
               <span className="num w-6 shrink-0 text-center text-[18px] font-bold text-ink3">{i + 1}</span>

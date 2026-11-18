@@ -73,8 +73,21 @@ export function PerformerApp(props: {
   const requestBlock = !state.accepting ? "藝人暫停接單中" : !state.live ? "藝人目前沒有在演出" : !state.queueOpen ? "藝人暫停點播" : waiting >= state.maxQueue ? "排隊已滿，稍後再點" : "";
 
   const TABS = [["menu", "歌單"], ["queue", waiting ? `排隊 ${waiting}` : "排隊"], ["rank", "排行"], ["wall", "留言"]] as const;
+
+  // 排隊是會自己變動的內容。看得到的人一眼就知道換歌了，讀螢幕的人需要被告知；
+  // 用 polite 不打斷他正在聽的句子，而且只在真的換了才播報。
+  const [announce, setAnnounce] = useState("");
+  const lastPlaying = useRef<string | null>(null);
+  useEffect(() => {
+    const now = playing ? `${playing.title}・${playing.name}` : null;
+    if (now !== lastPlaying.current) {
+      lastPlaying.current = now;
+      setAnnounce(now ? `現在演唱：${playing!.title}，${playing!.name} 點的。還有 ${waiting} 首排隊中。` : state.live ? "目前沒有歌曲在演唱。" : "");
+    }
+  }, [playing?.id, playing?.title, playing?.name, waiting, state.live]);
   return (
     <main className="mx-auto min-h-dvh max-w-[480px] pb-32">
+      <p className="sr-only" role="status" aria-live="polite">{announce}</p>
       {/* 連線不穩時說清楚畫面是舊的，不要讓人以為排隊真的空了 */}
       {shaky && (
         <p role="status" aria-live="polite" className="sticky top-0 z-40 border-b-2 border-ink bg-sunken px-5 py-2 text-[14px] text-ink2">
@@ -157,9 +170,9 @@ export function PerformerApp(props: {
       )}
 
       {tab === "queue" && (
-        <section className="px-5 pt-2">
+        <section className="px-5 pt-2" aria-label="點歌排隊">
           {state.queue.length ? (
-            <ol>
+            <ol aria-live="polite" aria-relevant="additions removals">
               {state.queue.map((x, i) => (
                 <li key={x.id} className="row flex min-h-[64px] items-center gap-3 py-3">
                   <span className="num w-8 shrink-0 text-[20px] font-bold text-ink3">{x.status === "playing" ? <span className="dot-now" /> : i}</span>

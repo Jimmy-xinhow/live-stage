@@ -127,6 +127,20 @@
       "when": 1794991273997,
       "tag": "0017_condemned_justin_hammer",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794991578700,
+      "tag": "0018_enable_rls_rest",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794991604496,
+      "tag": "0019_yellow_arachne",
+      "breakpoints": true
     }
   ]
 }

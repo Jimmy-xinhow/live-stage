@@ -15,6 +15,7 @@ import { effectivePlan } from "./subscription";
 import { wouldExceed } from "./linequota";
 import { recordSplit } from "./band";
 import { planHasPro } from "./plans";
+import { track } from "./usage";
 
 export async function getPerformerBySlug(slug: string) {
   const db = await getDb();
@@ -315,7 +316,10 @@ export async function markOrderPaid(tradeNo: string, r: Pick<PayResult, "payment
     const balance = await applyPoints(tx, p.id, -fee, "fee", { orderId: o.id, note: `${o.itemTitle ?? "打賞"} ${nt(o.amount)} × ${feePct(effectivePlan(p))}%` });
     return { order: o, performer: { ...p, pointsCents: balance } };
   });
-  if (result) await afterPaid(result.performer, result.order).catch((e) => reportError("afterPaid", e));
+  if (result) {
+    track(result.order.gameUnit ? "game_boost" : "order_paid", result.performer.id);
+    await afterPaid(result.performer, result.order).catch((e) => reportError("afterPaid", e));
+  }
   return result?.order ?? null;
 }
 
@@ -411,6 +415,7 @@ async function manualOrder(p: Performer, where: { id?: string; code?: string }) 
 
 /** 藝人確認收到轉帳 → 進排隊、扣點、通知（可修正實收金額） */
 export async function confirmManual(p: Performer, where: { id?: string; code?: string }, amount?: number) {
+  track("manual_confirm", p.id);
   const o = await manualOrder(p, where);
   if (!o) throw new OrderError(where.code ? `找不到待確認的點歌碼 ${where.code}` : "這筆已處理或已過期");
   const paid = await markOrderPaid(o.tradeNo, { paymentType: "manual", gatewayTradeNo: "", raw: null }, amount && amount > 0 ? amount : undefined);
@@ -470,6 +475,7 @@ export async function goLive(p: Performer, location: string, notifyFans: boolean
     .from(follows)
     .innerJoin(fans, eq(fans.id, follows.fanId))
     .where(and(eq(follows.performerId, p.id), eq(follows.notifyLive, true), isNotNull(fans.lineUserId)));
+  track("go_live", p.id);
   const ids = rows.map((r) => r.line);
   if (!ids.length) return { notified: 0 };
   // 額度不夠就不發，但演出照常開始——通知發不出去不該讓人無法上台
@@ -490,6 +496,7 @@ export async function goLive(p: Performer, location: string, notifyFans: boolean
 }
 
 export async function endLive(p: Performer) {
+  track("end_live", p.id);
   const db = await getDb();
   if (!p.liveSessionId) return;
   await db.update(liveSessions).set({ endedAt: new Date() }).where(eq(liveSessions.id, p.liveSessionId));
@@ -591,6 +598,7 @@ export async function refundOrder(opts: {
       })
       .where(eq(orders.id, o0.id))
       .returning();
+    track("refund", o0.performerId);
     if (o0.feeCents > 0) {
       await applyPoints(tx, o0.performerId, o0.feeCents, "fee_refund", {
         orderId: o0.id,

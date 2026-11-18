@@ -40,7 +40,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             { href: "/admin/reports", label: "內容檢舉", badge: Number(newReports.n) },
           ],
         },
-        { label: "設定", items: [{ href: "/admin/logs", label: "操作紀錄" }, { href: "/admin/system", label: "系統" }] },
+        { label: "設定", items: [{ href: "/admin/usage", label: "功能使用" }, { href: "/admin/logs", label: "操作紀錄" }, { href: "/admin/system", label: "系統" }] },
       ]}
     >
       {children}

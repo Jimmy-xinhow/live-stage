@@ -662,3 +662,22 @@ export const lineOutbox = pgTable(
   },
   (t) => [index("line_outbox_due_idx").on(t.status, t.nextAt)],
 );
+
+/**
+ * 功能埋點。只記「誰在什麼時候用了哪個功能」，沒有內容、沒有金額、沒有觀眾身分。
+ *
+ * 目的只有一個：知道做出來的東西有沒有人用。沒有這個，收斂與排優先順序就只能用猜的。
+ * 刻意不做成計數器，因為我們要算的是「有幾位表演者在用」，計數器算不出不重複人數。
+ * 保留 90 天，超過的由排程清掉。
+ */
+export const usageEvents = pgTable(
+  "usage_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** 事件名稱，見 lib/usage.ts 的 EVENTS */
+    name: varchar("name", { length: 40 }).notNull(),
+    performerId: uuid("performer_id").references(() => performers.id, { onDelete: "cascade" }),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("usage_events_idx").on(t.name, t.createdAt)],
+);

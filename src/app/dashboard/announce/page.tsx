@@ -4,6 +4,7 @@ import { planIsPaid } from "@/lib/plans";
 import { effectivePlan } from "@/lib/subscription";
 import { PageHead } from "@/components/back/Shell";
 import { Poster } from "./Poster";
+import { track } from "@/lib/usage";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function Announce() {
       </div>
     );
 
+  track("poster_open", p.id);
   return (
     <div className="flex flex-col gap-6">
       <PageHead title="開演公告" desc="填時間和地點，按下載就有一張可以直接貼 IG 限動的圖。圖上的 QR 就是你的點歌連結。" />

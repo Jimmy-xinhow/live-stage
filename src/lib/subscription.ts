@@ -2,6 +2,7 @@ import { and, eq, isNotNull, lte, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { performers } from "./db/schema";
 import { applyPoints } from "./billing";
+import { track } from "./usage";
 import { PLANS, planBySlug, type PlanSlug } from "./plans";
 import { pushMessage } from "./line";
 
@@ -90,6 +91,7 @@ export async function changePlan(performerId: string, to: PlanSlug): Promise<Cha
       return { ok: false, reason: "insufficient", needCents: charge - p.pointsCents, balanceCents: p.pointsCents } as const;
     }
 
+    track("plan_change", performerId);
     const until = new Date(Date.now() + PERIOD);
     await tx.update(performers).set({ plan: to, planUntil: until, planAutoRenew: true }).where(eq(performers.id, performerId));
 

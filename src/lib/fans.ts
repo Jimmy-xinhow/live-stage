@@ -5,6 +5,7 @@ import type { LineProfile } from "./line";
 import { multicast, pushMessage } from "./line";
 import { applyPoints, canAcceptOrders } from "./billing";
 import { wouldExceed } from "./linequota";
+import { track } from "./usage";
 import { env } from "./env";
 
 export async function upsertFan(profile: LineProfile) {
@@ -136,6 +137,7 @@ export async function createShow(p: Performer, input: { startsAt: Date; location
   await multicast(ids, [
     { type: "text", text: `📅 ${p.displayName} 演出預告\n${fmtShowTime(input.startsAt)}\n📍 ${input.location}${input.note ? `\n${input.note}` : ""}\n先看歌單：${env.baseUrl}/p/${p.slug}` },
   ], "show", p.id);
+  track("show_notify", p.id);
   const cost = ids.length * env.billing.liveNotifyCents;
   if (cost) await applyPoints(db, p.id, -cost, "broadcast", { note: `演出預告 ${ids.length} 位粉絲` });
   await db.update(shows).set({ notifiedCount: ids.length }).where(eq(shows.id, s.id));
@@ -217,6 +219,7 @@ export async function messageFans(p: Performer, target: { segment?: Segment | "a
   const body = `💌 ${p.displayName}：\n${text}\n\n${env.baseUrl}/p/${p.slug}`;
   if (ids.length === 1) await pushMessage(ids[0], [{ type: "text", text: body }], "broadcast", p.id);
   else await multicast(ids, [{ type: "text", text: body }], "broadcast", p.id);
+  track("broadcast", p.id);
   const cost = ids.length * env.billing.liveNotifyCents;
   if (cost) await applyPoints(db, p.id, -cost, "broadcast", { note: target.fanId ? "一對一感謝" : `粉絲訊息 ${ids.length} 人` });
   return { sent: ids.length };

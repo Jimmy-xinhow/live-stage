@@ -3,6 +3,7 @@ import { getDb } from "./db";
 import { fans, games, performers, type Game, type GameState, type Performer, type QuizQuestion, type WheelEntry } from "./db/schema";
 import { pushMessage } from "./line";
 import { env } from "./env";
+import { track } from "./usage";
 
 export class GameError extends Error {}
 
@@ -119,6 +120,7 @@ export async function startGame(p: Performer, type: GameType, input: { lanes: st
     .insert(games)
     .values({ performerId: p.id, opponentId: opponent?.id ?? null, sessionId: p.liveSessionId, type, config: { reward: input.reward.trim().slice(0, 60), goal: input.goal && input.goal > 0 ? Math.floor(input.goal) : t.goal, questions }, state, endsAt: new Date(Date.now() + Math.max(1, Math.min(30, input.minutes)) * 60_000) })
     .returning();
+  track("game_start", p.id);
   if (opponent?.lineUserId)
     await pushMessage(opponent.lineUserId, [
       { type: "text", text: `${p.displayName} 向你發起 PK！兩邊粉絲現在可以互相助攻。\n大螢幕：${env.baseUrl}/live/${opponent.slug}/game\n控制台：${env.baseUrl}/dashboard/interact` },

@@ -5,6 +5,7 @@ import { orders } from "@/lib/db/schema";
 import { planIsPaid } from "@/lib/plans";
 import { effectivePlan } from "@/lib/subscription";
 import { LIMITS, guard } from "@/lib/ratelimit";
+import { track } from "@/lib/usage";
 
 /**
  * 收入對帳明細，匯出成 CSV。
@@ -38,6 +39,7 @@ export async function GET(req: Request) {
   if (rl) return rl;
   const auth = await requirePerformer();
   if (!auth) return new Response("請先登入", { status: 401 });
+  track("ledger_export", auth.performer.id);
   if (!planIsPaid(effectivePlan(auth.performer)))
     return new Response("對帳明細匯出要點歌台方案以上。在後台的「方案」頁可以升級。", { status: 402 });
 

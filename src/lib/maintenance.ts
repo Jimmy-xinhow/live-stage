@@ -2,6 +2,7 @@ import { and, eq, isNull, lt, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { liveSessions, orders, performers } from "./db/schema";
 import { reportError } from "./errors";
+import { lineOutbox, usageEvents } from "./db/schema";
 
 /**
  * 每小時的整理工作。全部都寫成可以重複執行（冪等），
@@ -43,6 +44,19 @@ export async function runMaintenance() {
         .set({ liveSessionId: null })
         .where(sql`${performers.liveSessionId} in ${stale.map((s) => s.id)}`);
     }
+    // 4. 埋點只保留 90 天。要回答的是「有沒有人用」，再久只是佔空間
+    const pruned = await db
+      .delete(usageEvents)
+      .where(lt(usageEvents.createdAt, new Date(now.getTime() - 90 * 86400_000)))
+      .returning({ id: usageEvents.id });
+    out.prunedUsage = pruned.length;
+
+    // 5. 已送出的推播紀錄留 30 天就夠查，放棄的留著給人看
+    const sentLogs = await db
+      .delete(lineOutbox)
+      .where(and(eq(lineOutbox.status, "sent"), lt(lineOutbox.createdAt, new Date(now.getTime() - 30 * 86400_000))))
+      .returning({ id: lineOutbox.id });
+    out.prunedOutbox = sentLogs.length;
   } catch (e) {
     reportError("maintenance", e);
     throw e;

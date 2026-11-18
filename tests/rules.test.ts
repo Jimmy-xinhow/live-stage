@@ -135,3 +135,36 @@ describe("上線前檢查", () => {
     }
   });
 });
+
+describe("功能埋點", () => {
+  it("每個事件名稱都有看得懂的中文標籤", async () => {
+    const { EVENTS } = await import("@/lib/usage");
+    for (const [k, v] of Object.entries(EVENTS)) {
+      expect(k).toMatch(/^[a-z_]+$/);
+      expect(v.length, k).toBeGreaterThan(1);
+    }
+  });
+
+  it("埋點壞掉不會把正事一起拖下水", async () => {
+    const { track } = await import("@/lib/usage");
+    // 不存在的表演者 id：外鍵會失敗，但 track 要自己吞掉
+    await expect(track("go_live", "00000000-0000-0000-0000-000000000000")).resolves.toBeUndefined();
+  });
+
+  it("記錄得到、也算得出有幾位表演者在用", async () => {
+    const { track, usageSummary, unusedFeatures } = await import("@/lib/usage");
+    const { mkPerformer } = await import("./helpers");
+    const [a, b] = await Promise.all([mkPerformer(), mkPerformer()]);
+    await track("game_start", a.id);
+    await track("game_start", a.id);
+    await track("game_start", b.id);
+
+    const row = (await usageSummary(1)).find((r) => r.name === "game_start")!;
+    expect(row.count).toBeGreaterThanOrEqual(3);
+    expect(row.people).toBeGreaterThanOrEqual(2);
+    expect(row.label).toBe("開一場遊戲");
+
+    // 沒被用過的功能要列得出來，那才是這張表的用處
+    expect((await unusedFeatures(1)).some((u) => u.name === "refund")).toBe(true);
+  });
+});

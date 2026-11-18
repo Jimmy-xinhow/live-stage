@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { getDb, type DB } from "./db";
 import { bandMembers, orderSplits, orders, performers } from "./db/schema";
+import { track } from "./usage";
 
 type Tx = Parameters<Parameters<DB["transaction"]>[0]>[0];
 
@@ -70,6 +71,7 @@ export async function saveMembers(performerId: string, input: MemberInput[]) {
         }),
       );
   });
+  track("band_save", performerId);
   return { ok: true as const };
 }
 
@@ -118,6 +120,7 @@ export async function joinBand(code: string, lineUserId: string) {
   if (!m) return { ok: false as const, error: "邀請碼不正確，或這個團員已經被移除" };
   if (m.lineUserId && m.lineUserId !== lineUserId) return { ok: false as const, error: "這個邀請碼已經被別人用了，跟團長要一個新的" };
   await db.update(bandMembers).set({ lineUserId }).where(eq(bandMembers.id, m.id));
+  track("band_join", m.performerId);
   return { ok: true as const, memberId: m.id, name: m.name };
 }
 
