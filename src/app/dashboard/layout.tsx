@@ -51,6 +51,7 @@ export default async function DashLayout({ children }: { children: React.ReactNo
             { href: "/dashboard", label: "總覽" },
             { href: "/dashboard/stage", label: "演出控制台", badge: Number(pay.n) },
             { href: "/dashboard/menu", label: "歌單與服務" },
+            ...(FEATURES.games ? [{ href: "/dashboard/interact", label: "互動" }] : []),
           ],
         },
         {
@@ -58,6 +59,7 @@ export default async function DashLayout({ children }: { children: React.ReactNo
           items: [
             { href: "/dashboard/fans", label: "粉絲" },
             { href: "/dashboard/points", label: "點數" },
+            { href: "/dashboard/plan", label: "方案" },
             { href: "/dashboard/settings", label: "收款與設定" },
           ],
         },

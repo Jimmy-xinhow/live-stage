@@ -94,11 +94,11 @@ export async function seedDemo(db: DB) {
         paymentType: "Credit_CreditCard",
         queueStatus,
         queueSeq: seq,
-        feeCents: feeFor(amount),
+        feeCents: feeFor(amount, "all"),
         ...extra,
       })
       .returning();
-    await applyPoints(db, p.id, -feeFor(amount), "fee", { orderId: o.id, note: "示範資料" });
+    await applyPoints(db, p.id, -feeFor(amount, "all"), "fee", { orderId: o.id, note: "示範資料" });
   };
   await mk(1, items[0], fanRows[0], 100, "〈晴天〉是我們的歌", "done", 1, { reply: "謝謝小魚～下次再唱給你聽" });
   await mk(2, null, null, 50, "加油！", null, null);

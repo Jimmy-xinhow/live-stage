@@ -52,6 +52,10 @@ export const performers = pgTable("performers", {
   kind: varchar("kind", { length: 10 }).notNull().default("street"),
   // 方案：free / base / play / all。見 lib/plans.ts
   plan: varchar("plan", { length: 10 }).notNull().default("free"),
+  // 付費方案的到期時間。null＝免費方案。到期沒續成就會被降回 free
+  planUntil: timestamp("plan_until", { withTimezone: true }),
+  // 取消續期：到期就降回免費，當期仍然用到底
+  planAutoRenew: boolean("plan_auto_renew").notNull().default(true),
   /** 線上直播平台，只有 kind=streamer 用：youtube | twitch | self | instagram */
   streamPlatform: varchar("stream_platform", { length: 12 }),
   /** 粉絲單場花費上限（分）。0 = 用系統預設 */

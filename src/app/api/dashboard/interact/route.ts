@@ -3,7 +3,8 @@ import { requirePerformer } from "@/lib/auth";
 import { consoleState, drawLottery, HubError, pickHand, resetHype, setWishStatus, startLottery } from "@/lib/hub";
 import { currentGame, endGame, GameError, publicGame, quizControl, startGame, wheelReview, wheelSpin, type GameType } from "@/lib/games";
 import type { QuizQuestion } from "@/lib/db/schema";
-import { planHasGames } from "@/lib/plans";
+import { planHasGames, planHasPro } from "@/lib/plans";
+import { effectivePlan } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,10 @@ export async function POST(req: Request) {
     else if (b.action === "hype_reset") await resetHype(p);
     else if (b.action === "wish") await setWishStatus(p, String(b.id), b.status as "open" | "practice" | "done", String(b.note ?? ""));
     else if (b.action === "game_start") {
-      if (!planHasGames(p.plan)) return NextResponse.json({ error: "互動遊戲要互動方案以上才能開。想先試用跟我們說一聲，第一場免費開著。" }, { status: 402 });
+      const plan = effectivePlan(p);
+      if (!planHasGames(plan)) return NextResponse.json({ error: "互動遊戲要互動方案以上才能開。想先試用跟我們說一聲，第一場免費開著。" }, { status: 402 });
+      // 跨表演者 PK 是全部方案才有的
+      if (b.type === "pk" && !planHasPro(plan)) return NextResponse.json({ error: "跨表演者 PK 要全部方案。在後台的「方案」頁可以升級。" }, { status: 402 });
       await startGame(p, b.type as GameType, { lanes: (b.lanes as string[]) ?? [], reward: String(b.reward ?? ""), minutes: Number(b.minutes) || 3, goal: Number(b.goal) || undefined, questions: b.questions as QuizQuestion[] | undefined, opponentSlug: b.opponentSlug as string | undefined });
     }
     else if (b.action === "quiz") { const g = await currentGame(p.id); if (g) await quizControl(g.id, b.mode as "open" | "reveal" | "next", Number(b.secs) || 15); }

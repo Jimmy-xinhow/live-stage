@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { and, asc, desc, eq, gte, inArray, isNotNull, lt, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { fans, follows, liveSessions, menuItems, orders, performers, type Order, type Performer } from "./db/schema";
-import { applyPoints, canAcceptOrders, feeFor, fmtPoints } from "./billing";
+import { applyPoints, canAcceptOrders, feeFor, feePct, fmtPoints } from "./billing";
 import { multicast, pushMessage } from "./line";
 import { env } from "./env";
 import { nt } from "./format";
@@ -11,6 +11,7 @@ import { setFollow } from "./fans";
 import { badgesFor, evaluateAchievements, leaderboard, notifyOvertake } from "./rewards";
 import { reportError } from "./errors";
 import type { ModeSlug } from "./kinds";
+import { effectivePlan } from "./subscription";
 
 export async function getPerformerBySlug(slug: string) {
   const db = await getDb();
@@ -260,7 +261,7 @@ export async function markOrderPaid(tradeNo: string, r: Pick<PayResult, "payment
       queueSeq = Number(m) + 1;
       if (o0.menuItemId) await tx.update(menuItems).set({ requestCount: sql`${menuItems.requestCount} + 1` }).where(eq(menuItems.id, o0.menuItemId));
     }
-    const fee = feeFor(o0.amount);
+    const fee = feeFor(o0.amount, effectivePlan(p));
     const [o] = await tx
       .update(orders)
       .set({
@@ -277,7 +278,7 @@ export async function markOrderPaid(tradeNo: string, r: Pick<PayResult, "payment
       .where(and(eq(orders.id, o0.id), inArray(orders.status, payable)))
       .returning();
     if (!o) return null;
-    const balance = await applyPoints(tx, p.id, -fee, "fee", { orderId: o.id, note: `${o.itemTitle ?? "打賞"} ${nt(o.amount)} × ${env.billing.feeRate * 100}%` });
+    const balance = await applyPoints(tx, p.id, -fee, "fee", { orderId: o.id, note: `${o.itemTitle ?? "打賞"} ${nt(o.amount)} × ${feePct(effectivePlan(p))}%` });
     return { order: o, performer: { ...p, pointsCents: balance } };
   });
   if (result) await afterPaid(result.performer, result.order).catch((e) => reportError("afterPaid", e));

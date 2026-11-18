@@ -4,6 +4,9 @@ import { PROMO } from "../src/lib/market";
 import { EVENT_PROMO } from "../src/lib/events";
 import { streamInfo } from "../src/lib/acts";
 import { fmtTaipei } from "../src/lib/format";
+import { feeFor } from "../src/lib/billing";
+import { planHasGames, planHasPro, breakEven, boughtForFeatures } from "../src/lib/plans";
+import { effectivePlan } from "../src/lib/subscription";
 
 describe("互動遊戲規則", () => {
   it("免費玩法沒有付費道具，付費遊戲的道具都有固定加成", () => {
@@ -54,5 +57,48 @@ describe("台北時間格式", () => {
   it("用固定換算，不受伺服器時區影響", () => {
     expect(fmtTaipei("2026-11-20T12:00:00.000Z")).toBe("11/20（週五） 20:00");
     expect(fmtTaipei("2026-11-20T16:30:00.000Z", false)).toBe("11/21（週六）");
+  });
+});
+
+/* ───────── 方案與服務費 ─────────
+   方案頁上寫了「免費 3%、付費 1%」。程式沒吃 plan 的話那就是不實陳述，
+   所以這幾條是在守那個承諾。 */
+
+describe("方案", () => {
+  it("服務費率跟著方案走", () => {
+    expect(feeFor(200, "free")).toBe(600);   // 200 × 3%
+    expect(feeFor(200, "base")).toBe(200);   // 200 × 1%
+    expect(feeFor(200, "play")).toBe(200);
+    expect(feeFor(200, "all")).toBe(200);
+    // 認不得的方案當成免費，不能因為資料髒就少收
+    expect(feeFor(200, "???")).toBe(600);
+  });
+
+  it("過期的付費方案等於免費", () => {
+    const past = new Date(Date.now() - 1000);
+    const future = new Date(Date.now() + 86_400_000);
+    expect(effectivePlan({ plan: "all", planUntil: past })).toBe("free");
+    expect(effectivePlan({ plan: "all", planUntil: future })).toBe("all");
+    // 付費方案沒有到期日是資料壞了，當免費處理比較安全
+    expect(effectivePlan({ plan: "all", planUntil: null })).toBe("free");
+    expect(effectivePlan({ plan: "free", planUntil: null })).toBe("free");
+  });
+
+  it("功能閘門分得清楚哪一層買得到什麼", () => {
+    expect(planHasGames("free")).toBe(false);
+    expect(planHasGames("base")).toBe(false);
+    expect(planHasGames("play")).toBe(true);
+    expect(planHasGames("all")).toBe(true);
+    expect(planHasPro("play")).toBe(false);
+    expect(planHasPro("all")).toBe(true);
+  });
+
+  it("回本點講得出來才能寫在頁面上", () => {
+    // 免費 3% 與點歌台 1% 差 2%，299 ÷ 2% = 14,950，進位到整千
+    expect(breakEven()).toBe(15000);
+    // 互動與全部的費率和點歌台一樣，所以是買功能不是買費率
+    expect(boughtForFeatures("base")).toBe(false);
+    expect(boughtForFeatures("play")).toBe(true);
+    expect(boughtForFeatures("all")).toBe(true);
   });
 });

@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { FEATURES } from "@/lib/features";
 import { planHasGames } from "@/lib/plans";
 import Link from "next/link";
+import { effectivePlan } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function Page() {
   const others = (await liveNow(20)).filter((x) => x.slug !== p.slug).map((x) => ({ slug: x.slug, name: x.name }));
 
   // 功能不該無聲消失。沒買互動方案的人要看得到這裡有什麼、以及怎麼打開。
-  if (!planHasGames(p.plan))
+  if (!planHasGames(effectivePlan(p)))
     return (
       <div className="mx-auto max-w-[620px] px-5 py-10">
         <h1 className="h2">互動遊戲</h1>

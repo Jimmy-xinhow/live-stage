@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runMaintenance } from "@/lib/maintenance";
+import { runPlanRenewals } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,9 @@ export async function POST(req: Request) {
   const auth = req.headers.get("authorization") ?? "";
   if (auth !== `Bearer ${secret}`) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const result = await runMaintenance();
-  return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result });
+  // 方案到期：能續的從點數續一期，不能續的降回免費並通知
+  const plans = await runPlanRenewals();
+  return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result, plans });
 }
 
 export const GET = POST;
