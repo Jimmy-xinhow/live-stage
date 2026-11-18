@@ -11,10 +11,10 @@ import { kindBySlug, type KindSlug } from "@/lib/kinds";
 type Profile = {
   slug: string; displayName: string; avatarUrl: string; bio: string; category: "busker" | "service" | "creator" | "other"; themeColor: string;
   city: string | null; district: string;
-  thankYouText: string; presetAmounts: number[]; minAmount: number; maxAmount: number; maxQueue: number; avgSongMinutes: number; showAmounts: boolean; hideBranding: boolean; notifyLine: boolean;
+  thankYouText: string; presetAmounts: number[]; minAmount: number; maxAmount: number; maxQueue: number; avgSongMinutes: number; showAmounts: boolean; hideBranding: boolean; streamDelaySec: number; notifyLine: boolean;
 };
 
-export function SettingsForm({ paid, initial, gatewayLabel, merchantId, payMethods: pm0, kind }: { paid: boolean; initial: Profile; gatewayLabel: string; merchantId: string | null; payMethods: PayMethod[]; kind: KindSlug }) {
+export function SettingsForm({ paid, pro, initial, gatewayLabel, merchantId, payMethods: pm0, kind }: { paid: boolean; pro: boolean; initial: Profile; gatewayLabel: string; merchantId: string | null; payMethods: PayMethod[]; kind: KindSlug }) {
   const router = useRouter();
   const [f, setF] = useState(initial);
   const [presets, setPresets] = useState(initial.presetAmounts.join(", "));
@@ -98,7 +98,17 @@ export function SettingsForm({ paid, initial, gatewayLabel, merchantId, payMetho
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
           <label className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.showAmounts} onChange={(e) => set("showAmounts", e.target.checked)} />公開顯示金額</label>
           {paid ? (
-            <label className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.hideBranding} onChange={(e) => set("hideBranding", e.target.checked)} />點歌頁不顯示平台名稱</label>
+            <>
+              <label className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.hideBranding} onChange={(e) => set("hideBranding", e.target.checked)} />點歌頁不顯示平台名稱</label>
+              {pro && (
+                <label className="field max-w-[260px]">
+                  <span>直播畫面延遲（秒）</span>
+                  <input className="input num" inputMode="numeric" value={f.streamDelaySec}
+                    onChange={(e) => set("streamDelaySec", Math.max(0, Math.min(120, Number(e.target.value.replace(/\D/g, "")) || 0)))} />
+                  <span className="small">OBS 疊層會標「比畫面快約 N 秒」。填 0 就不顯示。</span>
+                </label>
+              )}
+            </>
           ) : (
             <p className="small">點歌頁移除平台標記是點歌台方案以上的功能。<a href="/dashboard/plan" className="underline">看方案</a></p>
           )}

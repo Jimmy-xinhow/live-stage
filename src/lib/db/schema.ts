@@ -58,6 +58,8 @@ export const performers = pgTable("performers", {
   planAutoRenew: boolean("plan_auto_renew").notNull().default(true),
   // 付費方案可以把點歌頁頁尾的平台標記收起來，讓頁面看起來是表演者自己的
   hideBranding: boolean("hide_branding").notNull().default(false),
+  // 直播畫面比排隊資料慢幾秒。疊層會標出來，否則觀眾看到「正在唱 A」但畫面還在上一首
+  streamDelaySec: integer("stream_delay_sec").notNull().default(0),
   /** 線上直播平台，只有 kind=streamer 用：youtube | twitch | self | instagram */
   streamPlatform: varchar("stream_platform", { length: 12 }),
   /** 粉絲單場花費上限（分）。0 = 用系統預設 */
@@ -554,7 +556,57 @@ export const leads = pgTable(
   (t) => [index("leads_at_idx").on(t.createdAt)],
 );
 
+/**
+ * 樂團團員與拆帳比例。
+ *
+ * 平台不經手款項，所以這裡做的是「算給你看」：錢還是進團長的收款帳戶，
+ * 系統負責把每一筆該怎麼分算好、各自只看到自己的數字。不要把它說成會自動匯款。
+ */
+export const bandMembers = pgTable(
+  "band_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    performerId: uuid("performer_id").notNull().references(() => performers.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 40 }).notNull(),
+    /** 比例，千分之一為單位。整團加起來要正好 1000 */
+    sharePermille: integer("share_permille").notNull(),
+    /**
+     * 邀請碼。團長不可能知道團員的 LINE ID，所以給一條連結讓團員自己登入綁定。
+     * 綁定之後 lineUserId 才有值，團員就能看到自己的拆帳。
+     */
+    inviteCode: varchar("invite_code", { length: 12 }).notNull().unique(),
+    lineUserId: varchar("line_user_id", { length: 60 }),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("band_perf_idx").on(t.performerId), uniqueIndex("band_line_idx").on(t.performerId, t.lineUserId)],
+);
+
+/**
+ * 每一筆訂單成交當下的拆帳快照。
+ *
+ * 不在報表的時候才用「現在的比例」回推——比例改過之後舊的帳就會跟著變，
+ * 那是對帳最忌諱的事。成交當下算好存起來，之後怎麼改都不動已經發生的。
+ */
+export const orderSplits = pgTable(
+  "order_splits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+    performerId: uuid("performer_id").notNull().references(() => performers.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id"),
+    /** 存名字而不是只存 memberId：團員被刪掉之後歷史帳還要看得懂 */
+    memberName: varchar("member_name", { length: 40 }).notNull(),
+    sharePermille: integer("share_permille").notNull(),
+    /** 這筆訂單分給他多少（元，整數，餘數給第一位） */
+    amount: integer("amount").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("split_perf_idx").on(t.performerId, t.createdAt), index("split_order_idx").on(t.orderId)],
+);
+
 export type Performer = typeof performers.$inferSelect;
+export type BandMember = typeof bandMembers.$inferSelect;
+export type OrderSplit = typeof orderSplits.$inferSelect;
 export type Lead = typeof leads.$inferSelect;
 export type AdminLog = typeof adminLogs.$inferSelect;
 export type Report = typeof reports.$inferSelect;

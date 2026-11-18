@@ -9,7 +9,7 @@ import { GameView } from "@/components/GameView";
 /** 完整模式：通知、排隊、排行、掃碼。安全模式（TikTok、17LIVE）：不顯示金額、QR 與支持提示 */
 type Chat = { enabled: boolean; messages: { id: string; author: string; text: string }[]; top: { name: string; count: number }[] };
 
-export function Overlay({ slug, name, safe, preview, chatOn }: { slug: string; name: string; safe: boolean; preview: boolean; chatOn: boolean }) {
+export function Overlay({ slug, name, safe, preview, chatOn, delaySec }: { slug: string; name: string; safe: boolean; preview: boolean; chatOn: boolean ; delaySec?: number }) {
   const [chat, setChat] = useState<Chat | null>(null);
   const [st, setSt] = useState<PublicState | null>(null);
   const [hub, setHub] = useState<HubState | null>(null);
@@ -53,7 +53,11 @@ export function Overlay({ slug, name, safe, preview, chatOn }: { slug: string; n
         <div className="absolute top-[4vh] right-[2.5vw] w-[33vw] rounded-[1.2vw] bg-[#FF6A3D] px-[1.6vw] py-[1.6vh] text-[#0E0E0F]"><div className="text-[1.2vw] font-bold">{latest.kind === "request" ? "新點歌" : "新的支持"}</div><div className="text-[2.2vw] leading-tight font-bold">{latest.name}{latest.itemTitle ? `〈${latest.itemTitle}〉` : ""}{latest.amount ? ` NT$${latest.amount}` : ""}</div>{latest.message && <div className="text-[1.4vw]">{latest.message}</div>}</div>
       )}
       {waiting.length > 0 && (
-        <div className={`absolute top-[20vh] left-[2.5vw] w-[26vw] px-[1.5vw] py-[1.6vh] ${box}`}><div className="mb-[0.6vh] text-[1.4vw] font-bold">接下來</div>{waiting.map((q, i) => <div key={q.id} className="flex gap-[0.8vw] py-[0.3vh] text-[1.4vw]"><span className="num text-[#8E8A81]">{i + 1}</span><span className="flex-1">{q.title}</span><span className="text-[1.1vw] text-[#B9B5AC]">{q.name}</span></div>)}</div>
+        <div className={`absolute top-[20vh] left-[2.5vw] w-[26vw] px-[1.5vw] py-[1.6vh] ${box}`}><div className="mb-[0.6vh] flex items-baseline gap-[0.8vw]">
+          <span className="text-[1.4vw] font-bold">接下來</span>
+          {/* 直播畫面比排隊資料慢。不標出來的話觀眾會看到「正在唱 A」但畫面還在上一首 */}
+          {!!delaySec && <span className="text-[1vw] text-[#B9B5AC]">比畫面快約 {delaySec} 秒</span>}
+        </div>{waiting.map((q, i) => <div key={q.id} className="flex gap-[0.8vw] py-[0.3vh] text-[1.4vw]"><span className="num text-[#8E8A81]">{i + 1}</span><span className="flex-1">{q.title}</span><span className="text-[1.1vw] text-[#B9B5AC]">{q.name}</span></div>)}</div>
       )}
       {hub && hub.live && hub.hype > 0 && (
         <div className={`absolute bottom-[14vh] left-[2.5vw] w-[26vw] px-[1.5vw] py-[1.2vh] ${box}`}><div className="flex justify-between text-[1.1vw]"><span>應援</span><span className="num">{hub.hype}%</span></div><div className="mt-[0.5vh] h-[1vh] overflow-hidden rounded-full bg-[#232326]"><div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${hub.hype}%` }} /></div></div>

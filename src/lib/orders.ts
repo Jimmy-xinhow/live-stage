@@ -12,6 +12,8 @@ import { badgesFor, evaluateAchievements, leaderboard, notifyOvertake } from "./
 import { reportError } from "./errors";
 import type { ModeSlug } from "./kinds";
 import { effectivePlan } from "./subscription";
+import { recordSplit } from "./band";
+import { planHasPro } from "./plans";
 
 export async function getPerformerBySlug(slug: string) {
   const db = await getDb();
@@ -278,6 +280,8 @@ export async function markOrderPaid(tradeNo: string, r: Pick<PayResult, "payment
       .where(and(eq(orders.id, o0.id), inArray(orders.status, payable)))
       .returning();
     if (!o) return null;
+    // 樂團拆帳快照：成交當下就算好，之後改比例不會動到已經發生的帳
+    if (planHasPro(effectivePlan(p))) await recordSplit(tx, p.id, o.id, o.amount);
     const balance = await applyPoints(tx, p.id, -fee, "fee", { orderId: o.id, note: `${o.itemTitle ?? "打賞"} ${nt(o.amount)} × ${feePct(effectivePlan(p))}%` });
     return { order: o, performer: { ...p, pointsCents: balance } };
   });

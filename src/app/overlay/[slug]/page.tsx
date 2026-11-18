@@ -3,6 +3,8 @@ import { getPerformerBySlug } from "@/lib/orders";
 import { streamInfo } from "@/lib/acts";
 import { chatEnabled } from "@/lib/chat";
 import { Overlay } from "./Overlay";
+import { planHasPro } from "@/lib/plans";
+import { effectivePlan } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false } };
@@ -13,5 +15,5 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const sp = await searchParams;
   if (!p || !p.overlayToken || sp.k !== p.overlayToken) notFound();
   const info = streamInfo(p.streamUrl);
-  return <Overlay slug={p.slug} name={p.displayName} safe={!!info?.safe} preview={sp.preview === "1"} chatOn={chatEnabled() && info?.platform === "youtube"} />;
+  return <Overlay slug={p.slug} name={p.displayName} safe={!!info?.safe} preview={sp.preview === "1"} chatOn={chatEnabled() && info?.platform === "youtube"} delaySec={planHasPro(effectivePlan(p)) ? p.streamDelaySec : 0} />;
 }
