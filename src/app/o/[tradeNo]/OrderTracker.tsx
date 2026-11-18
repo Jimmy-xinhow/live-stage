@@ -7,6 +7,7 @@ import type { orderStatus } from "@/lib/orders";
 import type { PublicPayMethod } from "@/lib/paymethods";
 import { Avatar } from "@/components/Avatar";
 import { nt } from "@/lib/format";
+import { getJson, request } from "@/lib/net";
 import { FollowButton } from "@/components/FollowButton";
 import type { FanInfo } from "@/components/useFan";
 
@@ -16,33 +17,47 @@ export function OrderTracker({ tradeNo, initial, oaUrl, methods, ttlMin, follow 
   const [s, setS] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(0);
+  const [shaky, setShaky] = useState(false);
   const p = s.performer;
 
   useEffect(() => {
     let stop = false;
     const final = (x: S) => x.status === "failed" || (x.status === "paid" && (x.kind === "tip" || x.queueStatus === "done" || x.queueStatus === "skipped"));
+    let misses = 0;
     const tick = async () => {
-      const r = await fetch(`/api/orders/${tradeNo}`, { cache: "no-store" }).then((r) => r.json()).catch(() => null);
-      if (r && !stop) setS(r);
-      if (!stop && !(r && final(r))) setTimeout(tick, 4000);
+      const r = await getJson<S>(`/api/orders/${tradeNo}`);
+      if (stop) return;
+      if (r) { setS(r); misses = 0; setShaky(false); }
+      else { misses += 1; if (misses >= 2) setShaky(true); }
+      if (!(r && final(r))) setTimeout(tick, misses ? Math.min(20_000, 4000 * 2 ** misses) : 4000);
     };
     const t = setTimeout(tick, 1500);
-    return () => { stop = true; clearTimeout(t); };
+    const back = () => { setShaky(false); tick(); };
+    window.addEventListener("online", back);
+    return () => { stop = true; clearTimeout(t); window.removeEventListener("online", back); };
   }, [tradeNo]);
 
   async function claim() {
     setBusy(true);
-    await fetch(`/api/orders/${tradeNo}/claim`, { method: "POST" });
+    // 「我轉好了」重送是安全的：伺服器只是把同一筆標成已通知表演者
+    await request(`/api/orders/${tradeNo}/claim`, { method: "POST" }, { idempotent: true }).catch(() => null);
     setS((x) => ({ ...x, claimed: true }));
     setBusy(false);
   }
 
   const header = (
+    <>
+      {shaky && (
+        <p role="status" aria-live="polite" className="border-b-2 border-ink bg-sunken px-4 py-2 text-[14px] text-ink2">
+          連線不太穩，狀態可能慢一點更新。你的訂單已經送出去了，不會因為這樣消失。
+        </p>
+      )}
     <header className="row flex h-14 items-center gap-3">
       <Avatar src={p.avatar} name={p.name} size={32} color="#6b665c" />
       <strong className="flex-1">{p.name}</strong>
       <Link href={`/p/${p.slug}`} className="small underline">回歌單</Link>
     </header>
+    </>
   );
   const quote = <blockquote className="mt-5 border-l-2 border-ink pl-4 text-left text-[17px] leading-7">「{p.thankYou}」<span className="small block">— {p.name}</span></blockquote>;
 

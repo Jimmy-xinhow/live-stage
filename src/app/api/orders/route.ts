@@ -18,6 +18,8 @@ const Body = z.object({
   /** 互動遊戲的付費加成 */
   game: z.object({ id: z.string().uuid(), lane: z.number().int().min(0).max(5), unit: z.string().max(12) }).nullish(),
   back: z.string().regex(/^\/[\w\-/]*$/).max(80).optional(),
+  /** 冪等鍵：觀眾端產生，收訊不穩重送時用它拿回同一筆訂單 */
+  clientKey: z.string().uuid().optional(),
 });
 
 export async function POST(req: Request) {

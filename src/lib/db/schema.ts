@@ -202,12 +202,18 @@ export const orders = pgTable(
     gameLane: integer("game_lane"),
     gameUnit: varchar("game_unit", { length: 12 }),
     rawNotify: jsonb("raw_notify"),
+    /**
+     * 觀眾端產生的冪等鍵。現場 4G 不穩時，送出請求可能已經到伺服器、
+     * 回應卻掉了；客戶端用同一把鑰匙重送，拿回同一筆訂單而不是建第二筆。
+     */
+    clientKey: varchar("client_key", { length: 36 }),
     createdAt: ts("created_at").notNull().defaultNow(),
   },
   (t) => [
     index("orders_performer_paid_idx").on(t.performerId, t.status, t.paidAt),
     index("orders_session_queue_idx").on(t.sessionId, t.queueStatus, t.queueSeq),
     index("orders_fan_idx").on(t.fanId),
+    uniqueIndex("orders_client_key_idx").on(t.clientKey),
     index("orders_awaiting_idx").on(t.performerId, t.status, t.payCode),
   ],
 );

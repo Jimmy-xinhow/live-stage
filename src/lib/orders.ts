@@ -154,9 +154,16 @@ export function newTradeNo(prefix = "DS") {
 
 export async function createOrder(
   p: Performer,
-  input: { menuItemId?: string | null; amount: number; nickname: string; message: string; isAnonymous: boolean; payMode: "auto" | "manual"; followOnPay?: boolean; game?: { id: string; lane: number; unit: string } | null },
+  input: { menuItemId?: string | null; amount: number; nickname: string; message: string; isAnonymous: boolean; payMode: "auto" | "manual"; followOnPay?: boolean; game?: { id: string; lane: number; unit: string } | null; clientKey?: string | null },
   fanId: string | null,
 ) {
+  // 冪等：現場收訊不穩時，請求可能已經進來、回應卻掉在路上。觀眾端用同一把
+  // 鑰匙重送，這裡要回同一筆訂單——而不是建第二筆讓他付兩次。
+  // 放在所有檢查之前，因為重送時排隊可能已經滿了，那時候該回原本那筆而不是報錯。
+  if (input.clientKey) {
+    const existing = await findByClientKey(input.clientKey);
+    if (existing) return existing;
+  }
   if (p.status !== "active") throw new OrderError("此頁面已停用");
   const opts = payOptions(p);
   if (input.payMode === "manual" ? !opts.manual : !opts.auto) throw new OrderError("藝人尚未開放這種付款方式");
@@ -214,9 +221,7 @@ export async function createOrder(
   let nickname = input.nickname.trim().slice(0, 30);
   if (!nickname && fanId) nickname = (await db.select({ n: fans.name }).from(fans).where(eq(fans.id, fanId)))[0]?.n ?? "";
 
-  const [o] = await db
-    .insert(orders)
-    .values({
+  const [o] = await insertOrder({
       performerId: p.id,
       sessionId,
       kind,
@@ -234,10 +239,34 @@ export async function createOrder(
       gameId: input.game?.id ?? null,
       gameLane: input.game?.lane ?? null,
       gameUnit: input.game?.unit ?? null,
+      clientKey: input.clientKey ?? null,
       status: input.payMode === "manual" ? "awaiting" : "pending",
-    })
-    .returning();
+  }, input.clientKey ?? null);
   return o;
+}
+
+/**
+ * 寫入訂單。兩個重送同時到達時，其中一個會撞上冪等鍵的唯一索引——
+ * 那不是錯誤，是這個機制正常運作的樣子，撿回先寫進去的那一筆就好。
+ */
+async function insertOrder(values: typeof orders.$inferInsert, clientKey: string | null) {
+  const db = await getDb();
+  try {
+    return await db.insert(orders).values(values).returning();
+  } catch (e) {
+    if (clientKey) {
+      const found = await findByClientKey(clientKey);
+      if (found) return [found];
+    }
+    throw e;
+  }
+}
+
+/** 同一把冪等鑰匙對應的訂單 */
+async function findByClientKey(key: string) {
+  const db = await getDb();
+  const [o] = await db.select().from(orders).where(eq(orders.clientKey, key));
+  return o ?? null;
 }
 
 /* ────────────── 付款結果 ────────────── */

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useFan, type FanInfo } from "@/components/useFan";
 import { submitForm } from "@/lib/liff-client";
+import { newKey, postJson } from "@/lib/net";
 import type { PublicGame } from "@/lib/games";
 import { LANE_COLORS, remain } from "@/components/gameui";
 import { Wheel } from "@/components/games/Wheel";
@@ -59,10 +60,19 @@ export function GameApp(props: { slug: string; name: string; initial: PublicGame
     setMsg("");
     if (!props.payMode) return setMsg("表演者還沒設定收款方式");
     if (!(await ensureFan())) return setMsg("請用 LINE 開啟這個頁面");
-    const r = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug: props.slug, amount: unit.price, message: `${g!.name}・${unit.name}`, payMode: props.payMode, game: { id: g!.id, lane: myLane, unit: unit.id }, back: `/p/${props.slug}/game` }) });
-    const j = await r.json();
-    if (!r.ok) return setMsg(j.error ?? "失敗了");
-    if (j.redirect) location.href = j.redirect; else submitForm(j.action, j.fields);
+    // 每次按下「派兵」是新的一筆，所以這裡產生新鑰匙；但這一筆在網路不穩時重送，
+    // 用的是同一把，不會變成兩次扣款。
+    const key = newKey();
+    try {
+      const j = await postJson<{ redirect?: string; action?: string; fields?: Record<string, string> }>(
+        "/api/orders",
+        { slug: props.slug, amount: unit.price, message: `${g!.name}・${unit.name}`, payMode: props.payMode, game: { id: g!.id, lane: myLane, unit: unit.id }, back: `/p/${props.slug}/game`, clientKey: key },
+        { idempotent: true, timeout: 15_000, onRetry: () => setMsg("訊號不穩，重送中…") },
+      );
+      if (j.redirect) location.href = j.redirect; else submitForm(j.action!, j.fields!);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "失敗了");
+    }
   }
 
   return (

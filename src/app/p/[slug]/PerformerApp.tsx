@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PublicState } from "@/lib/orders";
 import { CATEGORY_LABEL, initial as initialOf, nt, timeAgo } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { submitForm } from "@/lib/liff-client";
+import { getJson, newKey, postJson } from "@/lib/net";
 import { followApi, useFan, type FanInfo } from "@/components/useFan";
 import { RankTab } from "./RankTab";
 import { ReportButton } from "@/components/ReportButton";
@@ -29,16 +30,25 @@ export function PerformerApp(props: {
   const [sheet, setSheet] = useState<Sheet>(null);
   const [toast, setToast] = useState("");
 
-  // 即時狀態：排隊、演出中、留言牆
+  // 即時狀態：排隊、演出中、留言牆。
+  // 現場收訊不穩是常態，所以連續失敗才提示，而且不清掉畫面上既有的資料——
+  // 舊的排隊資訊比空白有用。
+  const [shaky, setShaky] = useState(false);
   useEffect(() => {
     let stop = false;
+    let misses = 0;
     const tick = async () => {
-      const s = await fetch(`/api/p/${p.slug}/state`, { cache: "no-store" }).then((r) => r.json()).catch(() => null);
-      if (s && !stop) setState(s);
-      if (!stop) setTimeout(tick, 5000);
+      const s = await getJson<PublicState>(`/api/p/${p.slug}/state`);
+      if (stop) return;
+      if (s) { setState(s); misses = 0; setShaky(false); }
+      else { misses += 1; if (misses >= 2) setShaky(true); }
+      // 連不上就放慢輪詢，不要在弱訊號下狂打
+      setTimeout(tick, misses ? Math.min(30_000, 5000 * 2 ** misses) : 5000);
     };
     const t = setTimeout(tick, 5000);
-    return () => { stop = true; clearTimeout(t); };
+    const back = () => { setShaky(false); tick(); };
+    window.addEventListener("online", back);
+    return () => { stop = true; clearTimeout(t); window.removeEventListener("online", back); };
   }, [p.slug]);
 
   async function toggleFollow() {
@@ -65,6 +75,12 @@ export function PerformerApp(props: {
   const TABS = [["menu", "歌單"], ["queue", waiting ? `排隊 ${waiting}` : "排隊"], ["rank", "排行"], ["wall", "留言"]] as const;
   return (
     <main className="mx-auto min-h-dvh max-w-[480px] pb-32">
+      {/* 連線不穩時說清楚畫面是舊的，不要讓人以為排隊真的空了 */}
+      {shaky && (
+        <p role="status" aria-live="polite" className="sticky top-0 z-40 border-b-2 border-ink bg-sunken px-5 py-2 text-[14px] text-ink2">
+          連線不太穩，畫面可能不是最新的。網路回來會自動更新。
+        </p>
+      )}
       {p.cover && (
         <div className="relative overflow-hidden bg-ink" style={{ aspectRatio: "16 / 7" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -215,24 +231,28 @@ function OrderSheet({ sheet, p, fan, following, ahead, avg, opts, onClose }: { s
   const [follow, setFollow] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [retrying, setRetrying] = useState(0);
+  // 這一次送出的冪等鑰匙。重試用同一把，所以網路斷在半路也只會有一筆訂單。
+  // 換成新的鑰匙才算是新的一筆——按「重試」不會換。
+  const keyRef = useRef(newKey());
   const chips = sheet.kind === "request" ? [base, base + 50, base + 100] : p.presets;
 
   async function pay(payMode: "manual" | "auto") {
     setError("");
+    setRetrying(0);
     setBusy(true);
     try {
-      const r = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: p.slug, menuItemId: sheet.kind === "request" ? sheet.item.id : null, amount, nickname, message, isAnonymous: anon, payMode, followOnPay: follow }),
-      });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error ?? "建立訂單失敗");
+      const j = await postJson<{ redirect?: string; action?: string; fields?: Record<string, string> }>(
+        "/api/orders",
+        { slug: p.slug, menuItemId: sheet.kind === "request" ? sheet.item.id : null, amount, nickname, message, isAnonymous: anon, payMode, followOnPay: follow, clientKey: keyRef.current },
+        { idempotent: true, timeout: 15_000, onRetry: (n) => setRetrying(n) },
+      );
       if (j.redirect) location.href = j.redirect;
-      else submitForm(j.action, j.fields);
+      else submitForm(j.action!, j.fields!);
     } catch (e) {
       setError(e instanceof Error ? e.message : "發生錯誤");
       setBusy(false);
+      setRetrying(0);
     }
   }
 
@@ -264,11 +284,21 @@ function OrderSheet({ sheet, p, fan, following, ahead, avg, opts, onClose }: { s
           {fan && !following && <label className="flex min-h-[28px] items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={follow} onChange={(e) => setFollow(e.target.checked)} />追蹤 {p.name}，開演通知我</label>}
         </div>
         {!fan && <p className="small">用 LINE 開啟這一頁，可以收到「快輪到你」通知與表演者的回覆。</p>}
-        {error && <p className="rounded-[12px] bg-sunken px-3 py-2 text-[14px] text-err">{error}</p>}
+        {retrying > 0 && (
+          <p className="rounded-[12px] bg-sunken px-3 py-2 text-[14px] text-ink2" role="status" aria-live="polite">
+            訊號不太穩，正在重送（第 {retrying} 次）。這把鑰匙是同一張單，不會重複付款。
+          </p>
+        )}
+        {error && (
+          <div className="rounded-[12px] bg-sunken px-3 py-2 text-[14px]">
+            <p className="text-err">{error}</p>
+            <p className="mt-1 text-ink2">再按一次就是重送同一張單，不會變成兩筆。</p>
+          </div>
+        )}
         <div className="flex flex-col gap-2">
           {opts.manual && (
             <button disabled={busy || !amount} onClick={() => pay("manual")} className="btn btn-primary btn-lg btn-block">
-              {busy ? "處理中" : <>用 {p.manualLabel} 轉帳 <span className="num">{nt(amount)}</span></>}
+              {busy ? (retrying ? "重送中" : "處理中") : <>用 {p.manualLabel} 轉帳 <span className="num">{nt(amount)}</span></>}
             </button>
           )}
           {opts.auto && (

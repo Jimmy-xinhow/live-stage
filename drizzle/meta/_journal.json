@@ -113,6 +113,13 @@
       "when": 1794981091662,
       "tag": "0015_handy_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794990915241,
+      "tag": "0016_blue_eddie_brock",
+      "breakpoints": true
     }
   ]
 }
