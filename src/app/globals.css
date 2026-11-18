@@ -164,6 +164,11 @@ table { font-variant-numeric: tabular-nums; }
 .stage ::selection { background: var(--sodium); color: #121212; }
 
 /* 光池：一道燈打在這個區塊上。不是裝飾漸層，是打光位置 */
+/* 行銷頁的底色。.stage 要 clip 橫向，因為下面的光暈刻意超出左右各 10%——
+   不 clip 的話整頁會多出 10% 的寬度，手機上可以左右拖動，看起來就像版面壞了。
+   用 clip 不用 hidden：hidden 會建立捲動容器，頁首的 sticky 就黏不住了。 */
+.stage { overflow-x: clip; }
+
 .lit { position: relative; isolation: isolate; }
 .lit::before {
   content: "";

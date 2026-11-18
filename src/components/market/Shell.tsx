@@ -36,9 +36,9 @@ export function StageFooter() {
  <Link href="/me" className="inline-flex min-h-[44px] items-center transition-colors hover:text-[color:var(--bone)]">我的護照</Link>
  </div>
  <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 border-t border-[color:var(--line)] pt-5 text-[color:var(--dim)]">
- <Link href="/terms" className="inline-flex min-h-[40px] items-center cap transition-colors hover:text-[color:var(--bone)]">服務條款</Link>
- <Link href="/privacy" className="inline-flex min-h-[40px] items-center cap transition-colors hover:text-[color:var(--bone)]">隱私權政策</Link>
- <Link href="/refund" className="inline-flex min-h-[40px] items-center cap transition-colors hover:text-[color:var(--bone)]">退款與爭議</Link>
+ <Link href="/terms" className="inline-flex min-h-[44px] items-center cap transition-colors hover:text-[color:var(--bone)]">服務條款</Link>
+ <Link href="/privacy" className="inline-flex min-h-[44px] items-center cap transition-colors hover:text-[color:var(--bone)]">隱私權政策</Link>
+ <Link href="/refund" className="inline-flex min-h-[44px] items-center cap transition-colors hover:text-[color:var(--bone)]">退款與爭議</Link>
  </div>
  <p className="mt-5 cap text-[color:var(--dim)]">
  {BRAND.name}　{BRAND.legal}　款項由聽眾直接付給表演者，平台不經手

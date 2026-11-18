@@ -35,7 +35,7 @@ export function LegalPage({
                 key={d.href}
                 href={d.href}
                 aria-current={on ? "page" : undefined}
-                className={`inline-flex min-h-[40px] items-center rounded-[8px] border px-4 text-[15px] transition-colors ${
+                className={`inline-flex min-h-[44px] items-center rounded-[8px] border px-4 text-[15px] transition-colors ${
                   on
                     ? "border-[color:var(--sodium)] text-[color:var(--sodium)]"
                     : "border-[color:var(--line)] text-[color:var(--dim)] hover:text-[color:var(--bone)]"
