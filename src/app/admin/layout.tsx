@@ -8,7 +8,8 @@ import { orders, reports } from "@/lib/db/schema";
 import { BackShell } from "@/components/back/Shell";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: `平台管理｜${APP_NAME}`, robots: { index: false } };
+// 根版面的 template 已經會接上品牌名，這裡再接一次就會變成「平台管理｜安可｜安可」
+export const metadata = { title: "平台管理", robots: { index: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   if (!(await isAdmin())) redirect("/admin/login");

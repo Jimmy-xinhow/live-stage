@@ -1,8 +1,8 @@
+import { APP_NAME } from "@/lib/env";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { areaCounts } from "@/lib/discover";
 import { REGIONS } from "@/lib/areas";
-import { APP_NAME } from "@/lib/env";
 import { JsonLd, breadcrumb } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/Site";
 import { notFound } from "next/navigation";
@@ -12,7 +12,7 @@ import { FEATURES } from "@/lib/features";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: `全台 22 縣市表演者與現場演出｜${APP_NAME}`,
+  title: `全台 22 縣市表演者與現場演出`,
   description: "依縣市找街頭藝人、駐唱歌手、樂團、DJ、魔術與主持：看誰正在演出、演出地點與行程，也可以直接送出演出邀約。",
   alternates: { canonical: "/area" },
 };

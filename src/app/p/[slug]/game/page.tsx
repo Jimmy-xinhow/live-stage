@@ -2,7 +2,7 @@ import { getPerformerBySlug, payOptions } from "@/lib/orders";
 import { getFan } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
 import { currentGame, publicGame } from "@/lib/games";
-import { APP_NAME, LIFF_ID, env } from "@/lib/env";
+import { LIFF_ID, env } from "@/lib/env";
 import { GameApp } from "./GameApp";
 import { notFound } from "next/navigation";
 import { battleGamesOn } from "@/lib/features";
@@ -10,7 +10,7 @@ import { sessionMode } from "@/lib/orders";
 import { effectivePlan } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: `互動遊戲｜${APP_NAME}`, robots: { index: false } };
+export const metadata = { title: `互動遊戲`, robots: { index: false } };
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const p = await getPerformerBySlug((await params).slug);

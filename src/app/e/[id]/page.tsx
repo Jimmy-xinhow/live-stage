@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!d) return {};
   const area = areaBySlug(d.ev.city);
   return {
-    title: `${d.ev.title}｜${area?.short ?? ""}${d.ev.place}・${fmtWhen(d.ev.startsAt)}｜${APP_NAME}`,
+    title: `${d.ev.title}｜${area?.short ?? ""}${d.ev.place}・${fmtWhen(d.ev.startsAt)}`,
     description: (d.ev.description || `${d.org?.displayName ?? ""}在${d.ev.place}的演出活動。`).slice(0, 120),
     alternates: { canonical: `/e/${d.ev.id}` },
     robots: d.ev.status === "published" ? undefined : { index: false, follow: true },

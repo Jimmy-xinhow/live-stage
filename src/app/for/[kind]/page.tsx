@@ -1,7 +1,8 @@
+import { APP_NAME } from "@/lib/env";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { APP_NAME, env } from "@/lib/env";
+import { env } from "@/lib/env";
 import { Band, StageFooter, StageHeader } from "@/components/market/Shell";
 import { Faq } from "@/components/market/Bits";
 import { Lead } from "@/components/market/Lead";
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ kind: str
  const c = COPY[slug as KindSlug];
  if (!c) return {};
  return {
- title: `${c.title}｜${APP_NAME}`,
+ title: `${c.title}`,
  description: c.meta,
  alternates: { canonical: `/for/${slug}` },
  };

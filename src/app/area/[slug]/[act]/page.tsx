@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/env";
+import type { Metadata } from "next";
 import { areaBySlug } from "@/lib/areas";
 import { actBySlug } from "@/lib/acts";
 import { actCounts } from "@/lib/market";
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
   const n = act ? counts[act.slug] ?? 0 : Object.values(counts).reduce((a, b) => a + b, 0);
   const what = act?.name ?? "現場表演";
   return {
-    title: `${area.short}${what}｜演出中、行程與邀約｜${APP_NAME}`,
+    title: `${area.short}${what}｜演出中、行程與邀約`,
     description: `${area.name}的${what}：誰正在演出、平台累積的演出場次與歌單、公開起價。可以直接到現場點歌，或免費送出邀約。`,
     alternates: { canonical: `/area/${area.slug}${act ? `/${act.slug}` : ""}` },
     // 沒有真實結果的頁面不收錄

@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const songs = await db.select({ t: menuItems.title }).from(menuItems).where(eq(menuItems.performerId, p.id)).orderBy(asc(menuItems.sort)).limit(6);
   const where = [area?.short, p.district].filter(Boolean).join("・");
   return {
-    title: `${p.displayName}｜${area ? `${area.short}街頭藝人` : "街頭藝人"}・點歌歌單｜${APP_NAME}`,
+    title: `${p.displayName}｜${area ? `${area.short}街頭藝人` : "街頭藝人"}・點歌歌單`,
     description: (p.bio ? `${p.bio.slice(0, 60)}　` : "") + `${where ? `${where}演出，` : ""}歌單${songs.length ? `有〈${songs.map((x) => x.t).slice(0, 3).join("〉〈")}〉等` : ""}，掃碼就能點歌打賞、追蹤開唱通知。`,
     alternates: { canonical: `/u/${p.slug}` },
     openGraph: { title: `${p.displayName}｜掃碼點歌`, description: p.bio.slice(0, 80), type: "profile", images: p.avatarUrl ? [p.avatarUrl] : undefined },

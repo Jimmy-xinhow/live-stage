@@ -9,7 +9,7 @@ import { nt } from "@/lib/format";
 import { ReviewForm } from "./ReviewForm";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: `演出護照｜${APP_NAME}`, robots: { index: false } };
+export const metadata = { title: `演出護照`, robots: { index: false } };
 
 export default async function Me() {
   const fan = await getFan(await getFanId());

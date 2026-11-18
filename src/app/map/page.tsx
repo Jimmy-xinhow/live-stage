@@ -1,8 +1,8 @@
+import { APP_NAME } from "@/lib/env";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { mapPins } from "@/lib/map";
 import { areaBySlug, TAIWAN_CENTER } from "@/lib/areas";
-import { APP_NAME } from "@/lib/env";
 import { JsonLd, breadcrumb } from "@/lib/seo";
 import { SiteFooter, SiteHeader } from "@/components/Site";
 import { MapView } from "./MapView";
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ city?: string }> }): Promise<Metadata> {
   const area = areaBySlug((await searchParams).city);
   return {
-    title: `${area ? `${area.short}表演地圖` : "現場表演地圖"}｜誰正在演出、近期活動在哪｜${APP_NAME}`,
+    title: `${area ? `${area.short}表演地圖` : "現場表演地圖"}｜誰正在演出、近期活動在哪`,
     description: `在地圖上看${area ? area.name : "全台"}正在演出的表演者與近兩週的演出活動，點開就能看歌單、點歌或邀請演出。`,
     alternates: { canonical: area ? `/map?city=${area.slug}` : "/map" },
   };

@@ -1,8 +1,8 @@
+import { APP_NAME } from "@/lib/env";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { upcomingEvents } from "@/lib/events";
 import { areaBySlug } from "@/lib/areas";
-import { APP_NAME } from "@/lib/env";
 import { JsonLd, breadcrumb } from "@/lib/seo";
 import { EventLine, SiteFooter, SiteHeader } from "@/components/Site";
 import { AreaSelect } from "@/components/AreaSelect";
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ city?: string }> }): Promise<Metadata> {
   const area = areaBySlug((await searchParams).city);
   return {
-    title: `${area ? `${area.short}演出活動` : "近期演出活動"}｜現場音樂、駐唱、表演｜${APP_NAME}`,
+    title: `${area ? `${area.short}演出活動` : "近期演出活動"}｜現場音樂、駐唱、表演`,
     description: `${area ? `${area.name}的` : "全台的"}演出活動：時間、地點、票價與演出者，由店家與主辦自行刊登。`,
     alternates: { canonical: area ? `/events?city=${area.slug}` : "/events" },
   };
