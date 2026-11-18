@@ -141,6 +141,13 @@
       "when": 1794991604496,
       "tag": "0019_yellow_arachne",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794992067849,
+      "tag": "0020_wide_gambit",
+      "breakpoints": true
     }
   ]
 }

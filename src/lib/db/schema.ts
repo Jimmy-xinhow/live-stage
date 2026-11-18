@@ -214,6 +214,10 @@ export const orders = pgTable(
     index("orders_session_queue_idx").on(t.sessionId, t.queueStatus, t.queueSeq),
     index("orders_fan_idx").on(t.fanId),
     uniqueIndex("orders_client_key_idx").on(t.clientKey),
+    // 本場排行榜：依場次把成交分組到每位粉絲。沒有這條會整表掃描（5 萬筆時 39ms）
+    index("orders_session_status_idx").on(t.sessionId, t.status),
+    // 粉絲名單：一位表演者的所有成交依粉絲彙總。資料量大的人最慢的一頁
+    index("orders_performer_fan_idx").on(t.performerId, t.fanId, t.status),
     index("orders_awaiting_idx").on(t.performerId, t.status, t.payCode),
   ],
 );

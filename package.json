@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "typecheck": "tsc --noEmit",
-    "test:smoke": "node --test tests/smoke.spec.mjs"
+    "test:smoke": "node --test tests/smoke.spec.mjs",
+    "explain": "tsx scripts/explain.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",
