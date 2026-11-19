@@ -1,4 +1,4 @@
-import { eq, like } from "drizzle-orm";
+import { and, eq, isNull, like } from "drizzle-orm";
 import type { DB } from "./index";
 import { fans, follows, liveSessions, menuItems, orders, performers, shows } from "./schema";
 import { FEATURES } from "../features";
@@ -46,6 +46,16 @@ export async function seedDemo(db: DB) {
     // 停在免費方案（付費方案沒有到期日會被當成資料壞掉），互動遊戲就打不開。
     // 這裡每次開機補一次，重跑無害。
     await db.update(performers).set({ plan: "all", planUntil: DEMO_PLAN_UNTIL }).where(like(performers.slug, "demo%"));
+
+    // 拿掉 LINE 之後，示範帳號要能用信箱密碼登入才驗收得了。
+    // 既有的帳號是 LINE 時代建的，沒有信箱，這裡每次開機補一次。
+    const need = await db.select({ id: performers.id, slug: performers.slug }).from(performers).where(and(like(performers.slug, "demo%"), isNull(performers.email)));
+    if (need.length) {
+      const hash = await (await import("../password")).hashPassword(DEMO_PASSWORD);
+      for (const d of need) {
+        await db.update(performers).set({ email: demoEmail(d.slug), passwordHash: hash, emailVerifiedAt: new Date() }).where(eq(performers.id, d.id));
+      }
+    }
     return;
   }
   demoHash = await (await import("../password")).hashPassword(DEMO_PASSWORD);
