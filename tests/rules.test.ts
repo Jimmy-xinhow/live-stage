@@ -168,3 +168,30 @@ describe("功能埋點", () => {
     expect((await unusedFeatures(1)).some((u) => u.name === "refund")).toBe(true);
   });
 });
+
+describe("現場狀態廣播", () => {
+  it("同一場只開一個查詢迴圈，最後一個人離開就收掉", async () => {
+    const { subscribe, busStats } = await import("@/lib/livebus");
+    expect(busStats().rooms).toBe(0);
+
+    const a = subscribe("demo-slug", () => {});
+    const b = subscribe("demo-slug", () => {});
+    expect(busStats()).toEqual({ rooms: 1, viewers: 2 });
+
+    // 不同表演者各自一個房間
+    const c = subscribe("other-slug", () => {});
+    expect(busStats().rooms).toBe(2);
+
+    a();
+    expect(busStats().viewers).toBe(2);
+    b();
+    expect(busStats().rooms).toBe(1);
+    c();
+    expect(busStats()).toEqual({ rooms: 0, viewers: 0 });
+  });
+
+  it("沒有人在看的時候推一下不會爆炸", async () => {
+    const { bump } = await import("@/lib/livebus");
+    expect(() => bump("nobody-watching")).not.toThrow();
+  });
+});

@@ -113,10 +113,10 @@ describe("登入", () => {
   it("帳號不存在和密碼錯誤回同一句話", async () => {
     const e = email();
     await signUp({ email: e, password: PW, displayName: "甲" });
-    const a = await signIn(e, "wrong-secret-here-x").catch((x) => x as Error);
-    const b = await signIn(email(), PW).catch((x) => x as Error);
-    expect(a.message).toBe(b.message);
-    expect(a.message).toBe("信箱或密碼不對");
+    const a = await signIn(e, "wrong-secret-here-x").then(() => null, (x: Error) => x);
+    const b = await signIn(email(), PW).then(() => null, (x: Error) => x);
+    expect(a?.message).toBe(b?.message);
+    expect(a?.message).toBe("信箱或密碼不對");
   });
 
   it("停用的帳號登不進來", async () => {

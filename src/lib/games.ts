@@ -3,6 +3,7 @@ import { getDb } from "./db";
 import { fans, games, performers, type Game, type GameState, type Performer, type QuizQuestion, type WheelEntry } from "./db/schema";
 import { env } from "./env";
 import { track } from "./usage";
+import { bump } from "./livebus";
 
 export class GameError extends Error {}
 
@@ -120,6 +121,7 @@ export async function startGame(p: Performer, type: GameType, input: { lanes: st
     .values({ performerId: p.id, opponentId: opponent?.id ?? null, sessionId: p.liveSessionId, type, config: { reward: input.reward.trim().slice(0, 60), goal: input.goal && input.goal > 0 ? Math.floor(input.goal) : t.goal, questions }, state, endsAt: new Date(Date.now() + Math.max(1, Math.min(30, input.minutes)) * 60_000) })
     .returning();
   track("game_start", p.id);
+  bump(p.slug);
   // 原本會推播通知對手。現在對手的控制台一進去就看得到這場 PK，
   // 而 PK 本來就是兩邊講好才開的。
   return g;
@@ -128,7 +130,9 @@ export async function startGame(p: Performer, type: GameType, input: { lanes: st
 export async function endGame(p: Performer) {
   const g = await currentGame(p.id);
   if (!g || g.status !== "running") return g;
-  return finish(g);
+  const done = await finish(g);
+  bump(p.slug);
+  return done;
 }
 
 /** 在交易內鎖住遊戲列再改分數，避免同時點按互相覆蓋 */

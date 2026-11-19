@@ -12,6 +12,7 @@ import { reportError } from "./errors";
 import type { ModeSlug } from "./kinds";
 import { effectivePlan } from "./subscription";
 import { sendMail, signature } from "./mail";
+import { bump } from "./livebus";
 import { recordSplit } from "./band";
 import { planHasPro } from "./plans";
 import { track } from "./usage";
@@ -316,6 +317,7 @@ export async function markOrderPaid(tradeNo: string, r: Pick<PayResult, "payment
     return { order: o, performer: { ...p, pointsCents: balance } };
   });
   if (result) {
+    bump(result.performer.slug);
     track(result.order.gameUnit ? "game_boost" : "order_paid", result.performer.id);
     await afterPaid(result.performer, result.order).catch((e) => reportError("afterPaid", e));
   }
@@ -480,8 +482,8 @@ export async function queueAction(p: Performer, orderId: string, action: "start"
       .set({ queueStatus: action === "done" ? "done" : "skipped", finishedAt: now })
       .where(eq(orders.id, o.id));
   }
-  // 「下一首就是你」原本是推播。現在觀眾的訂單頁本來就在輪詢排隊位置，
-  // 他低頭就看得到自己排第幾個，不需要再收一則訊息。
+  // 換歌是全場都在等的事，立刻推給大螢幕與每支手機，不等下一輪
+  bump(p.slug);
 }
 
 /** 觀眾查自己的點歌 */

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFan, type FanInfo } from "@/components/useFan";
 import { submitForm } from "@/lib/formpost";
 import { newKey, postJson } from "@/lib/net";
+import { useLive } from "@/components/useLive";
 import type { PublicGame } from "@/lib/games";
 import { LANE_COLORS, remain } from "@/components/gameui";
 import { Wheel } from "@/components/games/Wheel";
@@ -21,17 +22,26 @@ export function GameApp(props: { slug: string; name: string; initial: PublicGame
   const taps = useRef(0);
   const api = `/api/p/${props.slug}/game`;
 
+  // 遊戲狀態走伺服器推送。原本每個人每秒打一次，一場兩百人就是每秒兩百次查詢，
+  // 而且全部打在同一個容器上——最熱鬧的那一刻最容易掛。
+  const { game: pushed, shaky } = useLive<null, PublicGame | null>(props.slug, { state: null, game: props.initial });
+  useEffect(() => { if (pushed) setG(pushed); }, [pushed]);
+
+  // 點按先在本地累積，每秒送一次，不是每下都送。手指比網路快很多。
   useEffect(() => {
     setNow(Date.now());
     const t = setInterval(async () => {
       setNow(Date.now());
       const n = taps.current;
+      if (!n || lane == null) return;
       taps.current = 0;
-      const r = n && lane != null ? await fetch(api, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lane, count: n }) }) : await fetch(api);
+      const r = await fetch(api, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lane, count: n }) });
       if (r.ok) setG((await r.json()).game);
     }, 1000);
     return () => clearInterval(t);
   }, [api, lane]);
+
+  const warn = shaky ? <p className="mb-3 rounded-[10px] bg-white/10 px-3 py-2 text-[14px] text-[#B9B5AC]" role="status">連線不太穩，畫面可能慢一點。你按的還是算數。</p> : null;
 
   if (!g) return <Shell><p className="h2">目前沒有進行中的遊戲</p><p className="mt-2 text-[#B9B5AC]">{props.name} 開始遊戲時，這裡會自動出現。</p><Link href={`/p/${props.slug}/hub`} className="btn btn-secondary mt-6">回到現場互動</Link></Shell>;
 
@@ -77,6 +87,7 @@ export function GameApp(props: { slug: string; name: string; initial: PublicGame
 
   return (
     <Shell>
+      {warn}
       <div className="flex items-center justify-between gap-3">
         <div><div className="text-[12px] text-[#B9B5AC]">{g.lockedLane == null ? `${props.name} 開的遊戲` : `你站在 ${g.lanes[g.lockedLane]?.name ?? props.name} 這邊`}</div><h1 className="h2">{g.name}</h1></div>
         <span className="num rounded-[12px] bg-[#232326] px-3 py-1.5 text-[17px] font-bold">{running ? remain(g.endsAt, now) : "結束"}</span>

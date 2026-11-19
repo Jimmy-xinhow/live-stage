@@ -5,8 +5,9 @@ import type { PublicState } from "@/lib/orders";
 import { CATEGORY_LABEL, initial as initialOf, nt, timeAgo } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { submitForm } from "@/lib/formpost";
-import { getJson, newKey, postJson } from "@/lib/net";
+import { newKey, postJson } from "@/lib/net";
 import { followApi, useFan, type FanInfo } from "@/components/useFan";
+import { useLive } from "@/components/useLive";
 import { RankTab } from "./RankTab";
 import { ReportButton } from "@/components/ReportButton";
 
@@ -30,25 +31,10 @@ export function PerformerApp(props: {
   const [toast, setToast] = useState("");
 
   // 即時狀態：排隊、演出中、留言牆。
-  // 現場收訊不穩是常態，所以連續失敗才提示，而且不清掉畫面上既有的資料——
-  // 舊的排隊資訊比空白有用。
-  const [shaky, setShaky] = useState(false);
-  useEffect(() => {
-    let stop = false;
-    let misses = 0;
-    const tick = async () => {
-      const s = await getJson<PublicState>(`/api/p/${p.slug}/state`);
-      if (stop) return;
-      if (s) { setState(s); misses = 0; setShaky(false); }
-      else { misses += 1; if (misses >= 2) setShaky(true); }
-      // 連不上就放慢輪詢，不要在弱訊號下狂打
-      setTimeout(tick, misses ? Math.min(30_000, 5000 * 2 ** misses) : 5000);
-    };
-    const t = setTimeout(tick, 5000);
-    const back = () => { setShaky(false); tick(); };
-    window.addEventListener("online", back);
-    return () => { stop = true; clearTimeout(t); window.removeEventListener("online", back); };
-  }, [p.slug]);
+  // 伺服器主動推，一位表演者只查一次資料庫——現場三百個人跟一個人一樣輕。
+  // 連不上會自動退回輪詢，而且不清掉畫面上既有的資料：舊的排隊資訊比空白有用。
+  const { state: live, shaky } = useLive<PublicState, never>(p.slug, { state });
+  useEffect(() => { if (live) setState(live); }, [live]);
 
   async function toggleFollow() {
     if (!(await ensureFan())) {

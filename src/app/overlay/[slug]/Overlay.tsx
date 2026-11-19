@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLive } from "@/components/useLive";
 import type { PublicState } from "@/lib/orders";
 import type { PublicGame } from "@/lib/games";
 import type { HubState } from "@/lib/hub";
@@ -11,22 +12,22 @@ type Chat = { enabled: boolean; messages: { id: string; author: string; text: st
 
 export function Overlay({ slug, name, safe, preview, chatOn, delaySec }: { slug: string; name: string; safe: boolean; preview: boolean; chatOn: boolean ; delaySec?: number }) {
   const [chat, setChat] = useState<Chat | null>(null);
-  const [st, setSt] = useState<PublicState | null>(null);
   const [hub, setHub] = useState<HubState | null>(null);
-  const [g, setG] = useState<PublicGame | null>(null);
+  // 排隊與遊戲走伺服器推送：OBS 疊層是整場唯一會被觀眾看到的畫面，
+  // 不該因為自己每三秒查一次資料庫而拖慢現場
+  const { state: st, game: g } = useLive<PublicState | null, PublicGame | null>(slug, { state: null });
   const [now, setNow] = useState(0);
   useEffect(() => {
     document.documentElement.style.background = "transparent";
     document.body.style.background = "transparent";
+    // 互動狀態（簽到、舉手）量少，維持輪詢；排隊與遊戲走推送
     const load = async () => {
       setNow(Date.now());
-      const [a, b, c] = await Promise.all([fetch(`/api/p/${slug}/state`), fetch(`/api/p/${slug}/hub`), fetch(`/api/p/${slug}/game`)]);
-      if (a.ok) setSt(await a.json());
+      const b = await fetch(`/api/p/${slug}/hub`);
       if (b.ok) setHub(await b.json());
-      if (c.ok) setG((await c.json()).game);
     };
     load();
-    const t = setInterval(load, 3000);
+    const t = setInterval(load, 6000);
     return () => clearInterval(t);
   }, [slug]);
 
