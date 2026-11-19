@@ -11,7 +11,6 @@ export function StageConsole({ slug, initial, modes, defaultMode }: { slug: stri
   const [s, setS] = useState(initial);
   const [location, setLocation] = useState("");
   const [mode, setMode] = useState<ModeSlug>(defaultMode);
-  const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -64,7 +63,6 @@ export function StageConsole({ slug, initial, modes, defaultMode }: { slug: stri
           {mode !== "indoor" && (
             <label className="field">今天在哪裡演出<input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="例：駁二大勇倉庫 C5 前" /></label>
           )}
-          <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={notify} onChange={(e) => setNotify(e.target.checked)} />用 LINE 通知追蹤我的 <span className="num">{s.followers}</span> 位粉絲</label>
           <button
             disabled={busy}
             onClick={async () => { await post("/api/dashboard/live", { action: "start", location, mode }); setMsg("已開始"); }}

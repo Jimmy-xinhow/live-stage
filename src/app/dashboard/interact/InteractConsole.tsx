@@ -22,7 +22,7 @@ function parseQuestions(text: string) {
   }).filter((x) => x.q && x.options.length >= 2);
 }
 
-export function InteractConsole({ slug, initial, types, liveNow }: { slug: string; initial: State; types: GT[]; liveNow: { slug: string; name: string }[] }) {
+export function InteractConsole({ slug, initial, types, liveNow, feePct }: { slug: string; initial: State; types: GT[]; liveNow: { slug: string; name: string }[]; feePct: number }) {
   const [s, setS] = useState(initial);
   const [msg, setMsg] = useState("");
   const [now, setNow] = useState(0);
@@ -141,7 +141,7 @@ export function InteractConsole({ slug, initial, types, liveNow }: { slug: strin
                 <label className="field">{gt.max === 1 ? "達標就解鎖" : "贏的那邊得到"}<input value={reward} maxLength={60} onChange={(e) => setReward(e.target.value)} placeholder={gt.max === 1 ? "例：用台語唱〈晴天〉" : "例：決定安可曲"} /></label>
                 <div className="flex flex-wrap items-center gap-2"><span className="label mr-1">時間</span>{[1, 3, 5, 10].map((m) => <button key={m} onClick={() => setMinutes(m)} className={`btn btn-sm ${minutes === m ? "btn-primary" : "btn-secondary"}`}>{m} 分</button>)}</div>
                 <button disabled={!hub.live || (gt.id === "quiz" && !questions.length) || (gt.id === "pk" && !opponent)} className="btn btn-now self-start" onClick={async () => { if (await act({ action: "game_start", type: gt.id, lanes: lanes.split("\n"), reward, minutes, questions: gt.id === "quiz" ? questions : undefined, opponentSlug: gt.id === "pk" ? opponent : undefined })) { setGt(null); setQtext(""); setOpponent(""); } }}>開始（觀眾手機與大螢幕同步）</button>
-                <p className="small text-ink3">{gt.id === "quiz" || gt.id === "wheel" ? "這款完全免費，觀眾沒有獎品，結果只決定表演內容。" : "免費點按就能玩；付費加成是直接給你的支持，一樣扣 3% 點數。結果只決定表演內容，請不要發放獎金。"}</p>
+                <p className="small text-ink3">{gt.id === "quiz" || gt.id === "wheel" ? "這款完全免費，觀眾沒有獎品，結果只決定表演內容。" : `免費點按就能玩；付費加成是直接給你的支持，一樣扣 ${feePct}% 服務費。結果只決定表演內容，請不要發放獎金。`}</p>
               </div>
             )}
           </>

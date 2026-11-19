@@ -78,7 +78,7 @@ export function EventManager({ list, areas, defaultCity, defaultPlace }: { list:
           </div>
           <label className="field">標記平台上的表演者（填他們的網址代號，用逗號分隔）<input value={f.performerSlugs} onChange={(e) => set("performerSlugs", e.target.value)} placeholder="例：demo-mia, demo" /></label>
           <label className="field">其他演出者（不在平台上的，純文字）<input value={f.guestActs} maxLength={200} onChange={(e) => set("guestActs", e.target.value)} /></label>
-          <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.notifyFans} onChange={(e) => set("notifyFans", e.target.checked)} />表演者確認後，用 LINE 通知他的粉絲（依人數扣你的點數）</label>
+          <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.notifyFans} onChange={(e) => set("notifyFans", e.target.checked)} />表演者確認後公開顯示在活動頁</label>
           <div className="flex gap-2">
             <button disabled={busy || !f.title || !f.startsAt} onClick={save} className="btn btn-primary">{editing ? "儲存" : "刊登活動"}</button>
             <button onClick={() => { setOpen(false); setEditing(null); setF(empty); }} className="btn btn-quiet">取消</button>

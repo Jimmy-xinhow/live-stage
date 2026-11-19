@@ -87,7 +87,7 @@ export function MyFollowing(props: { fan: FanInfo; following: Following; orders:
                   </div>
                   <span className="btn btn-now btn-sm shrink-0">去現場頁</span>
                 </Link>
-              )) : <p className="small py-3">追蹤的表演者現在都沒有演出。開演時會用 LINE 通知你。</p>}
+              )) : <p className="small py-3">追蹤的表演者現在都沒有演出。</p>}
             </div>
           </section>
 

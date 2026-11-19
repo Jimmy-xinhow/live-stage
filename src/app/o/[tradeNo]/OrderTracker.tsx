@@ -123,7 +123,7 @@ export function OrderTracker({ tradeNo, initial, methods, ttlMin, follow }: { tr
             <ol className="mt-5 flex flex-col gap-1 text-[14px] text-ink2">
               <li><span className="num mr-2 font-bold text-ink">1</span>用上面的收款碼轉帳 <strong className="num text-ink">{nt(s.amount)}</strong></li>
               <li><span className="num mr-2 font-bold text-ink">2</span>備註填 <strong className="num text-ink">{code}</strong></li>
-              <li><span className="num mr-2 font-bold text-ink">3</span>回來按「我付好了」，表演者確認後{s.itemTitle ? "排進隊伍" : "會通知你"}</li>
+              <li><span className="num mr-2 font-bold text-ink">3</span>回來按「我付好了」，表演者確認後{s.itemTitle ? "排進隊伍" : "這一頁會變成已收到"}</li>
             </ol>
             <button disabled={busy} onClick={claim} className="btn btn-primary btn-lg btn-block mt-5">我付好了</button>
             <p className="small mt-2 text-center">{ttlMin} 分鐘內沒有確認會自動取消；沒付款不會產生費用。</p>

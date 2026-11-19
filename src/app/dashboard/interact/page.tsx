@@ -2,6 +2,7 @@ import { requirePerformer } from "@/lib/auth";
 import { consoleState } from "@/lib/hub";
 import { currentGame, GAME_TYPES, publicGame } from "@/lib/games";
 import { InteractConsole } from "./InteractConsole";
+import { feePct } from "@/lib/billing";
 import { liveNow } from "@/lib/fans";
 import { notFound } from "next/navigation";
 import { FEATURES } from "@/lib/features";
@@ -47,6 +48,7 @@ export default async function Page() {
       initial={{ hub: await consoleState(p), game: publicGame(await currentGame(p.id), null, p.id) }}
       types={Object.entries(GAME_TYPES).map(([id, t]) => ({ id, name: t.name, desc: t.desc, min: t.lanes[0], max: t.lanes[1], goal: t.goal }))}
       liveNow={others}
+      feePct={feePct(effectivePlan(p))}
     />
   );
 }

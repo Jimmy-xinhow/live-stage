@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { dailyRevenue, overview } from "@/lib/admin";
 import { nt } from "@/lib/format";
+import { env } from "@/lib/env";
 import { Stats } from "./Bits";
 import { PageHead } from "@/components/back/Shell";
 
@@ -42,7 +43,7 @@ export default async function AdminHome() {
         <h2 className="h2">平台收入（近 30 天）</h2>
         <Stats
           items={[
-            { label: "服務費", value: `${o.fee30 / 100} 點`, sub: "每筆成交 3%" },
+            { label: "服務費", value: `${o.fee30 / 100} 點`, sub: `免費方案每筆 ${env.billing.feeRate * 100}%` },
             { label: "購買點數", value: nt(o.points.nt30), sub: `${o.points.cnt30} 筆` },
           ]}
         />

@@ -107,7 +107,7 @@ export function PerformerApp(props: {
           {state.live ? (
             <><span className="dot-now shrink-0" /><span><strong>演出中</strong>{state.live.location ? `・${state.live.location}` : ""}・排隊 <span className="num">{waiting}</span> 首</span></>
           ) : (
-            <span className="text-ink2">{props.nextShow ? `下次演出：${props.nextShow.when}・${props.nextShow.location}` : "目前沒有演出。追蹤後，開演時會用 LINE 通知你"}</span>
+            <span className="text-ink2">{props.nextShow ? `下次演出：${props.nextShow.when}・${props.nextShow.location}` : "目前沒有演出。追蹤之後，下次回到這一頁你的紀錄都還在"}</span>
           )}
         </div>
       </header>
@@ -278,7 +278,7 @@ function OrderSheet({ sheet, p, fan, following, ahead, avg, opts, onClose }: { s
         <label className="field">{sheet.kind === "request" ? "想說的話、要送給誰" : "想對他說的話"}<input value={message} onChange={(e) => setMessage(e.target.value.slice(0, 120))} placeholder="表演者會看到，可以不填" /></label>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink2">
           <label className="flex min-h-[28px] items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={anon} onChange={(e) => setAnon(e.target.checked)} />匿名</label>
-          {fan && !following && <label className="flex min-h-[28px] items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={follow} onChange={(e) => setFollow(e.target.checked)} />追蹤 {p.name}，開演通知我</label>}
+          {fan && !following && <label className="flex min-h-[28px] items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={follow} onChange={(e) => setFollow(e.target.checked)} />追蹤 {p.name}，下次回來紀錄都在</label>}
         </div>
         {!fan && <p className="small">用 LINE 開啟這一頁，可以收到「快輪到你」通知與表演者的回覆。</p>}
         {retrying > 0 && (

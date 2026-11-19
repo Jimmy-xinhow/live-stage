@@ -15,16 +15,13 @@ export default async function Fans() {
     fanList(p.id),
     db.select().from(shows).where(and(eq(shows.performerId, p.id), gte(shows.startsAt, new Date()))).orderBy(asc(shows.startsAt)),
   ]);
-  const costPerFan = env.billing.liveNotifyCents / 100;
   return (
     <div className="flex flex-col gap-8">
       <PageHead title="粉絲" desc="追蹤你的人、他們的支持紀錄，以及演出預告的發布。" />
       <ShowsManager
-        upcoming={upcoming.map((s) => ({ id: s.id, startsAt: s.startsAt.toISOString(), location: s.location, note: s.note, notified: s.notifiedCount }))}
-        followers={list.filter((f) => f.notifyLive).length}
-        costPerFan={costPerFan}
+        upcoming={upcoming.map((s) => ({ id: s.id, startsAt: s.startsAt.toISOString(), location: s.location, note: s.note }))}
       />
-      <FansManager fans={list} segmentLabel={SEGMENT_LABEL} costPerFan={costPerFan} />
+      <FansManager fans={list} segmentLabel={SEGMENT_LABEL} />
     </div>
   );
 }

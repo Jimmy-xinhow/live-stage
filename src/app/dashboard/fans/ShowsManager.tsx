@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 const when = (iso: string) => fmtTaipei(iso);
 
 /** 演出預告：發布後追蹤者收到 LINE 通知，觀眾頁與「我的追蹤」也會顯示 */
-export function ShowsManager({ upcoming, followers, costPerFan }: { upcoming: { id: string; startsAt: string; location: string; note: string; notified: number }[]; followers: number; costPerFan: number }) {
+export function ShowsManager({ upcoming }: { upcoming: { id: string; startsAt: string; location: string; note: string }[] }) {
   const router = useRouter();
   const [f, setF] = useState({ startsAt: "", location: "", note: "" });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -18,7 +18,7 @@ export function ShowsManager({ upcoming, followers, costPerFan }: { upcoming: { 
     const r = await fetch("/api/dashboard/shows", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
     const j = await r.json();
     setBusy(false);
-    setMsg(r.ok ? { ok: true, text: j.notified ? `已發布，通知了 ${j.notified} 位粉絲` : "已發布" } : { ok: false, text: j.error });
+    setMsg(r.ok ? { ok: true, text: "已發布" } : { ok: false, text: j.error });
     if (r.ok) { setF({ startsAt: "", location: "", note: "" }); router.refresh(); }
   }
 
@@ -44,7 +44,6 @@ export function ShowsManager({ upcoming, followers, costPerFan }: { upcoming: { 
             <li key={s.id} className="row flex items-center gap-3 py-2.5 text-[14px]">
               <strong className="num shrink-0">{when(s.startsAt)}</strong>
               <span className="min-w-0 flex-1 truncate text-ink2">{s.location}{s.note ? `・${s.note}` : ""}</span>
-              <span className="small num shrink-0">{s.notified ? `已通知 ${s.notified}` : ""}</span>
               <button onClick={async () => { await fetch(`/api/dashboard/shows/${s.id}`, { method: "DELETE" }); router.refresh(); }} className="small shrink-0 underline">刪除</button>
             </li>
           ))}

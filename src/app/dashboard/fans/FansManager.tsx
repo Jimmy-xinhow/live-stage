@@ -6,7 +6,7 @@ import { Avatar } from "@/components/Avatar";
 import { nt, timeAgo } from "@/lib/format";
 
 type Seg = "new" | "regular" | "big" | "sleeping";
-type Fan = { id: string; name: string; avatar: string | null; followedAt: string; notifyLive: boolean; total: number; cnt: number; last: string | null; seg: Seg[] };
+type Fan = { id: string; name: string; avatar: string | null; followedAt: string; total: number; cnt: number; last: string | null; seg: Seg[] };
 type Hist = { itemTitle: string | null; amount: number; message: string; paidAt: string | null };
 
 const SEG_SHORT: Record<Seg, string> = { new: "新粉", regular: "常客", big: "大粉", sleeping: "沉睡" };
@@ -18,7 +18,7 @@ const TEMPLATES: Record<"all" | Seg, string> = {
   sleeping: "好久不見！我最近練了幾首新歌，有空來聽聽。",
 };
 
-export function FansManager({ fans, segmentLabel, costPerFan }: { fans: Fan[]; segmentLabel: Record<Seg, string>; costPerFan: number }) {
+export function FansManager({ fans, segmentLabel }: { fans: Fan[]; segmentLabel: Record<Seg, string> }) {
   const router = useRouter();
   const [seg, setSeg] = useState<"all" | Seg>("all");
   const [text, setText] = useState(TEMPLATES.all);
@@ -28,7 +28,6 @@ export function FansManager({ fans, segmentLabel, costPerFan }: { fans: Fan[]; s
   const [busy, setBusy] = useState(false);
 
   const shown = useMemo(() => (seg === "all" ? fans : fans.filter((f) => f.seg.includes(seg))), [fans, seg]);
-  const reach = shown.filter((f) => f.notifyLive).length;
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: fans.length };
     for (const s of ["new", "regular", "big", "sleeping"] as Seg[]) c[s] = fans.filter((f) => f.seg.includes(s)).length;

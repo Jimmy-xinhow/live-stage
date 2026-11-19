@@ -101,6 +101,7 @@ export async function createShow(p: Performer, input: { startsAt: Date; location
     .insert(shows)
     .values({ performerId: p.id, startsAt: input.startsAt, location: input.location, note: input.note })
     .returning();
+  track("show_add", p.id);
   return { show: s };
 }
 
