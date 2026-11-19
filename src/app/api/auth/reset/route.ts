@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AuthError, resetPassword } from "@/lib/auth";
-import { LIMITS, guardShared } from "@/lib/ratelimit";
+import { LIMITS } from "@/lib/ratelimit";
+import { guardShared } from "@/lib/ratelimit.server";
 
 const Body = z.object({ token: z.string().max(200), password: z.string().max(200) });
 

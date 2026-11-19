@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AuthError, signIn } from "@/lib/auth";
-import { LIMITS, guardShared } from "@/lib/ratelimit";
+import { LIMITS } from "@/lib/ratelimit";
+import { guardShared } from "@/lib/ratelimit.server";
 
 const Body = z.object({ email: z.string().trim().max(160), password: z.string().max(200) });
 

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { joinBand } from "@/lib/band";
 import { createMemberSession, getMemberIds } from "@/lib/session";
-import { LIMITS, guardShared } from "@/lib/ratelimit";
+import { LIMITS } from "@/lib/ratelimit";
+import { guardShared } from "@/lib/ratelimit.server";
 
 const Body = z.object({ code: z.string().trim().min(4).max(12) });
 

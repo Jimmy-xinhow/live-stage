@@ -198,7 +198,7 @@ describe("現場狀態廣播", () => {
 
 describe("帳號安全的頻率限制", () => {
   it("超過次數就擋，而且跨實例共用（存在資料庫）", async () => {
-    const { hitShared } = await import("@/lib/ratelimit");
+    const { hitShared } = await import("@/lib/ratelimit.server");
     const key = `test-${Date.now()}`;
     const lim = { limit: 3, windowMs: 60_000 };
     expect((await hitShared(key, lim)).ok).toBe(true);
@@ -210,7 +210,7 @@ describe("帳號安全的頻率限制", () => {
   });
 
   it("不同來源各算各的", async () => {
-    const { hitShared } = await import("@/lib/ratelimit");
+    const { hitShared } = await import("@/lib/ratelimit.server");
     const lim = { limit: 1, windowMs: 60_000 };
     const a = `a-${Date.now()}`;
     const b = `b-${Date.now()}`;
