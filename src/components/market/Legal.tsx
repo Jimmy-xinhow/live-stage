@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
+import { env } from "@/lib/env";
 import { StageFooter, StageHeader } from "@/components/market/Shell";
 
 /**
@@ -54,7 +55,13 @@ export function LegalPage({
         <div className="mt-10 space-y-9">{children}</div>
 
         <p className="cap mt-14 text-[color:var(--dim)]">
-          對這份文件有疑問，或要行使你的資料權利，寄信到 {BRAND.legal} 的客服信箱，我們會在七個工作日內回覆。
+          對這份文件有疑問，或要行使你的資料權利，寄信到{" "}
+          {env.supportEmail ? (
+            <a href={`mailto:${env.supportEmail}`} className="underline">{env.supportEmail}</a>
+          ) : (
+            <>{BRAND.legal} 的客服信箱</>
+          )}
+          ，我們會在七個工作日內回覆。
         </p>
       </main>
       <StageFooter />

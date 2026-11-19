@@ -726,3 +726,44 @@ export const usageEvents = pgTable(
   },
   (t) => [index("usage_events_idx").on(t.name, t.createdAt)],
 );
+
+/**
+ * 收款碼圖片。
+ *
+ * 大部分收款碼能解碼成一段網址，存文字就好。解不開的才留圖，
+ * 而那張圖最大 300KB——放在 performers 這一列裡的話，每一次打開點歌頁
+ * 都會把它一起撈出來，而點歌頁是全站最常被打開的一頁。
+ * 所以圖另外放，只有真的要顯示收款碼的那一頁才去拿。
+ */
+export const payQrImages = pgTable(
+  "pay_qr_images",
+  {
+    performerId: uuid("performer_id").notNull().references(() => performers.id, { onDelete: "cascade" }),
+    /** 對應 payMethods 陣列的位置 */
+    idx: integer("idx").notNull(),
+    /** data URL（image/jpeg），上限由上傳檢查把關 */
+    data: text("data").notNull(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.performerId, t.idx] })],
+);
+
+/**
+ * 跨實例的頻率計數。
+ *
+ * 記憶體版本有兩個問題：重新部署就歸零，而且多開一台之後每台各算各的——
+ * 對猜密碼這種事來說，等於額度乘以實例數。
+ * 高頻的動作（點按、輪詢）還是走記憶體，便宜；跟帳號安全有關的走這裡。
+ */
+export const rateHits = pgTable(
+  "rate_hits",
+  {
+    /** 用途＋來源，例如 signin:1.2.3.4 */
+    key: varchar("key", { length: 160 }).notNull(),
+    /** 這個視窗的起點（毫秒時間戳除以視窗長度） */
+    window: integer("window").notNull(),
+    n: integer("n").notNull().default(0),
+    expiresAt: ts("expires_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.key, t.window] }), index("rate_hits_exp_idx").on(t.expiresAt)],
+);

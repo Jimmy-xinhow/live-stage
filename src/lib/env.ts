@@ -24,6 +24,8 @@ export const env = {
   /** 平台管理員的信箱白名單，逗號分隔 */
   /** 寄信（Resend）。沒設就只寫進伺服器記錄，流程照樣走得完 */
   mail: { from: process.env.MAIL_FROM ?? "", configured: !!process.env.RESEND_API_KEY && !!process.env.MAIL_FROM },
+  /** 客服信箱。條款與退款政策都指向這裡，所以它必須真的有人看 */
+  supportEmail: process.env.SUPPORT_EMAIL ?? "",
   adminEmails: (process.env.ADMIN_EMAILS ?? "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean),
   /** 平台自己的收款帳號：只用於藝人「購買點數」，與藝人收款無關 */
   platformGateway: {

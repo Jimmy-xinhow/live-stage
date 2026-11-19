@@ -2,7 +2,7 @@ import { and, eq, isNull, lt, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { liveSessions, orders, performers } from "./db/schema";
 import { reportError } from "./errors";
-import { lineOutbox, usageEvents } from "./db/schema";
+import { rateHits, usageEvents } from "./db/schema";
 
 /**
  * 每小時的整理工作。全部都寫成可以重複執行（冪等），
@@ -51,12 +51,9 @@ export async function runMaintenance() {
       .returning({ id: usageEvents.id });
     out.prunedUsage = pruned.length;
 
-    // 5. 已送出的推播紀錄留 30 天就夠查，放棄的留著給人看
-    const sentLogs = await db
-      .delete(lineOutbox)
-      .where(and(eq(lineOutbox.status, "sent"), lt(lineOutbox.createdAt, new Date(now.getTime() - 30 * 86400_000))))
-      .returning({ id: lineOutbox.id });
-    out.prunedOutbox = sentLogs.length;
+    // 5. 過期的頻率計數
+    const hits = await db.delete(rateHits).where(lt(rateHits.expiresAt, now)).returning({ key: rateHits.key });
+    out.prunedRateHits = hits.length;
   } catch (e) {
     reportError("maintenance", e);
     throw e;

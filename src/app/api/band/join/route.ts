@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { joinBand } from "@/lib/band";
 import { createMemberSession, getMemberIds } from "@/lib/session";
-import { LIMITS, guard } from "@/lib/ratelimit";
+import { LIMITS, guardShared } from "@/lib/ratelimit";
 
 const Body = z.object({ code: z.string().trim().min(4).max(12) });
 
@@ -11,7 +11,7 @@ const Body = z.object({ code: z.string().trim().min(4).max(12) });
  * 認領成功後把團員 id 寫進這台裝置的簽章 cookie。
  */
 export async function POST(req: Request) {
-  const rl = guard(req, "bandjoin", LIMITS.auth);
+  const rl = await guardShared(req, "bandjoin", LIMITS.auth);
   if (rl) return rl;
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "邀請碼格式不對" }, { status: 400 });

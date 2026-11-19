@@ -7,7 +7,7 @@ import { publicPayMethods } from "@/lib/paymethods";
 
 export default async function Poster() {
   const p = (await requirePerformer())!.performer;
-  const [pay] = await publicPayMethods(p.payMethods.slice(0, 1));
+  const [pay] = await publicPayMethods(p.payMethods.slice(0, 1), p.id);
   return (
     <main className="mx-auto max-w-[148mm]">
       <div className="no-print mb-4 flex gap-2"><PrintButton /><a href="/dashboard" className="btn btn-secondary btn-sm">返回</a></div>

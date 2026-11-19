@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AuthError, resetPassword } from "@/lib/auth";
-import { LIMITS, guard } from "@/lib/ratelimit";
+import { LIMITS, guardShared } from "@/lib/ratelimit";
 
 const Body = z.object({ token: z.string().max(200), password: z.string().max(200) });
 
 export async function POST(req: Request) {
-  const rl = guard(req, "reset", LIMITS.auth);
+  const rl = await guardShared(req, "reset", LIMITS.auth);
   if (rl) return rl;
   const b = Body.safeParse(await req.json().catch(() => ({})));
   if (!b.success) return NextResponse.json({ error: "資料不完整" }, { status: 400 });

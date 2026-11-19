@@ -110,11 +110,18 @@ export function preflight(): Check[] {
       fix: "設定 ADMIN_EMAILS（逗號分隔）。沒設的話沒有人能用帳號進平台後台。",
     },
     {
-      key: "cron_secret",
+      key: "support_email",
+      level: "block",
+      ok: !!process.env.SUPPORT_EMAIL,
+      title: "客服信箱已設定",
+      fix: "設定 SUPPORT_EMAIL。退款與爭議政策寫著「寄信給我們」，那個信箱必須真的存在。",
+    },
+    {
+      key: "healthcheck",
       level: "warn",
-      ok: !!process.env.CRON_SECRET,
-      title: "背景排程金鑰已設定",
-      fix: "設定 CRON_SECRET 並安排每小時呼叫 /api/cron。沒有它逾時訂單不會收掉，方案也不會自動續期。",
+      ok: !!process.env.HEALTHCHECK_NOTE,
+      title: "外部監控已掛上 /api/health",
+      fix: "用 UptimeRobot 之類的服務每分鐘打一次 /api/health，掛掉才會有人知道。設好之後把 HEALTHCHECK_NOTE 填上服務名稱當作記號。",
     },
     {
       key: "error_tracking",

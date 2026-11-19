@@ -18,8 +18,9 @@ export default async function OrderPage({ params }: { params: Promise<{ tradeNo:
   let methods: Awaited<ReturnType<typeof publicPayMethods>> = [];
   if (s.payMode === "manual") {
     const db = await getDb();
-    const [row] = await db.select({ m: performers.payMethods }).from(orders).innerJoin(performers, eq(performers.id, orders.performerId)).where(eq(orders.tradeNo, tradeNo));
-    methods = await publicPayMethods(row?.m ?? []);
+    const [row] = await db.select({ m: performers.payMethods, id: performers.id }).from(orders).innerJoin(performers, eq(performers.id, orders.performerId)).where(eq(orders.tradeNo, tradeNo));
+    // 這一頁真的要顯示收款碼，所以才去拿圖
+    methods = await publicPayMethods(row?.m ?? [], row?.id);
   }
   const fan = await getFan(await getFanId());
   const db2 = await getDb();

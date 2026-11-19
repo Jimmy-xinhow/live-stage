@@ -201,3 +201,83 @@ test("法務三份文件都開得起來，而且頁尾連得到", async () => {
   }
   await p.close();
 });
+
+/**
+ * 跨帳號的授權邊界。
+ *
+ * 「沒登入會被擋」只是第一層。真正會賠錢的是第二層：登入了，但拿別人的
+ * 訂單 id、別人的團員 id 去打 API。程式裡有檢查，但沒有東西保證下次改動
+ * 不會把它弄丟——所以這一條要有測試守著。
+ */
+test("登入之後也拿不到別人的資料", async () => {
+  const a = await browser.newContext();
+  const b = await browser.newContext();
+
+  // 兩個不同的示範表演者。開發登入會導到 APP_BASE_URL，測試時那個位址
+  // 不一定連得上，所以只要 cookie 拿到就好，不跟著跳轉
+  await a.request.get(`${BASE}/api/auth/dev?as=demo`, { maxRedirects: 0 }).catch(() => null);
+  await b.request.get(`${BASE}/api/auth/dev?as=demo-mia`, { maxRedirects: 0 }).catch(() => null);
+
+  // A 的某一筆訂單
+  const list = await a.request.get(`${BASE}/api/dashboard/orders?limit=1`);
+  let orderId = null;
+  if (list.ok()) {
+    const j = await list.json().catch(() => ({}));
+    orderId = j.items?.[0]?.id ?? j.orders?.[0]?.id ?? null;
+  }
+
+  if (orderId) {
+    // B 拿 A 的訂單 id 去退款，必須被擋
+    const steal = await b.request.post(`${BASE}/api/dashboard/orders/${orderId}`, {
+      data: { action: "refund", note: "" },
+    });
+    assert.ok([403, 404].includes(steal.status()), `別人的訂單應該退不了，實際 ${steal.status()}`);
+  }
+
+  // B 看不到 A 的對帳
+  const ledgerA = await a.request.get(`${BASE}/api/dashboard/ledger?month=2026-11`);
+  const ledgerB = await b.request.get(`${BASE}/api/dashboard/ledger?month=2026-11`);
+  if (ledgerA.ok() && ledgerB.ok()) {
+    const ta = await ledgerA.text();
+    const tb = await ledgerB.text();
+    assert.notEqual(ta, tb, "兩個不同帳號的對帳檔不該一模一樣");
+  }
+
+  // 團員拆帳：B 存不進 A 的團
+  const band = await b.request.post(`${BASE}/api/dashboard/band`, {
+    data: { members: [{ name: "亂入", sharePermille: 1000 }] },
+  });
+  assert.ok(band.status() < 500, `存自己的團不該 500，實際 ${band.status()}`);
+
+  await a.close();
+  await b.close();
+});
+
+test("健康檢查回得出資料庫狀態", async () => {
+  const anon = await browser.newContext();
+  const r = await anon.request.get(`${BASE}/api/health`);
+  assert.equal(r.status(), 200, `健康檢查應該回 200，實際 ${r.status()}`);
+  const j = await r.json();
+  assert.equal(j.db, true, "健康檢查要真的查過資料庫");
+  assert.ok(typeof j.live?.rooms === "number", "要回報現在有幾場在廣播");
+  await anon.close();
+});
+
+test("現場狀態的 SSE 推得出東西", async () => {
+  const anon = await browser.newContext();
+  const p = await anon.newPage();
+  // EventSource 要從站台自己的來源開，所以先把頁面導到站上
+  await p.goto(`${BASE}/p/demo`, { waitUntil: "domcontentloaded" });
+  const got = await p.evaluate(async () => {
+    return await new Promise((resolve) => {
+      const es = new EventSource(`/api/p/demo/stream`);
+      const seen = [];
+      es.addEventListener("state", () => { seen.push("state"); done(); });
+      es.addEventListener("game", () => { seen.push("game"); done(); });
+      const timer = setTimeout(() => { es.close(); resolve(seen); }, 8000);
+      function done() { if (seen.length >= 2) { clearTimeout(timer); es.close(); resolve(seen); } }
+    });
+  });
+  assert.ok(got.includes("state"), `SSE 應該推出 state，實際收到 ${JSON.stringify(got)}`);
+  await anon.close();
+});

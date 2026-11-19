@@ -11,7 +11,8 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "typecheck": "tsc --noEmit",
     "test:smoke": "node --test tests/smoke.spec.mjs",
-    "explain": "tsx scripts/explain.ts"
+    "explain": "tsx scripts/explain.ts",
+    "backup:check": "tsx scripts/backup-check.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",

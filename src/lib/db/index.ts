@@ -16,7 +16,15 @@ async function init(): Promise<DB> {
     const db = drizzlePg(client, { schema });
     if (process.env.MIGRATE_ON_BOOT === "true") {
       const { migrate } = await import("drizzle-orm/postgres-js/migrator");
-      await migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
+      // 多個實例同時開機會一起跑遷移，同一道 DDL 跑兩次會炸。
+      // 用 Postgres 的諮詢鎖排隊：先拿到的跑，其他的等它跑完再往下，
+      // 那時候遷移已經是最新的，第二次跑等於無事發生。
+      await client`select pg_advisory_lock(727001)`;
+      try {
+        await migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
+      } finally {
+        await client`select pg_advisory_unlock(727001)`;
+      }
       // SEED_DEMO=true 只在空資料庫建示範資料；=reset 會先清掉舊的示範帳號再重建（驗收用）
       if (process.env.SEED_DEMO === "true" || process.env.SEED_DEMO === "reset") {
         const { resetDemo, seedDemo } = await import("./seed");

@@ -195,3 +195,27 @@ describe("現場狀態廣播", () => {
     expect(() => bump("nobody-watching")).not.toThrow();
   });
 });
+
+describe("帳號安全的頻率限制", () => {
+  it("超過次數就擋，而且跨實例共用（存在資料庫）", async () => {
+    const { hitShared } = await import("@/lib/ratelimit");
+    const key = `test-${Date.now()}`;
+    const lim = { limit: 3, windowMs: 60_000 };
+    expect((await hitShared(key, lim)).ok).toBe(true);
+    expect((await hitShared(key, lim)).ok).toBe(true);
+    expect((await hitShared(key, lim)).ok).toBe(true);
+    const over = await hitShared(key, lim);
+    expect(over.ok).toBe(false);
+    expect(over.retryAfter).toBeGreaterThan(0);
+  });
+
+  it("不同來源各算各的", async () => {
+    const { hitShared } = await import("@/lib/ratelimit");
+    const lim = { limit: 1, windowMs: 60_000 };
+    const a = `a-${Date.now()}`;
+    const b = `b-${Date.now()}`;
+    expect((await hitShared(a, lim)).ok).toBe(true);
+    expect((await hitShared(a, lim)).ok).toBe(false);
+    expect((await hitShared(b, lim)).ok).toBe(true);
+  });
+});

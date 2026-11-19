@@ -7,6 +7,7 @@ import { requirePerformer } from "@/lib/auth";
 import { encrypt } from "@/lib/crypto";
 import { AREAS } from "@/lib/areas";
 import { checkDataUrlImage } from "@/lib/imagecheck";
+import { savePayImages } from "@/lib/paymethods";
 import { planHasPro, planIsPaid } from "@/lib/plans";
 import { effectivePlan } from "@/lib/subscription";
 
@@ -69,10 +70,14 @@ export async function POST(req: Request) {
   const dup = await db.select({ id: performers.id }).from(performers).where(and(eq(performers.slug, b.slug), ne(performers.id, auth.performer.id)));
   if (dup.length) return NextResponse.json({ error: "網址代號已被使用" }, { status: 409 });
 
+  // 收款碼圖片存到另一張表，performers 這一列保持小——點歌頁每次都會讀它
+  const payMethods = await savePayImages(auth.performer.id, b.payMethods as never);
+
   await db
     .update(performers)
     .set({
       ...b,
+      payMethods,
       avatarUrl: b.avatarUrl || null,
       // 免費方案不能關掉平台標記。在這裡擋，不能只靠前端藏按鈕
       hideBranding: b.hideBranding && planIsPaid(effectivePlan(auth.performer)),
