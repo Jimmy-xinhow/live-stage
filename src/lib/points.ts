@@ -2,7 +2,6 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { performers, pointPurchases } from "./db/schema";
 import { applyPoints } from "./billing";
-import { pushMessage } from "./line";
 import { POINT_PACKAGES } from "./env";
 import { newTradeNo } from "./orders";
 import { FEATURES } from "./features";
@@ -33,10 +32,7 @@ export async function markPurchasePaid(tradeNo: string, raw?: unknown) {
     await tx.update(performers).set({ lowBalanceNotifiedAt: null }).where(eq(performers.id, row.performerId));
     return { row, balance };
   });
-  if (done) {
-    const [p] = await db.select().from(performers).where(eq(performers.id, done.row.performerId));
-    if (p?.lineUserId) await pushMessage(p.lineUserId, [{ type: "text", text: `✅ 已儲值 ${done.row.pointsCents / 100} 點，目前餘額 ${done.balance / 100} 點` }]);
-  }
+  // 儲值成功不另外通知：付款完會導回點數頁，餘額當下就看得到
   return done?.row ?? null;
 }
 

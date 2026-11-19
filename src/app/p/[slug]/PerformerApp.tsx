@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { PublicState } from "@/lib/orders";
 import { CATEGORY_LABEL, initial as initialOf, nt, timeAgo } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
-import { submitForm } from "@/lib/liff-client";
+import { submitForm } from "@/lib/formpost";
 import { getJson, newKey, postJson } from "@/lib/net";
 import { followApi, useFan, type FanInfo } from "@/components/useFan";
 import { RankTab } from "./RankTab";
@@ -15,14 +15,13 @@ type Perf = { slug: string; name: string; avatar: string | null; cover?: string 
 type Sheet = { kind: "request"; item: MenuRow } | { kind: "tip" } | null;
 
 export function PerformerApp(props: {
-  performer: Perf; menu: MenuRow[]; initialState: PublicState; fan: FanInfo; initialFollowing: boolean; nextShow: { when: string; location: string; note: string } | null;
-  liffId: string; devLogin: boolean; oaUrl: string; appName: string; hideBranding?: boolean; initialTab?: "menu" | "queue" | "rank" | "wall";
+  performer: Perf; menu: MenuRow[]; initialState: PublicState; fan: FanInfo; initialFollowing: boolean; nextShow: { when: string; location: string; note: string } | null; appName: string; hideBranding?: boolean; initialTab?: "menu" | "queue" | "rank" | "wall";
   area?: { slug: string; name: string } | null; district?: string;
 }) {
-  const { performer: p, menu, liffId } = props;
+  const { performer: p, menu } = props;
   const [state, setState] = useState(props.initialState);
   const [tab, setTab] = useState<"menu" | "queue" | "rank" | "wall">(props.initialTab ?? "menu");
-  const { fan, ensureFan, liffOk } = useFan(props.fan, liffId, props.devLogin);
+  const { fan, ensureFan } = useFan(props.fan);
   const [following, setFollowing] = useState(props.initialFollowing);
   const [followers, setFollowers] = useState(props.initialState.followers);
   const [q, setQ] = useState("");
@@ -53,14 +52,14 @@ export function PerformerApp(props: {
 
   async function toggleFollow() {
     if (!(await ensureFan())) {
-      if (!liffOk) setToast("請用 LINE 開啟此頁面後再追蹤");
+      setToast("現在連不上，等一下再試");
       return;
     }
     const next = !following;
     if (await followApi(p.slug, next)) {
       setFollowing(next);
       setFollowers((n) => n + (next ? 1 : -1));
-      if (next) setToast(props.oaUrl ? "已追蹤！記得加 LINE 好友才收得到開唱通知" : "已追蹤！開唱時會通知你");
+      if (next) setToast("已追蹤。下次回到這一頁，你的紀錄都還在。");
     }
   }
 
@@ -226,7 +225,6 @@ export function PerformerApp(props: {
       {toast && (
         <div onClick={() => setToast("")} className="fixed inset-x-0 top-4 z-40 mx-auto w-fit max-w-[90%] rounded-[12px] bg-ink px-4 py-2.5 text-[14px] text-paper">
           {toast}
-          {props.oaUrl && following && <a href={props.oaUrl} className="ml-2 underline">加好友</a>}
         </div>
       )}
 

@@ -19,6 +19,6 @@ export async function POST(req: Request) {
   const b = parsed.data;
   const startsAt = new Date(`${b.startsAt}:00+08:00`);
   if (startsAt.getTime() < Date.now()) return NextResponse.json({ error: "時間已經過了" }, { status: 400 });
-  const r = await createShow(auth.performer, { startsAt, location: b.location, note: b.note }, b.notify);
-  return NextResponse.json({ ok: true, notified: r.notified });
+  await createShow(auth.performer, { startsAt, location: b.location, note: b.note });
+  return NextResponse.json({ ok: true });
 }

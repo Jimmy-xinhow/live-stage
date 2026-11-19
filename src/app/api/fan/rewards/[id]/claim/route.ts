@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { ensureFanId } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
 import { claimReward, RewardError } from "@/lib/rewards";
 
 export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  const fanId = await getFanId();
-  if (!fanId) return NextResponse.json({ error: "請先用 LINE 登入" }, { status: 401 });
+  // 不需要登入：沒有身分就當場發一個，使用者完全不會被擋下來
+  const fanId = await ensureFanId();
   try {
     const fa = await claimReward(fanId, (await params).id);
     return NextResponse.json({ ok: true, status: fa.status, code: fa.claimCode });

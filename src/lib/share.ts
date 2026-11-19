@@ -1,6 +1,11 @@
-import { env, LIFF_ID } from "./env";
+import { env } from "./env";
 
-/** QR 優先指向 LIFF 網址：手機相機掃到會直接開 LINE，自動帶出身分，方便追蹤與通知 */
+/**
+ * QR 與分享連結指向的網址。
+ *
+ * 就是一般網頁，沒有中介。手機相機掃到直接開瀏覽器，不用裝任何東西、
+ * 不用登入、不用加好友——這是這套系統對觀眾唯一的要求：掃一下。
+ */
 export function performerShareUrl(slug: string) {
-  return LIFF_ID ? `https://liff.line.me/${LIFF_ID}/${encodeURIComponent(slug)}` : `${env.baseUrl}/p/${encodeURIComponent(slug)}`;
+  return `${env.baseUrl}/p/${encodeURIComponent(slug)}`;
 }

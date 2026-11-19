@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureFanId } from "@/lib/fans";
 import { getPerformerBySlug } from "@/lib/orders";
 import { getFanId } from "@/lib/session";
 import { addWish, checkIn, cheer, HubError, hubState, joinLottery, raiseHand, voteWish } from "@/lib/hub";
@@ -23,11 +24,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const p = await getPerformerBySlug((await params).slug);
   if (!p) return NextResponse.json({ error: "not found" }, { status: 404 });
   const b = (await req.json().catch(() => ({}))) as { action?: string; n?: number; kind?: string; text?: string; title?: string; id?: string; on?: boolean };
-  const fanId = await getFanId();
+  const fanId = await ensureFanId();
   try {
     if (b.action === "cheer") await cheer(p, Number(b.n) || 1);
     else {
-      if (!fanId) return NextResponse.json({ error: "請先用 LINE 登入" }, { status: 401 });
       if (b.action === "checkin") await checkIn(p, fanId);
       else if (b.action === "join") await joinLottery(p, fanId);
       else if (b.action === "hand") await raiseHand(p, fanId, String(b.kind), String(b.text ?? ""));

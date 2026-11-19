@@ -21,7 +21,10 @@ export const env = {
   encryptionKey: process.env.APP_ENCRYPTION_KEY ?? "dev-only-encryption-key-change-me",
   /** 管理後台密碼登入；沒設就只能用 ADMIN_LINE_USER_IDS 的 LINE 帳號進入 */
   adminPassword: process.env.ADMIN_PASSWORD ?? "",
-  adminLineUserIds: (process.env.ADMIN_LINE_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+  /** 平台管理員的信箱白名單，逗號分隔 */
+  /** 寄信（Resend）。沒設就只寫進伺服器記錄，流程照樣走得完 */
+  mail: { from: process.env.MAIL_FROM ?? "", configured: !!process.env.RESEND_API_KEY && !!process.env.MAIL_FROM },
+  adminEmails: (process.env.ADMIN_EMAILS ?? "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean),
   /** 平台自己的收款帳號：只用於藝人「購買點數」，與藝人收款無關 */
   platformGateway: {
     gateway: (process.env.PLATFORM_GATEWAY ?? "mock") as "mock" | "ecpay" | "newebpay",
@@ -48,16 +51,8 @@ export const env = {
     /** 每則聊天室留言加多少應援能量（百分比） */
     hypePerMessage: Number(process.env.CHAT_HYPE_PER_MESSAGE ?? "1"),
   },
-  line: {
-    loginChannelId: process.env.LINE_LOGIN_CHANNEL_ID ?? "",
-    loginChannelSecret: process.env.LINE_LOGIN_CHANNEL_SECRET ?? "",
-    messagingAccessToken: process.env.LINE_MESSAGING_ACCESS_TOKEN ?? "",
-    messagingChannelSecret: process.env.LINE_MESSAGING_CHANNEL_SECRET ?? "",
-    oaAddFriendUrl: process.env.NEXT_PUBLIC_LINE_OA_URL ?? "",
-  },
 };
 
-export const LIFF_ID = process.env.NEXT_PUBLIC_LIFF_ID ?? "";
 
 export const POINT_PACKAGES = [
   { id: "p300", priceNt: 300, points: 300, label: "300 點" },

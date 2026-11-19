@@ -7,7 +7,7 @@ import { liveSessions, menuItems, shows } from "@/lib/db/schema";
 import { getPerformerBySlug } from "@/lib/orders";
 import { getFan, isFollowing } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
-import { APP_NAME, LIFF_ID, env } from "@/lib/env";
+import { APP_NAME, env } from "@/lib/env";
 import { areaBySlug } from "@/lib/areas";
 import { actName, streamInfo } from "@/lib/acts";
 import { reviewsOf, trackRecord } from "@/lib/market";
@@ -30,8 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description: `${p.bio ? p.bio.slice(0, 70) + "　" : ""}${what}。平台累積的演出場次、歌單與接下來的演出，可以直接邀請演出。`,
     alternates: { canonical: `/u/${p.slug}` },
     openGraph: { title: `${p.displayName}｜${what}`, description: p.bio.slice(0, 80), type: "profile", images: p.coverUrl || p.avatarUrl ? [(p.coverUrl || p.avatarUrl)!] : undefined },
-    robots: area && p.status === "active" && p.bio ? undefined : { index: false, follow: true },
-  };
+    robots: area && p.status === "active" && p.bio ? undefined : { index: false, follow: true } };
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
@@ -97,7 +96,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               <div className="flex flex-col gap-3">
                 <div><div className="small">{act}・{[area?.name, p.district].filter(Boolean).join(" ")}</div><h1 className="h-display">{p.displayName}</h1>{p.genres && <div className="small">{p.genres}</div>}</div>
                 {p.bio && <p className="max-w-[600px] text-ink2">{p.bio}</p>}
-                <FollowMini slug={p.slug} initialFollowing={following} fan={fan ? { name: fan.name, avatar: fan.avatarUrl } : null} liffId={LIFF_ID} devLogin={env.allowDevLogin} count={rec.followers} />
+                <FollowMini slug={p.slug} initialFollowing={following} fan={fan ? { name: fan.name, avatar: fan.avatarUrl } : null} count={rec.followers} />
               </div>
             </div>
 

@@ -3,7 +3,6 @@ import { getDb } from "./db";
 import { eventPerformers, events, fans, follows, performers, promotions, type EventRow, type Performer } from "./db/schema";
 import { areaBySlug } from "./areas";
 import { applyPoints } from "./billing";
-import { multicast, pushMessage } from "./line";
 import { env } from "./env";
 import { fmtTaipei } from "./format";
 import { bumpImpressions } from "./market";
@@ -91,19 +90,8 @@ async function tagPerformers(org: Performer, ev: EventRow, slugs: string[]) {
   for (const p of list) {
     if (current.some((c) => c.performerId === p.id)) continue;
     await db.insert(eventPerformers).values({ eventId: ev.id, performerId: p.id });
-    if (p.lineUserId)
-      await pushMessage(p.lineUserId, [
-        {
-          type: "text",
-          text: `${org.displayName} 把你列在活動「${ev.title}」的演出名單\n${fmtWhen(ev.startsAt)}・${ev.place}\n確認後才會公開顯示你的名字。`,
-          quickReply: {
-            items: [
-              { type: "action", action: { type: "postback", label: "我會演出", data: `event_yes:${ev.id}`, displayText: `我會演出「${ev.title}」` } },
-              { type: "action", action: { type: "postback", label: "不是我", data: `event_no:${ev.id}`, displayText: `不會演出「${ev.title}」` } },
-            ],
-          },
-        },
-      ]).catch(() => null);
+    // 原本這裡推播請被標記的表演者確認。沒有推播之後，
+    // 待確認的活動會出現在他後台的待辦清單裡。
   }
 }
 
@@ -126,13 +114,9 @@ export async function respondTag(p: Performer, eventId: string, accept: boolean)
     .from(follows)
     .innerJoin(fans, eq(fans.id, follows.fanId))
     .where(and(eq(follows.performerId, p.id), eq(follows.notifyLive, true)));
-  const ids = rows.map((r) => r.line).filter(Boolean);
-  if (!ids.length) return { notified: 0 };
-  await multicast(ids, [{ type: "text", text: `${p.displayName} 要在「${ev.title}」演出\n${fmtWhen(ev.startsAt)}・${ev.place}\n${env.baseUrl}/e/${ev.id}` }]).catch(() => null);
-  const cost = ids.length * env.billing.liveNotifyCents;
-  if (cost) await applyPoints(db, ev.organizerId, -cost, "event_notify", { note: `活動通知 ${ids.length} 位粉絲` });
-  await db.update(eventPerformers).set({ notified: ids.length }).where(and(eq(eventPerformers.eventId, eventId), eq(eventPerformers.performerId, p.id)));
-  return { notified: ids.length };
+  // 活動通知原本是推播給粉絲。沒有推播之後這個動作不存在，活動靠活動頁與地圖被看到。
+  void rows;
+  return { notified: 0 };
 }
 
 export type EventCard = {

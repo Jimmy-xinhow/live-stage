@@ -15,8 +15,8 @@ type LiveRow = { slug: string; name: string; avatar: string | null; color: strin
 const Q: Record<string, string> = { waiting: "排隊中", playing: "正在唱", done: "已唱", skipped: "沒有唱" };
 const when = (iso: string) => fmtTaipei(iso);
 
-export function MyFollowing(props: { fan: FanInfo; following: Following; orders: OrderRow[]; liveNow: LiveRow[]; rewards: RewardRow[]; liffId: string; devLogin: boolean; oaUrl: string; appName: string; children?: React.ReactNode }) {
-  const { fan, ensureFan } = useFan(props.fan, props.liffId, props.devLogin);
+export function MyFollowing(props: { fan: FanInfo; following: Following; orders: OrderRow[]; liveNow: LiveRow[]; rewards: RewardRow[]; appName: string; children?: React.ReactNode }) {
+  const { fan, ensureFan } = useFan(props.fan);
   const [data, setData] = useState({ following: props.following, orders: props.orders, liveNow: props.liveNow });
   const [rewards, setRewards] = useState(props.rewards);
   const [rerr, setRerr] = useState("");
@@ -45,12 +45,10 @@ export function MyFollowing(props: { fan: FanInfo; following: Following; orders:
     await fetch(key === "follow" ? "/api/fan/follow" : "/api/fan/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(key === "follow" ? { slug, follow: value } : { slug, notifyLive: value }),
-    });
+      body: JSON.stringify(key === "follow" ? { slug, follow: value } : { slug, notifyLive: value }) });
     setData((d) => ({
       ...d,
-      following: key === "follow" && !value ? d.following.filter((f) => f.slug !== slug) : d.following.map((f) => (f.slug === slug ? { ...f, notifyLive: value } : f)),
-    }));
+      following: key === "follow" && !value ? d.following.filter((f) => f.slug !== slug) : d.following.map((f) => (f.slug === slug ? { ...f, notifyLive: value } : f)) }));
   }
 
   const live = data.following.filter((f) => f.live);
@@ -69,8 +67,8 @@ export function MyFollowing(props: { fan: FanInfo; following: Following; orders:
       {!fan && (
         <section className="pt-8">
           <h1 className="h1">演出護照</h1>
-          <p className="small mt-1">用 LINE 登入，就能看到追蹤的表演者誰正在演出、你的簽到章與點歌紀錄。</p>
-          <button onClick={() => ensureFan()} className="btn btn-primary btn-lg btn-block mt-6">用 LINE 登入</button>
+          <p className="small mt-1">追蹤過的表演者、簽到章與點歌紀錄都會留在這台裝置上。</p>
+          <button onClick={() => ensureFan()} className="btn btn-primary btn-lg btn-block mt-6">開始使用</button>
         </section>
       )}
 
@@ -155,7 +153,7 @@ export function MyFollowing(props: { fan: FanInfo; following: Following; orders:
               </ul>
             </section>
           )}
-          {props.oaUrl && <a href={props.oaUrl} className="btn btn-secondary btn-block mt-8">加官方帳號好友，才收得到開演通知</a>}
+          
         </>
       )}
 

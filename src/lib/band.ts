@@ -113,19 +113,29 @@ export async function monthlySplit(performerId: string, year: number, month: num
   return rows.map((r) => ({ ...r, total: Number(r.total), count: Number(r.count) }));
 }
 
-/** 團員用邀請碼把自己的 LINE 帳號綁上去 */
-export async function joinBand(code: string, lineUserId: string) {
+/**
+ * 團員用邀請碼認領自己的位置。
+ *
+ * 認領的是「這台裝置」，不是一個帳號——團員只想看自己分到多少，
+ * 為這件事要他註冊一個帳號是不成比例的。
+ * 一組碼只能被認領一次；換手機要跟團長要一組新的。
+ */
+export async function joinBand(code: string, alreadyClaimed: string[] = []) {
   const db = await getDb();
   const [m] = await db.select().from(bandMembers).where(eq(bandMembers.inviteCode, code.trim().toUpperCase()));
   if (!m) return { ok: false as const, error: "邀請碼不正確，或這個團員已經被移除" };
-  if (m.lineUserId && m.lineUserId !== lineUserId) return { ok: false as const, error: "這個邀請碼已經被別人用了，跟團長要一個新的" };
-  await db.update(bandMembers).set({ lineUserId }).where(eq(bandMembers.id, m.id));
-  track("band_join", m.performerId);
+  if (m.claimedAt && !alreadyClaimed.includes(m.id))
+    return { ok: false as const, error: "這個邀請碼已經被別人用了，跟團長要一個新的" };
+  if (!m.claimedAt) {
+    await db.update(bandMembers).set({ claimedAt: new Date() }).where(eq(bandMembers.id, m.id));
+    track("band_join", m.performerId);
+  }
   return { ok: true as const, memberId: m.id, name: m.name };
 }
 
-/** 這個 LINE 帳號是哪些團的團員。給團員登入後看自己的拆帳用 */
-export async function bandsOf(lineUserId: string) {
+/** 這台裝置認領過的團員身分。給團員頁看自己的拆帳用 */
+export async function bandsOf(memberIds: string[]) {
+  if (!memberIds.length) return [];
   const db = await getDb();
   return db
     .select({
@@ -138,7 +148,7 @@ export async function bandsOf(lineUserId: string) {
     })
     .from(bandMembers)
     .innerJoin(performers, eq(performers.id, bandMembers.performerId))
-    .where(eq(bandMembers.lineUserId, lineUserId));
+    .where(inArray(bandMembers.id, memberIds));
 }
 
 /** 單一團員某個月的明細 */

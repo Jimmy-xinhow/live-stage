@@ -30,7 +30,6 @@ const Body = z.object({
   showAmounts: z.boolean(),
   hideBranding: z.boolean().default(false),
   streamDelaySec: z.number().int().min(0).max(120).default(0),
-  notifyLine: z.boolean(),
   payMethods: z
     .array(
       z.object({

@@ -11,7 +11,7 @@ import { kindBySlug, type KindSlug } from "@/lib/kinds";
 type Profile = {
   slug: string; displayName: string; avatarUrl: string; bio: string; category: "busker" | "service" | "creator" | "other"; themeColor: string;
   city: string | null; district: string;
-  thankYouText: string; presetAmounts: number[]; minAmount: number; maxAmount: number; maxQueue: number; avgSongMinutes: number; showAmounts: boolean; hideBranding: boolean; streamDelaySec: number; notifyLine: boolean;
+  thankYouText: string; presetAmounts: number[]; minAmount: number; maxAmount: number; maxQueue: number; avgSongMinutes: number; showAmounts: boolean; hideBranding: boolean; streamDelaySec: number;
 };
 
 export function SettingsForm({ paid, pro, initial, gatewayLabel, merchantId, payMethods: pm0, kind }: { paid: boolean; pro: boolean; initial: Profile; gatewayLabel: string; merchantId: string | null; payMethods: PayMethod[]; kind: KindSlug }) {
@@ -112,7 +112,6 @@ export function SettingsForm({ paid, pro, initial, gatewayLabel, merchantId, pay
           ) : (
             <p className="small">點歌頁移除平台標記是點歌台方案以上的功能。<a href="/dashboard/plan" className="underline">看方案</a></p>
           )}
-          <label className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.notifyLine} onChange={(e) => set("notifyLine", e.target.checked)} />有新點歌時用 LINE 通知我</label>
         </div>
       </section>
 

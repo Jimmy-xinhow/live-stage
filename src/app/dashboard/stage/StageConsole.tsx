@@ -67,7 +67,7 @@ export function StageConsole({ slug, initial, modes, defaultMode }: { slug: stri
           <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={notify} onChange={(e) => setNotify(e.target.checked)} />用 LINE 通知追蹤我的 <span className="num">{s.followers}</span> 位粉絲</label>
           <button
             disabled={busy}
-            onClick={async () => { const j = await post("/api/dashboard/live", { action: "start", location, notifyFans: notify, mode }); setMsg(j.notified ? `已開始，通知了 ${j.notified} 位粉絲` : "已開始"); }}
+            onClick={async () => { await post("/api/dashboard/live", { action: "start", location, mode }); setMsg("已開始"); }}
             className="btn btn-now btn-lg"
           >
             開始演出

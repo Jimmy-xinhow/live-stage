@@ -17,8 +17,7 @@ export const metadata: Metadata = {
  title: `${BRAND.name}｜${BRAND.tagline}`,
  description:
  "給街頭藝人、駐唱歌手與直播主的點歌台。聽眾掃碼點一首想聽的歌，歌自動排進你的清單，大螢幕與 OBS 同步顯示。款項直接進你的帳戶，平台不經手。免費方案不是試用版。",
- alternates: { canonical: "/" },
-};
+ alternates: { canonical: "/" } };
 
 /** 一場演出實際的時間軸。寫成具體的事，不要寫成功能清單 */
 const NIGHT = [
@@ -45,8 +44,7 @@ export default async function Home() {
  operatingSystem: "Web",
  url: absUrl("/"),
  description: "給街頭藝人、駐唱歌手與直播主的點歌台",
- offers: PLANS.map((p) => ({ "@type": "Offer", name: p.name, price: p.price, priceCurrency: "TWD" })),
- }}
+ offers: PLANS.map((p) => ({ "@type": "Offer", name: p.name, price: p.price, priceCurrency: "TWD" })) }}
  />
  <StageHeader />
 
@@ -356,7 +354,7 @@ export default async function Home() {
  <Faq
  dark
  items={[
- { q: "聽眾需要下載 App 或註冊嗎？", a: "不用。掃碼直接開網頁，挑歌、付款就結束。只有想追蹤你、下次收開演通知的人，才會用 LINE 登入一次。" },
+ { q: "聽眾需要下載 App 或註冊嗎？", a: "不用。掃碼直接開網頁，挑歌、付款就結束。沒有註冊、沒有登入、不用加任何好友。" },
  { q: "錢什麼時候進我的帳戶？", a: "看你用哪種收款。用你自己的 LINE Pay、街口收款碼，聽眾是直接轉給你，我們完全不經手。接自己的刷卡金流，就照金流商的撥款週期走。平台不會卡你的錢。" },
  { q: `那 ${fee}% 的服務費怎麼收？`, a: "從你的點數餘額扣，成交才扣。註冊送新手點數，用完可以儲值。沒點數時會先讓你小額透支，不會演到一半被中斷，也不會讓你欠一筆莫名其妙的錢。" },
  { q: "我沒有大螢幕也能用嗎？", a: "可以。街頭情境預設就不開大螢幕，只要一張印好的 QR 立牌。大螢幕是駐唱和直播才需要的。" },

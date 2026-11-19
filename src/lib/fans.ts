@@ -1,32 +1,15 @@
 import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { fans, follows, liveSessions, orders, performers, shows, type Performer } from "./db/schema";
-import type { LineProfile } from "./line";
-import { multicast, pushMessage } from "./line";
 import { applyPoints, canAcceptOrders } from "./billing";
-import { wouldExceed } from "./linequota";
 import { track } from "./usage";
+import { createFanSession, getFanId } from "./session";
 import { env } from "./env";
-
-export async function upsertFan(profile: LineProfile) {
-  const db = await getDb();
-  const [f] = await db
-    .insert(fans)
-    .values({ lineUserId: profile.userId, name: profile.name.slice(0, 60), avatarUrl: profile.picture ?? null })
-    .onConflictDoUpdate({ target: fans.lineUserId, set: { name: profile.name.slice(0, 60), avatarUrl: profile.picture ?? null } })
-    .returning();
-  return f;
-}
 
 export async function getFan(id: string | null) {
   if (!id) return null;
   const db = await getDb();
   return (await db.select().from(fans).where(eq(fans.id, id)))[0] ?? null;
-}
-
-export async function getFanByLine(lineUserId: string) {
-  const db = await getDb();
-  return (await db.select().from(fans).where(eq(fans.lineUserId, lineUserId)))[0] ?? null;
 }
 
 export async function isFollowing(performerId: string, fanId: string | null) {
@@ -40,13 +23,6 @@ export async function setFollow(performerId: string, fanId: string, on: boolean)
   if (on) await db.insert(follows).values({ performerId, fanId }).onConflictDoNothing();
   else await db.delete(follows).where(and(eq(follows.performerId, performerId), eq(follows.fanId, fanId)));
 }
-
-export async function setNotify(performerId: string, fanId: string, notifyLive: boolean) {
-  const db = await getDb();
-  await db.update(follows).set({ notifyLive }).where(and(eq(follows.performerId, performerId), eq(follows.fanId, fanId)));
-}
-
-/* ────────────── 觀眾：我的追蹤 ────────────── */
 
 export async function myFollowing(fanId: string) {
   const db = await getDb();
@@ -116,35 +92,17 @@ export async function nextShow(performerId: string) {
   return (await db.select().from(shows).where(and(eq(shows.performerId, performerId), gte(shows.startsAt, new Date()))).orderBy(asc(shows.startsAt)).limit(1))[0] ?? null;
 }
 
-async function followerLineIds(performerId: string, fanIds?: string[]) {
-  const db = await getDb();
-  const conds = [eq(follows.performerId, performerId), eq(follows.notifyLive, true)];
-  if (fanIds) conds.push(inArray(follows.fanId, fanIds.length ? fanIds : ["00000000-0000-0000-0000-000000000000"]));
-  return (await db.select({ l: fans.lineUserId }).from(follows).innerJoin(fans, eq(fans.id, follows.fanId)).where(and(...conds))).map((r) => r.l);
-}
-
 export const fmtShowTime = (d: Date) =>
   d.toLocaleString("zh-TW", { timeZone: "Asia/Taipei", month: "numeric", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false });
 
-export async function createShow(p: Performer, input: { startsAt: Date; location: string; note: string }, notify: boolean) {
+export async function createShow(p: Performer, input: { startsAt: Date; location: string; note: string }) {
   const db = await getDb();
-  const [s] = await db.insert(shows).values({ performerId: p.id, ...input }).returning();
-  if (!notify) return { show: s, notified: 0 };
-  const ids = await followerLineIds(p.id);
-  if (!ids.length) return { show: s, notified: 0 };
-  const over = await wouldExceed(ids.length);
-  if (over) throw new FanError(`這個月的 LINE 推播額度只剩 ${over.left} 則，這一發需要 ${over.need} 則。演出已經建立，等下個月或提高額度後再手動通知粉絲。`);
-  await multicast(ids, [
-    { type: "text", text: `📅 ${p.displayName} 演出預告\n${fmtShowTime(input.startsAt)}\n📍 ${input.location}${input.note ? `\n${input.note}` : ""}\n先看歌單：${env.baseUrl}/p/${p.slug}` },
-  ], "show", p.id);
-  track("show_notify", p.id);
-  const cost = ids.length * env.billing.liveNotifyCents;
-  if (cost) await applyPoints(db, p.id, -cost, "broadcast", { note: `演出預告 ${ids.length} 位粉絲` });
-  await db.update(shows).set({ notifiedCount: ids.length }).where(eq(shows.id, s.id));
-  return { show: s, notified: ids.length };
+  const [s] = await db
+    .insert(shows)
+    .values({ performerId: p.id, startsAt: input.startsAt, location: input.location, note: input.note })
+    .returning();
+  return { show: s };
 }
-
-/* ────────────── 藝人：粉絲名單與分群 ────────────── */
 
 export type Segment = "new" | "regular" | "big" | "sleeping";
 export const SEGMENT_LABEL: Record<Segment, string> = { new: "新粉（30 天內）", regular: "常客（支持 3 次以上）", big: "大粉（累計 NT$1,000 以上）", sleeping: "沉睡（60 天沒來）" };
@@ -196,31 +154,23 @@ export async function fanHistory(performerId: string, fanId: string) {
 export class FanError extends Error {}
 
 /** 藝人透過平台官方帳號傳訊息給粉絲（整群、分群或單一粉絲），依人數扣點 */
-export async function messageFans(p: Performer, target: { segment?: Segment | "all"; fanId?: string }, text: string) {
-  const db = await getDb();
-  const list = await fanList(p.id);
-  const picked = target.fanId ? list.filter((f) => f.id === target.fanId) : target.segment && target.segment !== "all" ? list.filter((f) => f.seg.includes(target.segment as Segment)) : list;
-  if (!picked.length) throw new FanError("沒有符合的粉絲");
-  // 群發每天最多 3 次，避免洗版讓粉絲封鎖官方帳號
-  if (!target.fanId) {
-    const since = new Date(Date.now() - 24 * 3600_000);
-    const [{ n }] = await db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(sql`point_ledger`)
-      .where(sql`performer_id = ${p.id} and reason = 'broadcast' and created_at > ${since.toISOString()}`);
-    if (Number(n) >= 3) throw new FanError("今天已群發 3 次，明天再發");
+
+/**
+ * 拿到這台裝置的觀眾身分，沒有就當場建一個。
+ *
+ * 這是「不需要登入」的核心：任何需要認得人的動作（簽到、許願、投票、
+ * 遊戲裡的我）都呼叫這個，而不是先擋下來要求登入。
+ * 只能在路由處理器或 server action 裡呼叫，因為它會寫 cookie。
+ */
+export async function ensureFanId(): Promise<string> {
+  const existing = await getFanId();
+  if (existing) {
+    const db = await getDb();
+    const [f] = await db.select({ id: fans.id }).from(fans).where(eq(fans.id, existing));
+    if (f) return f.id;
   }
-  const ids = target.fanId
-    ? (await db.select({ l: fans.lineUserId }).from(fans).where(eq(fans.id, target.fanId))).map((r) => r.l)
-    : await followerLineIds(p.id, picked.map((f) => f.id));
-  if (!ids.length) throw new FanError("這些粉絲關閉了通知");
-  const over = await wouldExceed(ids.length);
-  if (over) throw new FanError(`這個月的 LINE 推播額度只剩 ${over.left} 則，這一發需要 ${over.need} 則。`);
-  const body = `💌 ${p.displayName}：\n${text}\n\n${env.baseUrl}/p/${p.slug}`;
-  if (ids.length === 1) await pushMessage(ids[0], [{ type: "text", text: body }], "broadcast", p.id);
-  else await multicast(ids, [{ type: "text", text: body }], "broadcast", p.id);
-  track("broadcast", p.id);
-  const cost = ids.length * env.billing.liveNotifyCents;
-  if (cost) await applyPoints(db, p.id, -cost, "broadcast", { note: target.fanId ? "一對一感謝" : `粉絲訊息 ${ids.length} 人` });
-  return { sent: ids.length };
+  const db = await getDb();
+  const [fan] = await db.insert(fans).values({}).returning();
+  await createFanSession(fan.id);
+  return fan.id;
 }

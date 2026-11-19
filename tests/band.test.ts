@@ -121,24 +121,24 @@ describe("成交當下的快照", () => {
 });
 
 describe("團員帳號", () => {
-  it("用邀請碼綁定，別人不能再用同一組", async () => {
+  it("用邀請碼認領，別人不能再用同一組", async () => {
     const p = await pro();
     await saveMembers(p.id, even3);
     const kai = (await listMembers(p.id)).find((m) => m.name === "阿凱")!;
 
-    const first = await joinBand(kai.inviteCode, "Ukai");
+    const first = await joinBand(kai.inviteCode);
     expect(first.ok).toBe(true);
 
-    const stolen = await joinBand(kai.inviteCode, "U別人");
+    const stolen = await joinBand(kai.inviteCode);
     expect(stolen.ok).toBe(false);
     if (!stolen.ok) expect(stolen.error).toContain("已經被別人用了");
 
     // 同一個人重複點連結沒問題
-    expect((await joinBand(kai.inviteCode.toLowerCase(), "Ukai")).ok).toBe(true);
+    expect((await joinBand(kai.inviteCode.toLowerCase(), [kai.id])).ok).toBe(true);
   });
 
   it("亂填邀請碼進不來", async () => {
-    expect((await joinBand("ZZZZZZZZ", "U誰")).ok).toBe(false);
+    expect((await joinBand("ZZZZZZZZ")).ok).toBe(false);
   });
 
   it("團員只看得到自己那一份，看不到其他團員", async () => {
@@ -146,7 +146,7 @@ describe("團員帳號", () => {
     await saveMembers(p.id, even3);
     const ms = await listMembers(p.id);
     const kai = ms.find((m) => m.name === "阿凱")!;
-    await joinBand(kai.inviteCode, "Ukai2");
+    await joinBand(kai.inviteCode);
     await order(p, 1000);
     const [y, m] = ym();
 
@@ -155,16 +155,16 @@ describe("團員帳號", () => {
     expect(mine[0].amount).toBe(333);
 
     // 自己的頁面只拿得到自己的團員身分
-    const bands = await bandsOf("Ukai2");
+    const bands = await bandsOf([kai.id]);
     expect(bands).toHaveLength(1);
     expect(bands[0].memberId).toBe(kai.id);
     expect(bands[0].memberName).toBe("阿凱");
   });
 
-  it("沒綁定的 LINE 帳號查不到任何團", async () => {
+  it("沒認領過的裝置查不到任何團", async () => {
     const p = await pro();
     await saveMembers(p.id, even3);
-    expect(await bandsOf("U路人")).toHaveLength(0);
+    expect(await bandsOf([])).toHaveLength(0);
   });
 
   it("別的團的團員查不到這個團的帳", async () => {
@@ -173,11 +173,11 @@ describe("團員帳號", () => {
     await saveMembers(a.id, even3);
     await saveMembers(b.id, [{ name: "外人", sharePermille: 1000 }, { name: "外人2", sharePermille: 0 }]);
     const outsider = (await listMembers(b.id))[0];
-    await joinBand(outsider.inviteCode, "U外人");
+    await joinBand(outsider.inviteCode);
     await order(a, 1000);
     const [y, m] = ym();
 
     expect(await memberMonth(outsider.id, y, m)).toHaveLength(0);
-    expect((await bandsOf("U外人")).every((x) => x.performerId === b.id)).toBe(true);
+    expect((await bandsOf([outsider.id])).every((x) => x.performerId === b.id)).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 import { getFan, liveNow, myFollowing, myOrders } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
-import { APP_NAME, env, LIFF_ID } from "@/lib/env";
+import { APP_NAME, env } from "@/lib/env";
 import { MyFollowing } from "./MyFollowing";
 import { myRewards } from "@/lib/rewards";
 import Link from "next/link";
@@ -37,9 +37,6 @@ export default async function Me() {
       orders={orders.map((o) => ({ ...o, createdAt: o.createdAt.toISOString() }))}
       liveNow={live.map((l) => ({ ...l, startedAt: l.startedAt.toISOString() }))}
       rewards={rewards.map((r) => ({ ...r, unlockedAt: r.unlockedAt.toISOString() }))}
-      liffId={LIFF_ID}
-      devLogin={env.allowDevLogin}
-      oaUrl={env.line.oaAddFriendUrl}
       appName={APP_NAME}
     >
       {top}

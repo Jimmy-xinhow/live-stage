@@ -3,7 +3,7 @@ import { getFan } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
 import { hubState } from "@/lib/hub";
 import { currentGame, publicGame } from "@/lib/games";
-import { APP_NAME, LIFF_ID, env } from "@/lib/env";
+import { APP_NAME, env } from "@/lib/env";
 import { HubApp } from "./HubApp";
 import { notFound } from "next/navigation";
 import { FEATURES } from "@/lib/features";
@@ -25,7 +25,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       slug={p.slug} name={p.displayName} avatar={p.avatarUrl}
       initial={hub} nowPlaying={playing ? { title: playing.title, by: playing.name } : null} nextTitle={next?.title ?? null} waiting={st.queue.filter((q) => q.status === "waiting").length}
       gameOn={publicGame(game, null, p.id)?.status === "running" ? publicGame(game, null, p.id)!.name : null}
-      fan={fan ? { name: fan.name, avatar: fan.avatarUrl } : null} liffId={LIFF_ID} devLogin={env.allowDevLogin}
+      fan={fan ? { name: fan.name, avatar: fan.avatarUrl } : null}
     />
   );
 }

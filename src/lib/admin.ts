@@ -243,8 +243,7 @@ export function systemChecks() {
   return [
     { name: "資料庫", ok: true, value: db },
     { name: "網站網址", ok: !!process.env.APP_BASE_URL, value: env.baseUrl },
-    { name: "LINE Login", ok: !!env.line.loginChannelId, value: env.line.loginChannelId ? "已設定" : "未設定（無法用 LINE 登入）" },
-    { name: "LINE Messaging", ok: !!env.line.messagingAccessToken, value: env.line.messagingAccessToken ? "已設定" : "未設定（通知只寫在伺服器記錄）" },
+    { name: "寄信", ok: env.mail.configured, value: env.mail.configured ? `已設定（${env.mail.from}）` : "未設定（驗證信與重設密碼只寫在伺服器記錄）" },
     { name: "平台購點金流", ok: env.platformGateway.gateway !== "mock" && !!env.platformGateway.merchantId, value: env.platformGateway.gateway === "mock" ? "模擬模式" : env.platformGateway.gateway },
     { name: "模擬付款", ok: !env.allowMock, value: env.allowMock ? "開啟（展示用，正式環境請關閉）" : "已關閉" },
     { name: "開發登入", ok: !env.allowDevLogin, value: env.allowDevLogin ? "開啟（展示用，正式環境請關閉）" : "已關閉" },

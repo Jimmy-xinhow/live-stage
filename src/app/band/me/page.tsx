@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { getFanId } from "@/lib/session";
-import { getFan } from "@/lib/fans";
+import { getMemberIds } from "@/lib/session";
 import { bandsOf, memberMonth } from "@/lib/band";
 import { SiteFooter, SiteHeader } from "@/components/Site";
 
@@ -12,8 +11,8 @@ const tpe = (d: Date | null) =>
 
 /** 團員看自己的拆帳。只看得到自己那一份，看不到別人的數字 */
 export default async function MyBand() {
-  const fan = await getFan(await getFanId());
-  const bands = fan?.lineUserId ? await bandsOf(fan.lineUserId) : [];
+  const mine = await getMemberIds();
+  const bands = await bandsOf(mine);
 
   const now = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Taipei", year: "numeric", month: "2-digit" }).format(new Date());
   const [y, mo] = now.split("-").map(Number);
@@ -30,10 +29,8 @@ export default async function MyBand() {
       <SiteHeader />
       <main className="wrap min-h-[60vh] max-w-[680px] py-12">
         <h1 className="h1">我的拆帳</h1>
-        {!fan?.lineUserId ? (
-          <p className="mt-3 leading-7">請先用團長給你的邀請連結登入。</p>
-        ) : bands.length === 0 ? (
-          <p className="mt-3 leading-7">你還沒有加入任何團。跟團長要一條加入連結。</p>
+        {bands.length === 0 ? (
+          <p className="mt-3 leading-7">這台裝置還沒有加入任何團。跟團長要一條加入連結，點開就好，不用註冊。</p>
         ) : (
           <div className="mt-6 flex flex-col gap-8">
             {detail.map((b) => (

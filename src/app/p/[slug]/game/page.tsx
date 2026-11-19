@@ -2,7 +2,7 @@ import { getPerformerBySlug, payOptions } from "@/lib/orders";
 import { getFan } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
 import { currentGame, publicGame } from "@/lib/games";
-import { LIFF_ID, env } from "@/lib/env";
+import { env } from "@/lib/env";
 import { GameApp } from "./GameApp";
 import { notFound } from "next/navigation";
 import { battleGamesOn } from "@/lib/features";
@@ -19,5 +19,5 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const fanId = await getFanId();
   const fan = await getFan(fanId);
   const opts = payOptions(p);
-  return <GameApp slug={p.slug} name={p.displayName} initial={publicGame(await currentGame(p.id), fanId, p.id)} payMode={opts.auto ? "auto" : opts.manual ? "manual" : null} fan={fan ? { name: fan.name, avatar: fan.avatarUrl } : null} liffId={LIFF_ID} devLogin={env.allowDevLogin} />;
+  return <GameApp slug={p.slug} name={p.displayName} initial={publicGame(await currentGame(p.id), fanId, p.id)} payMode={opts.auto ? "auto" : opts.manual ? "manual" : null} fan={fan ? { name: fan.name, avatar: fan.avatarUrl } : null} />;
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPerformerBySlug } from "@/lib/orders";
 import { getFanId } from "@/lib/session";
-import { getFan } from "@/lib/fans";
+import { getFan, ensureFanId } from "@/lib/fans";
 import { currentGame, GameError, publicGame, quizAnswer, tap, wheelSubmit } from "@/lib/games";
 import { LIMITS, guard } from "@/lib/ratelimit";
 import { battleGamesOn, featureGate } from "@/lib/features";
@@ -27,8 +27,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const p = await getPerformerBySlug((await params).slug);
   if (!p) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (!battleGamesOn(await sessionMode(p.liveSessionId), effectivePlan(p))) return NextResponse.json({ error: "not found" }, { status: 404 });
-  const fanId = await getFanId();
-  if (!fanId) return NextResponse.json({ error: "請先用 LINE 登入" }, { status: 401 });
+  // 不需要登入：沒有身分就當場發一個，使用者完全不會被擋下來
+  const fanId = await ensureFanId();
   const b = (await req.json().catch(() => ({}))) as { action?: string; lane?: number; count?: number; pick?: number; text?: string; name?: string };
   const g = await currentGame(p.id);
   if (!g || g.status !== "running") return NextResponse.json({ game: publicGame(g, fanId, p.id) });

@@ -6,7 +6,6 @@ import { fans, orders, performers } from "@/lib/db/schema";
 import { adminActor, isAdmin } from "@/lib/session";
 import { audit } from "@/lib/audit";
 import { refundOrder } from "@/lib/orders";
-import { pushMessage } from "@/lib/line";
 
 const Body = z.object({ action: z.literal("refund"), note: z.string().trim().max(120).default("") });
 
@@ -28,14 +27,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     detail: `${p?.name ?? ""} NT$${r.order.amount}${parsed.data.note ? `・${parsed.data.note}` : ""}`,
   });
 
-  if (r.order.fanId) {
-    const [f] = await db.select().from(fans).where(eq(fans.id, r.order.fanId));
-    if (f) {
-      await pushMessage(f.lineUserId, [{
-        type: "text",
-        text: `你的${r.order.itemTitle ? `〈${r.order.itemTitle}〉點歌` : "打賞"} NT$${r.order.amount} 已被標記為退款${parsed.data.note ? `：${parsed.data.note}` : "。"}\n款項會由表演者直接退還給你。`,
-      }]).catch(() => {});
-    }
-  }
+  // 觀眾的訂單頁會即時顯示「已退款」，不另外送訊息
   return NextResponse.json({ ok: true, needsGatewayRefund: r.needsGatewayRefund });
 }

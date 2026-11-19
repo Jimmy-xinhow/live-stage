@@ -4,7 +4,6 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { fans, orders } from "@/lib/db/schema";
 import { requirePerformer } from "@/lib/auth";
-import { pushMessage } from "@/lib/line";
 import { refundOrder } from "@/lib/orders";
 
 const Body = z.discriminatedUnion("action", [
@@ -26,15 +25,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (b.action === "refund") {
     const r = await refundOrder({ orderId: id, by: "performer", note: b.note, performerId: auth.performer.id });
     if (!r) return NextResponse.json({ error: "找不到這筆已付款的訂單" }, { status: 404 });
-    if (r.order.fanId) {
-      const [f] = await db.select().from(fans).where(eq(fans.id, r.order.fanId));
-      if (f) {
-        await pushMessage(f.lineUserId, [{
-          type: "text",
-          text: `${auth.performer.displayName} 已將你的${r.order.itemTitle ? `〈${r.order.itemTitle}〉點歌` : "打賞"} NT$${r.order.amount} 標記為退款${b.note ? `：${b.note}` : "。"}\n款項會由表演者直接退還給你。`,
-        }]);
-      }
-    }
+    // 觀眾的訂單頁會即時顯示「已退款」，不另外送訊息
     return NextResponse.json({ ok: true, needsGatewayRefund: r.needsGatewayRefund });
   }
 
@@ -42,9 +33,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const set = b.action === "reply" ? { reply: b.reply, repliedAt: new Date() } : { hidden: b.action === "hide" };
   const [o] = await db.update(orders).set(set).where(where).returning();
   if (!o) return NextResponse.json({ error: "找不到這筆紀錄" }, { status: 404 });
-  if (b.action === "reply" && o.fanId) {
-    const [f] = await db.select().from(fans).where(eq(fans.id, o.fanId));
-    if (f) await pushMessage(f.lineUserId, [{ type: "text", text: `💌 ${auth.performer.displayName} 回覆你：\n「${b.reply}」` }]);
-  }
+  // 回覆會顯示在留言牆與觀眾的訂單頁上
   return NextResponse.json({ ok: true });
 }

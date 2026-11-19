@@ -52,7 +52,6 @@ export default async function Dashboard() {
       {!canAcceptOrders(p.pointsCents) && (
         <Link href="/dashboard/points" className="mb-7 block rounded-[12px] border-[1.5px] border-err px-4 py-3 text-[14px] text-err">點數用完了（{fmtPoints(p.pointsCents)} 點），點歌與打賞已暫停。按這裡補充點數。</Link>
       )}
-      {env.line.oaAddFriendUrl && <a href={env.line.oaAddFriendUrl} className="mb-7 block rounded-[12px] bg-sunken px-4 py-3 text-[14px] underline">加入官方帳號好友，才能收到即時點歌通知</a>}
 
       {left > 0 && (
         <Section title="開始使用" desc={`還剩 ${left} 步。`}>

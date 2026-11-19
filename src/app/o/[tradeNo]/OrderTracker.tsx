@@ -13,7 +13,7 @@ import type { FanInfo } from "@/components/useFan";
 
 type S = NonNullable<Awaited<ReturnType<typeof orderStatus>>>;
 
-export function OrderTracker({ tradeNo, initial, oaUrl, methods, ttlMin, follow }: { tradeNo: string; initial: S; oaUrl: string; methods: PublicPayMethod[]; ttlMin: number; follow: { following: boolean; fan: FanInfo; liffId: string; devLogin: boolean } }) {
+export function OrderTracker({ tradeNo, initial, methods, ttlMin, follow }: { tradeNo: string; initial: S; methods: PublicPayMethod[]; ttlMin: number; follow: { following: boolean; fan: FanInfo;} }) {
   const [s, setS] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(0);
@@ -161,7 +161,7 @@ export function OrderTracker({ tradeNo, initial, oaUrl, methods, ttlMin, follow 
       {s.reply && <div className="mt-6 rounded-[12px] bg-sunken px-4 py-3 text-[14px] leading-6"><strong>{p.name} 回覆：</strong>{s.reply}</div>}
       {s.status === "paid" && (
         <div className="mt-8">
-          <FollowButton key={String(s.following ?? follow.following)} slug={p.slug} name={p.name} initialFollowing={s.following ?? follow.following} fan={follow.fan} liffId={follow.liffId} devLogin={follow.devLogin} color={p.color} oaUrl={oaUrl} />
+          <FollowButton key={String(s.following ?? follow.following)} slug={p.slug} name={p.name} initialFollowing={s.following ?? follow.following} fan={follow.fan} color={p.color} />
         </div>
       )}
       {s.status === "paid" && s.itemTitle && <a href={`/api/card/${tradeNo}`} target="_blank" rel="noreferrer" className="btn btn-secondary btn-block mt-3">存下點歌回憶卡</a>}

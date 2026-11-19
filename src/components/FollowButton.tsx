@@ -4,8 +4,8 @@ import { useState } from "react";
 import { followApi, useFan, type FanInfo } from "./useFan";
 
 /** 一鍵追蹤：已登入直接追蹤；沒登入就先走 LINE 登入，回來再按一次 */
-export function FollowButton(props: { slug: string; name: string; initialFollowing: boolean; fan: FanInfo; liffId: string; devLogin: boolean; color: string; oaUrl: string }) {
-  const { ensureFan } = useFan(props.fan, props.liffId, props.devLogin);
+export function FollowButton(props: { slug: string; name: string; initialFollowing: boolean; fan: FanInfo; color: string;}) {
+  const { ensureFan } = useFan(props.fan);
   const [following, setFollowing] = useState(props.initialFollowing);
   const [hint, setHint] = useState("");
 
@@ -22,7 +22,6 @@ export function FollowButton(props: { slug: string; name: string; initialFollowi
       <div className="card p-4">
         <strong>已追蹤 {props.name}</strong>
         <p className="small">下次開演、發布演出預告時會用 LINE 通知你。</p>
-        {props.oaUrl && <a href={props.oaUrl} className="btn btn-secondary btn-sm btn-block mt-3">加 LINE 好友才收得到通知</a>}
       </div>
     );
   return (

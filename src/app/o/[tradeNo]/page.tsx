@@ -5,7 +5,7 @@ import { orders, performers } from "@/lib/db/schema";
 import { orderStatus, MANUAL_TTL_MIN } from "@/lib/orders";
 import { publicPayMethods } from "@/lib/paymethods";
 import { OrderTracker } from "./OrderTracker";
-import { env, LIFF_ID } from "@/lib/env";
+import { env } from "@/lib/env";
 import { getFan, isFollowing } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
 
@@ -29,10 +29,9 @@ export default async function OrderPage({ params }: { params: Promise<{ tradeNo:
     <OrderTracker
       tradeNo={tradeNo}
       initial={s}
-      oaUrl={env.line.oaAddFriendUrl}
       methods={methods}
       ttlMin={MANUAL_TTL_MIN}
-      follow={{ following, fan: fan ? { name: fan.name, avatar: fan.avatarUrl } : null, liffId: LIFF_ID, devLogin: env.allowDevLogin }}
+      follow={{ following, fan: fan ? { name: fan.name, avatar: fan.avatarUrl } : null}}
     />
   );
 }

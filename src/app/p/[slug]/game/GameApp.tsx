@@ -4,14 +4,14 @@ import { IconScreen, IconTroops, IconWheel } from "@/components/icons";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useFan, type FanInfo } from "@/components/useFan";
-import { submitForm } from "@/lib/liff-client";
+import { submitForm } from "@/lib/formpost";
 import { newKey, postJson } from "@/lib/net";
 import type { PublicGame } from "@/lib/games";
 import { LANE_COLORS, remain } from "@/components/gameui";
 import { Wheel } from "@/components/games/Wheel";
 
-export function GameApp(props: { slug: string; name: string; initial: PublicGame | null; payMode: "auto" | "manual" | null; fan: FanInfo; liffId: string; devLogin: boolean }) {
-  const { ensureFan } = useFan(props.fan, props.liffId, props.devLogin);
+export function GameApp(props: { slug: string; name: string; initial: PublicGame | null; payMode: "auto" | "manual" | null; fan: FanInfo;}) {
+  const { ensureFan } = useFan(props.fan);
   const [g, setG] = useState(props.initial);
   const [lane, setLane] = useState<number | null>(props.initial?.lockedLane ?? props.initial?.me?.lane ?? (props.initial && props.initial.lanes.length === 1 ? 0 : null));
   const [now, setNow] = useState(0);

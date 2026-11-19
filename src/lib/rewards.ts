@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { getDb, type DB } from "./db";
 import { achievements, fanAchievements, fans, liveSessions, orders, performers, type Achievement, type Order, type Performer } from "./db/schema";
-import { pushMessage } from "./line";
 import { env } from "./env";
 import { nt } from "./format";
 
@@ -133,12 +132,7 @@ export async function evaluateAchievements(p: Performer, fanId: string) {
   const [f] = await db.select().from(fans).where(eq(fans.id, fanId));
   if (f) {
     const lines = fresh.map((a) => `${a.emoji}〈${a.name}〉${a.reward ? `\n　獎勵：${a.reward}` : ""}`);
-    await pushMessage(f.lineUserId, [
-      {
-        type: "text",
-        text: `🏆 恭喜！你在 ${p.displayName} 達成新成就\n${lines.join("\n")}\n\n${fresh.some((a) => a.reward) ? "到現場打開「我的追蹤」按領取，出示給藝人就能兌換：" : "查看："}${env.baseUrl}/me`,
-      },
-    ]);
+    // 原本這裡推播通知。沒有推播之後，狀態直接顯示在對應的頁面上。
   }
   return fresh;
 }
@@ -175,9 +169,7 @@ export async function notifyOvertake(p: Performer, o: Order) {
   if (!f) return;
   const gap = board[0].total - prev.total + 1;
   if (prev.name === "匿名支持者" && !prev.avatar) return;
-  await pushMessage(f.lineUserId, [
-    { type: "text", text: `🔥 你在 ${p.displayName} 本場支持榜的第 1 名被 ${board[0].name} 超越了！\n再支持 ${nt(gap)} 就能搶回來：${env.baseUrl}/p/${p.slug}?tab=rank` },
-  ]);
+  // 原本這裡推播通知。沒有推播之後，狀態直接顯示在對應的頁面上。
 }
 
 /* ────────────── 粉絲領取、藝人兌換 ────────────── */
@@ -235,13 +227,7 @@ export async function claimReward(fanId: string, fanAchievementId: string) {
     .returning();
   const [f] = await db.select().from(fans).where(eq(fans.id, fanId));
   if (row.p.lineUserId && fa) {
-    await pushMessage(row.p.lineUserId, [
-      {
-        type: "text",
-        text: `🎁 ${f?.name ?? "粉絲"} 要領取〈${row.a.name}〉獎勵：${row.a.reward}\n兌換碼 ${code}，對方出示後按兌換`,
-        quickReply: { items: [{ type: "action", action: { type: "postback", label: `✅ 已兌換 ${code}`, data: `redeem:${fa.id}`, displayText: `已兌換 ${code}` } }] },
-      },
-    ]);
+    // 原本這裡推播通知。沒有推播之後，狀態直接顯示在對應的頁面上。
   }
   return fa ?? row.fa;
 }
@@ -261,7 +247,7 @@ export async function redeemReward(p: Performer, fanAchievementId: string) {
     .innerJoin(achievements, eq(achievements.id, fanAchievements.achievementId))
     .innerJoin(fans, eq(fans.id, fanAchievements.fanId))
     .where(eq(fanAchievements.id, fa.id));
-  if (row) await pushMessage(row.line, [{ type: "text", text: `✅ 已兌換〈${row.name}〉：${row.reward ?? ""}\n謝謝你一直支持 ${p.displayName}！` }]);
+  // 原本這裡推播通知。沒有推播之後，狀態直接顯示在對應的頁面上。
   return fa;
 }
 

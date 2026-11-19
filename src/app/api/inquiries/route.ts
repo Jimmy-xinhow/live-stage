@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureFanId } from "@/lib/fans";
 import { z } from "zod";
 import { getFanId } from "@/lib/session";
 import { createInquiry, MarketError } from "@/lib/market";
@@ -27,8 +28,8 @@ export async function POST(req: Request) {
   if (off) return off;
   const rl = guard(req, "inquiry", LIMITS.submit);
   if (rl) return rl;
-  const fanId = await getFanId();
-  if (!fanId) return NextResponse.json({ error: "請先用 LINE 登入，報價會傳到你的 LINE" }, { status: 401 });
+  // 不需要登入：沒有身分就當場發一個，使用者完全不會被擋下來
+  const fanId = await ensureFanId();
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "請把必填欄位填完整" }, { status: 400 });
   if (new Date(parsed.data.eventDate + "T23:59:59+08:00").getTime() < Date.now()) return NextResponse.json({ error: "活動日期已經過了" }, { status: 400 });

@@ -35,16 +35,6 @@ export function FansManager({ fans, segmentLabel, costPerFan }: { fans: Fan[]; s
     return c;
   }, [fans]);
 
-  async function send(body: object) {
-    setBusy(true);
-    setMsg(null);
-    const r = await fetch("/api/dashboard/fans/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const j = await r.json();
-    setBusy(false);
-    setMsg(r.ok ? { ok: true, text: `已送出給 ${j.sent} 位粉絲` } : { ok: false, text: j.error });
-    if (r.ok) router.refresh();
-  }
-
   async function expand(id: string) {
     setOpen(open === id ? null : id);
     if (!hist[id]) {
@@ -56,7 +46,7 @@ export function FansManager({ fans, segmentLabel, costPerFan }: { fans: Fan[]; s
   return (
     <section className="sec">
       <h2 className="h2">粉絲 <span className="num text-ink3">{fans.length}</span></h2>
-      <p className="small">觀眾點歌時預設會追蹤你。依支持金額排序，點一下看他點過什麼。</p>
+      <p className="small">觀眾點歌時預設會追蹤你。依支持金額排序，點一下看他點過什麼。這份名單是你自己的經營資料，平台不會外流，也沒有主動推播——要讓他們知道下一場，用開演公告的圖去貼社群。</p>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {(["all", "new", "regular", "big", "sleeping"] as const).map((k) => (
@@ -66,15 +56,6 @@ export function FansManager({ fans, segmentLabel, costPerFan }: { fans: Fan[]; s
         ))}
       </div>
       {seg !== "all" && <p className="small mt-1">{segmentLabel[seg]}</p>}
-
-      <div className="card mt-4 flex flex-col gap-3 p-4">
-        <label className="field">傳給這一群的訊息<textarea value={text} onChange={(e) => setText(e.target.value.slice(0, 300))} rows={2} className="!min-h-[72px]" /></label>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="small">會傳給 <span className="num">{reach}</span> 位（約 <span className="num">{Math.round(reach * costPerFan * 10) / 10}</span> 點），每天最多群發 3 次</span>
-          <button disabled={busy || !reach || !text.trim()} onClick={() => send({ segment: seg, text })} className="btn btn-primary btn-sm ml-auto">用 LINE 傳送</button>
-        </div>
-        {msg && <p className={`text-[14px] ${msg.ok ? "text-ok" : "text-err"}`}>{msg.text}</p>}
-      </div>
 
       <ul className="mt-4 border-t border-rule">
         {shown.map((f, i) => (
@@ -86,7 +67,6 @@ export function FansManager({ fans, segmentLabel, costPerFan }: { fans: Fan[]; s
                 <div className="flex flex-wrap items-center gap-1.5">
                   <strong>{f.name}</strong>
                   {f.seg.map((s) => <span key={s} className="tag tag-quiet !h-5 !px-1.5 !text-[11px]">{SEG_SHORT[s]}</span>)}
-                  {!f.notifyLive && <span className="tag tag-quiet !h-5 !px-1.5 !text-[11px]">關閉通知</span>}
                 </div>
                 <div className="small">追蹤 {timeAgo(f.followedAt)}{f.last ? `・最近支持 ${timeAgo(f.last)}` : ""}</div>
               </div>
@@ -106,7 +86,6 @@ export function FansManager({ fans, segmentLabel, costPerFan }: { fans: Fan[]; s
                 ) : (
                   <p className="small">{hist[f.id] ? "還沒有點歌紀錄" : "載入中"}</p>
                 )}
-                <button disabled={busy} onClick={() => { const t = prompt(`傳給 ${f.name} 的話`, "謝謝你一直來聽我唱歌！"); if (t) send({ fanId: f.id, text: t }); }} className="btn btn-secondary btn-sm mt-2">傳訊息給 {f.name}</button>
               </div>
             )}
           </li>

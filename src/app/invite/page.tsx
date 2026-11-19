@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { APP_NAME, LIFF_ID, env } from "@/lib/env";
+import { APP_NAME, env } from "@/lib/env";
 import { getPerformerBySlug } from "@/lib/orders";
 import { getFan } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
@@ -26,8 +26,6 @@ export default async function Invite({ searchParams }: { searchParams: Promise<{
           to={to && to.bookable ? { slug: to.slug, name: to.displayName, act: actName(to.actType) } : null}
           init={{ city: areaBySlug(sp.city)?.slug ?? to?.city ?? "", act: actBySlug(sp.act)?.slug ?? to?.actType ?? "", occasion: sp.occasion ?? "" }}
           fan={fan ? { name: fan.name, avatar: fan.avatarUrl } : null}
-          liffId={LIFF_ID}
-          devLogin={env.allowDevLogin}
         />
       </main>
     </>

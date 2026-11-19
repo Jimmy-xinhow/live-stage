@@ -14,6 +14,14 @@ const ts = (name: string) => timestamp(name, { withTimezone: true });
 export const performers = pgTable("performers", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: varchar("slug", { length: 40 }).notNull().unique(),
+  /** 登入用的信箱。一律存小寫，比對才不會因為大小寫產生兩個帳號 */
+  email: varchar("email", { length: 160 }).unique(),
+  /** scrypt 雜湊，格式見 lib/password.ts。永遠不存明碼 */
+  passwordHash: text("password_hash"),
+  emailVerifiedAt: ts("email_verified_at"),
+  /** 改密碼的時間。早於這個時間簽出的 session 一律失效 */
+  passwordChangedAt: ts("password_changed_at"),
+  /** 舊的 LINE 綁定，保留給既有帳號對照，新帳號不會有 */
   lineUserId: varchar("line_user_id", { length: 64 }).unique(),
   displayName: text("display_name").notNull(),
   avatarUrl: text("avatar_url"),
@@ -139,12 +147,21 @@ export const liveSessions = pgTable("live_sessions", {
   chatAt: ts("chat_at"),
 });
 
+/**
+ * 觀眾。
+ *
+ * 不需要註冊也不需要登入：掃碼進來就在伺服器端建一列，把 id 簽進 cookie。
+ * 這一列存在的理由是「同一個人」——集章、許願、排行、遊戲裡的「我」都要認得他。
+ * 名字是他自己在點歌時填的暱稱，沒填就是空的。
+ */
 export const fans = pgTable("fans", {
   id: uuid("id").primaryKey().defaultRandom(),
-  lineUserId: varchar("line_user_id", { length: 64 }).notNull().unique(),
+  /** 舊的 LINE 綁定，保留給既有資料，新的觀眾不會有 */
+  lineUserId: varchar("line_user_id", { length: 64 }).unique(),
   name: varchar("name", { length: 60 }).notNull().default(""),
   avatarUrl: text("avatar_url"),
   createdAt: ts("created_at").notNull().defaultNow(),
+  lastSeenAt: ts("last_seen_at").notNull().defaultNow(),
 });
 
 export const follows = pgTable(
@@ -581,14 +598,38 @@ export const bandMembers = pgTable(
     /** 比例，千分之一為單位。整團加起來要正好 1000 */
     sharePermille: integer("share_permille").notNull(),
     /**
-     * 邀請碼。團長不可能知道團員的 LINE ID，所以給一條連結讓團員自己登入綁定。
-     * 綁定之後 lineUserId 才有值，團員就能看到自己的拆帳。
+     * 邀請碼。團長手上沒有團員的任何帳號資訊，所以給一條連結讓團員自己打開認領。
+     * 認領之後這台裝置會拿到一張簽章 cookie，團員就能看到自己的拆帳。
+     * 沒有註冊、沒有密碼——團員只是要看數字，不該為此開一個帳號。
      */
     inviteCode: varchar("invite_code", { length: 12 }).notNull().unique(),
+    /** 認領時間。有值代表這組邀請碼已經被某台裝置認走，不能再被別人用 */
+    claimedAt: ts("claimed_at"),
+    /** @deprecated 舊的 LINE 綁定。已經不再寫入，留著是為了不動既有資料 */
     lineUserId: varchar("line_user_id", { length: 60 }),
     createdAt: ts("created_at").notNull().defaultNow(),
   },
   (t) => [index("band_perf_idx").on(t.performerId), uniqueIndex("band_line_idx").on(t.performerId, t.lineUserId)],
+);
+
+/**
+ * 登入信件用的一次性權杖：驗證信箱、重設密碼。
+ *
+ * 只存雜湊，不存原始權杖——資料庫被看到也不能拿來登入別人的帳號。
+ */
+export const authTokens = pgTable(
+  "auth_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    performerId: uuid("performer_id").notNull().references(() => performers.id, { onDelete: "cascade" }),
+    /** verify｜reset */
+    kind: varchar("kind", { length: 10 }).notNull(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+    expiresAt: ts("expires_at").notNull(),
+    usedAt: ts("used_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("auth_tokens_perf_idx").on(t.performerId, t.kind)],
 );
 
 /**

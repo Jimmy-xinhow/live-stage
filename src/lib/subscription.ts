@@ -2,9 +2,9 @@ import { and, eq, isNotNull, lte, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { performers } from "./db/schema";
 import { applyPoints } from "./billing";
+import { sendMail, signature } from "./mail";
 import { track } from "./usage";
 import { PLANS, planBySlug, type PlanSlug } from "./plans";
-import { pushMessage } from "./line";
 
 /**
  * 方案訂閱。
@@ -115,7 +115,7 @@ export async function changePlan(performerId: string, to: PlanSlug): Promise<Cha
 export async function runPlanRenewals() {
   const db = await getDb();
   const due = await db
-    .select({ id: performers.id, plan: performers.plan, planUntil: performers.planUntil, planAutoRenew: performers.planAutoRenew, points: performers.pointsCents, lineUserId: performers.lineUserId, name: performers.displayName })
+    .select({ id: performers.id, plan: performers.plan, planUntil: performers.planUntil, planAutoRenew: performers.planAutoRenew, points: performers.pointsCents, email: performers.email, name: performers.displayName })
     .from(performers)
     .where(and(sql`${performers.plan} <> 'free'`, isNotNull(performers.planUntil), lte(performers.planUntil, new Date())));
 
@@ -139,9 +139,18 @@ export async function runPlanRenewals() {
       }
     });
 
-    if (!canRenew && p.lineUserId && !p.lineUserId.startsWith("Udev-")) {
+    // 降回免費是會影響收入的事（服務費從 1% 回到 3%），一定要讓本人知道。
+    // 沒有推播之後，信箱是唯一能主動送達的管道。
+    if (!canRenew && p.email) {
       const why = p.planAutoRenew ? "點數不足" : "你先前取消了續期";
-      await pushMessage(p.lineUserId, [{ type: "text", text: `${planBySlug(p.plan).name}方案已到期（${why}），已改回免費方案。點歌收款不受影響，成交服務費回到 3%。要再開啟隨時可以在後台的「方案」頁操作。` }]).catch(() => {});
+      await sendMail({
+        to: p.email,
+        subject: `${planBySlug(p.plan).name}方案已到期`,
+        text:
+          `${planBySlug(p.plan).name}方案已經到期（${why}），帳號已改回免費方案。\n\n` +
+          `點歌與收款不受影響，資料也都還在，只是成交服務費從 1% 回到 3%，互動功能會關閉。\n` +
+          `要再開啟隨時可以到後台的「方案」頁操作。` + signature(),
+      }).catch(() => {});
     }
   }
   return { renewed, dropped, checked: due.length };

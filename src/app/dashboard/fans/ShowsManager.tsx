@@ -9,7 +9,7 @@ const when = (iso: string) => fmtTaipei(iso);
 /** 演出預告：發布後追蹤者收到 LINE 通知，觀眾頁與「我的追蹤」也會顯示 */
 export function ShowsManager({ upcoming, followers, costPerFan }: { upcoming: { id: string; startsAt: string; location: string; note: string; notified: number }[]; followers: number; costPerFan: number }) {
   const router = useRouter();
-  const [f, setF] = useState({ startsAt: "", location: "", note: "", notify: true });
+  const [f, setF] = useState({ startsAt: "", location: "", note: "" });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -19,7 +19,7 @@ export function ShowsManager({ upcoming, followers, costPerFan }: { upcoming: { 
     const j = await r.json();
     setBusy(false);
     setMsg(r.ok ? { ok: true, text: j.notified ? `已發布，通知了 ${j.notified} 位粉絲` : "已發布" } : { ok: false, text: j.error });
-    if (r.ok) { setF({ startsAt: "", location: "", note: "", notify: true }); router.refresh(); }
+    if (r.ok) { setF({ startsAt: "", location: "", note: "" }); router.refresh(); }
   }
 
   return (
@@ -33,10 +33,7 @@ export function ShowsManager({ upcoming, followers, costPerFan }: { upcoming: { 
         </div>
         <label className="field">想對粉絲說的話（可不填）<input placeholder="例：這週有新歌" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-[14px]">
-            <input type="checkbox" className="h-4 w-4 accent-[#151412]" checked={f.notify} onChange={(e) => setF({ ...f, notify: e.target.checked })} />
-            通知 <span className="num">{followers}</span> 位粉絲（約 <span className="num">{Math.round(followers * costPerFan * 10) / 10}</span> 點）
-          </label>
+          <span className="small">發布之後會出現在你的點歌頁與作品頁。要讓人知道，用「開演公告」做成圖貼到社群。</span>
           <button disabled={busy || !f.startsAt || !f.location} onClick={add} className="btn btn-primary btn-sm ml-auto">發布</button>
         </div>
         {msg && <p className={`text-[14px] ${msg.ok ? "text-ok" : "text-err"}`}>{msg.text}</p>}

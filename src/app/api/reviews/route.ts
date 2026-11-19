@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureFanId } from "@/lib/fans";
 import { z } from "zod";
 import { getFanId } from "@/lib/session";
 import { MarketError, reviewInquiry } from "@/lib/market";
@@ -12,8 +13,8 @@ export async function POST(req: Request) {
   if (off) return off;
   const rl = guard(req, "review", LIMITS.submit);
   if (rl) return rl;
-  const fanId = await getFanId();
-  if (!fanId) return NextResponse.json({ error: "請先用 LINE 登入" }, { status: 401 });
+  // 不需要登入：沒有身分就當場發一個，使用者完全不會被擋下來
+  const fanId = await ensureFanId();
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "資料格式不正確" }, { status: 400 });
   try {

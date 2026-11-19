@@ -5,7 +5,6 @@ import { listable } from "./discover";
 import { areaBySlug } from "./areas";
 import { actName } from "./acts";
 import { applyPoints } from "./billing";
-import { pushMessage } from "./line";
 import { env } from "./env";
 import { nt } from "./format";
 import { reportError } from "./errors";
@@ -203,9 +202,8 @@ export async function createInquiry(fanId: string, i: InquiryInput) {
     .returning();
   await db.insert(inquiryTargets).values(targets.map((p) => ({ inquiryId: inq.id, performerId: p.id })));
   const area = areaBySlug(i.city)?.name ?? "";
-  for (const p of targets)
-    if (p.lineUserId)
-      await pushMessage(p.lineUserId, [{ type: "text", text: `新邀約：${i.occasion}\n${i.eventDate} ${i.timeText}\n${area} ${i.place}\n${i.guests}・${i.budget}\n回覆報價：${env.baseUrl}/dashboard/inquiries` }]).catch(() => null);
+  // 原本這裡推播給被邀約的表演者。沒有推播之後，邀約出現在後台的待辦清單。
+  void area;
   return { id: inq.id, names: targets.map((p) => p.displayName) };
 }
 
@@ -230,7 +228,8 @@ export async function replyInquiry(p: Performer, inquiryId: string, r: { decline
   if (!row) throw new MarketError("找不到這筆邀約");
   if (!r.decline) {
     const [q] = await db.select({ line: fans.lineUserId, occasion: inquiries.occasion, date: inquiries.eventDate }).from(inquiries).innerJoin(fans, eq(fans.id, inquiries.fanId)).where(eq(inquiries.id, inquiryId));
-    if (q) await pushMessage(q.line, [{ type: "text", text: `${p.displayName} 回覆了你的邀約（${q.occasion}・${q.date}）\n報價：${r.amount ? nt(r.amount) : "面議"}\n${r.note ?? ""}\n看作品與歌單：${env.baseUrl}/u/${p.slug}` }]).catch(() => null);
+    // 報價回覆原本會推播給邀請人；現在他回到邀約頁就看得到
+    void q;
   }
   return row;
 }
@@ -251,7 +250,7 @@ export async function reviewInquiry(fanId: string, inquiryId: string, performerS
     .where(and(eq(inquiryTargets.inquiryId, inquiryId), eq(inquiryTargets.performerId, p.id), eq(inquiryTargets.status, "quoted"), isNull(inquiryTargets.reviewedAt)))
     .returning();
   if (!row) throw new MarketError("這筆邀約還不能評價，或你已經評過了");
-  if (p.lineUserId) await pushMessage(p.lineUserId, [{ type: "text", text: `${inq.contactName} 給了你 ${rating} 顆星的評價${review ? `\n「${review.slice(0, 60)}」` : ""}\n${env.baseUrl}/u/${p.slug}` }]).catch(() => null);
+  // 評價原本會推播給表演者；現在作品頁上直接看得到
   return row;
 }
 

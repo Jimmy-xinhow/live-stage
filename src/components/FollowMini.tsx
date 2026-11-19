@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { followApi, useFan, type FanInfo } from "./useFan";
 
-export function FollowMini(props: { slug: string; initialFollowing: boolean; fan: FanInfo; liffId: string; devLogin: boolean; count: number }) {
-  const { ensureFan } = useFan(props.fan, props.liffId, props.devLogin);
+export function FollowMini(props: { slug: string; initialFollowing: boolean; fan: FanInfo; count: number }) {
+  const { ensureFan } = useFan(props.fan);
   const [on, setOn] = useState(props.initialFollowing);
   const [hint, setHint] = useState("");
   async function go() {

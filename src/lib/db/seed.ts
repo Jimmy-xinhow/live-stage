@@ -31,6 +31,15 @@ export async function resetDemo(db: DB) {
   await db.delete(fans).where(like(fans.lineUserId, "Udev-%"));
 }
 
+/**
+ * 示範帳號的登入資料。
+ * 拿掉 LINE 之後，驗收時要能真的用信箱密碼登進去看，而不是只靠 DEV_LOGIN 後門。
+ * 正式環境不會有這些帳號（SEED_DEMO 關掉）。
+ */
+export const DEMO_PASSWORD = "demo-encore-2026";
+const demoEmail = (slug: string) => `${slug}@demo.local`;
+let demoHash = "";
+
 export async function seedDemo(db: DB) {
   if ((await db.select({ id: performers.id }).from(performers).where(eq(performers.slug, "demo"))).length) {
     // 示範帳號要能展示全部功能。plan 與 planUntil 都是後來才加的，既有的示範帳號會
@@ -39,10 +48,12 @@ export async function seedDemo(db: DB) {
     await db.update(performers).set({ plan: "all", planUntil: DEMO_PLAN_UNTIL }).where(like(performers.slug, "demo%"));
     return;
   }
+  demoHash = await (await import("../password")).hashPassword(DEMO_PASSWORD);
   const [p] = await db
     .insert(performers)
     .values({
       slug: "demo", kind: "street", plan: "all", planUntil: DEMO_PLAN_UNTIL,
+      email: demoEmail("demo"), passwordHash: demoHash, emailVerifiedAt: new Date(),
       lineUserId: "Udev-demo",
       displayName: "阿哲的街頭吉他",
       bio: "每週五六晚上在駁二大勇倉庫前，民謠、流行、台語老歌。歌單上的我都會唱，直接點！",
@@ -122,7 +133,7 @@ export async function seedDemo(db: DB) {
   for (const e of extra) {
     const [x] = await db
       .insert(performers)
-      .values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, lineUserId: `Udev-${e.slug}`, plan: "all", planUntil: DEMO_PLAN_UNTIL, actType: e.slug === "demo-band" ? "band" : "busker", coverUrl: e.slug === "demo-band" ? "/demo/band-1.jpg" : "/demo/uku-1.jpg", avatarUrl: e.slug === "demo-band" ? "/demo/av-band-1.jpg" : "/demo/av-uku-1.jpg", genres: e.slug === "demo-band" ? "台語老歌、搖滾" : "日系、華語抒情", priceFrom: e.slug === "demo-band" ? 15000 : 4000, occasions: ["婚禮", "尾牙春酒", "企業活動"], status: "active", gateway: "mock", payMethods: [{ type: "linepay", label: "LINE Pay", qrText: "DEMO", imageData: null }] })
+      .values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, lineUserId: `Udev-${e.slug}`, email: demoEmail(e.slug), passwordHash: demoHash, emailVerifiedAt: new Date(), plan: "all", planUntil: DEMO_PLAN_UNTIL, actType: e.slug === "demo-band" ? "band" : "busker", coverUrl: e.slug === "demo-band" ? "/demo/band-1.jpg" : "/demo/uku-1.jpg", avatarUrl: e.slug === "demo-band" ? "/demo/av-band-1.jpg" : "/demo/av-uku-1.jpg", genres: e.slug === "demo-band" ? "台語老歌、搖滾" : "日系、華語抒情", priceFrom: e.slug === "demo-band" ? 15000 : 4000, occasions: ["婚禮", "尾牙春酒", "企業活動"], status: "active", gateway: "mock", payMethods: [{ type: "linepay", label: "LINE Pay", qrText: "DEMO", imageData: null }] })
       .returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     await db.insert(menuItems).values(e.songs.map(([title, subtitle, category, price], i) => ({ performerId: x.id, title, subtitle, category, price, sort: i })));
@@ -138,7 +149,7 @@ export async function seedDemo(db: DB) {
   ];
   for (const e of more) {
     const kind = e.act === "singer" || e.act === "band" ? "venue" : e.act === "dj" ? "streamer" : "street";
-    const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, kind, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", coverUrl: e.cover, avatarUrl: e.cover.replace("/demo/", "/demo/av-"), lineUserId: `Udev-${e.slug}`, plan: "all", planUntil: DEMO_PLAN_UNTIL }).returning();
+    const [x] = await db.insert(performers).values({ slug: e.slug, displayName: e.name, bio: e.bio, city: e.city, district: e.district, actType: e.act, kind, genres: e.genres, priceFrom: e.price, occasions: e.occ, status: "active", gateway: "mock", coverUrl: e.cover, avatarUrl: e.cover.replace("/demo/", "/demo/av-"), lineUserId: `Udev-${e.slug}`, email: demoEmail(e.slug), passwordHash: demoHash, emailVerifiedAt: new Date(), plan: "all", planUntil: DEMO_PLAN_UNTIL }).returning();
     await applyPoints(db, x.id, 20000, "signup_bonus", { note: "新手贈點" });
     if (e.act === "singer") {
       // Mia 也在演出中，首頁「現在演出中」才有兩個以上
@@ -166,7 +177,7 @@ export async function seedDemo(db: DB) {
   const [venue] = await db
     .insert(performers)
     .values({
-      slug: "demo-venue", lineUserId: "Udev-venue", displayName: "Bar Jade 展演空間", accountType: "organizer", orgKind: "venue",
+      slug: "demo-venue", lineUserId: "Udev-venue", email: demoEmail("demo-venue"), passwordHash: demoHash, emailVerifiedAt: new Date(), displayName: "Bar Jade 展演空間", accountType: "organizer", orgKind: "venue",
       city: "kaohsiung", district: "鹽埕區", address: "高雄市鹽埕區大勇路 1 號", website: "https://example.com",
       bio: "鹽埕的小型展演空間，每週五六有駐唱與樂團演出，可容納 60 人。",
     })
@@ -188,7 +199,7 @@ export async function seedDemo(db: DB) {
   const [mkt] = await db
     .insert(performers)
     .values({
-      slug: "demo-market", lineUserId: "Udev-market", displayName: "中山線上市集", accountType: "organizer", orgKind: "organizer",
+      slug: "demo-market", lineUserId: "Udev-market", email: demoEmail("demo-market"), passwordHash: demoHash, emailVerifiedAt: new Date(), displayName: "中山線上市集", accountType: "organizer", orgKind: "organizer",
       city: "taipei", district: "中山區", address: "臺北市中山區南京西路 18 巷", website: "https://example.com",
       bio: "每月兩次的小型市集，固定安排兩到三組街頭演出，提供電源與簡易音響。",
       coverUrl: "/demo/stage-wide.jpg",

@@ -6,7 +6,7 @@ import { menuItems } from "@/lib/db/schema";
 import { getPerformerBySlug, publicState } from "@/lib/orders";
 import { fmtShowTime, getFan, isFollowing, nextShow } from "@/lib/fans";
 import { getFanId } from "@/lib/session";
-import { APP_NAME, LIFF_ID, env } from "@/lib/env";
+import { APP_NAME, env } from "@/lib/env";
 import { PerformerApp } from "./PerformerApp";
 import { payMethodSummary } from "@/lib/paymethods";
 import { areaBySlug } from "@/lib/areas";
@@ -32,8 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     alternates: { canonical: `/u/${p.slug}` },
     openGraph: { title: `${p.displayName}｜掃碼點歌`, description: p.bio.slice(0, 80), type: "profile", images: p.avatarUrl ? [p.avatarUrl] : undefined },
     // 沒有歌單或沒設定縣市的頁面先不收錄
-    robots: songs.length && area && p.status === "active" ? undefined : { index: false, follow: true },
-  };
+    robots: songs.length && area && p.status === "active" ? undefined : { index: false, follow: true } };
 }
 
 export default async function Page({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ tab?: string }> }) {
@@ -71,24 +70,19 @@ export default async function Page({ params, searchParams }: { params: Promise<{
         description: p.bio || undefined,
         url: absUrl(`/p/${p.slug}`),
         image: p.avatarUrl || undefined,
-        ...(area ? { location: { "@type": "Place", name: p.district || area.name, address: { "@type": "PostalAddress", addressLocality: area.official, addressCountry: "TW" } } } : {}),
-      }}
+        ...(area ? { location: { "@type": "Place", name: p.district || area.name, address: { "@type": "PostalAddress", addressLocality: area.official, addressCountry: "TW" } } } : {}) }}
     />
     {area && <JsonLd data={breadcrumb([{ name: APP_NAME, path: "/" }, { name: `${area.name}街頭藝人`, path: `/area/${area.slug}` }, { name: p.displayName, path: `/p/${p.slug}` }])} />}
     {ns && <JsonLd data={showEvent({ startsAt: ns.startsAt.toISOString(), location: ns.location, note: ns.note, name: p.displayName, slug: p.slug, cityOfficial: area?.official })} />}
     <PerformerApp
       performer={{
         slug: p.slug, name: p.displayName, avatar: p.avatarUrl, cover: p.coverUrl, bio: p.bio, category: p.category, color: p.themeColor,
-        presets: p.presetAmounts, min: p.minAmount, max: p.maxAmount, manualLabel: payMethodSummary(p.payMethods) || "LINE Pay",
-      }}
+        presets: p.presetAmounts, min: p.minAmount, max: p.maxAmount, manualLabel: payMethodSummary(p.payMethods) || "LINE Pay" }}
       menu={menu.map((m) => ({ id: m.id, title: m.title, subtitle: m.subtitle, category: m.category, price: m.price, enabled: m.enabled, hot: m.requestCount }))}
       initialState={state}
       fan={fan ? { name: fan.name, avatar: fan.avatarUrl } : null}
       initialFollowing={following}
       nextShow={ns ? { when: fmtShowTime(ns.startsAt), location: ns.location, note: ns.note } : null}
-      liffId={LIFF_ID}
-      devLogin={env.allowDevLogin}
-      oaUrl={env.line.oaAddFriendUrl}
       appName={APP_NAME}
       hideBranding={p.hideBranding && planIsPaid(effectivePlan(p))}
       initialTab={tab === "rank" || tab === "queue" || tab === "wall" ? tab : "menu"}

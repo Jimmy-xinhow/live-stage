@@ -3,7 +3,6 @@ import { and, asc, desc, eq, gte, inArray, isNotNull, lt, sql } from "drizzle-or
 import { getDb } from "./db";
 import { fans, follows, liveSessions, menuItems, orders, performers, type Order, type Performer } from "./db/schema";
 import { applyPoints, canAcceptOrders, feeFor, feePct, fmtPoints } from "./billing";
-import { multicast, pushMessage } from "./line";
 import { env } from "./env";
 import { nt } from "./format";
 import { performerCreds, type PayResult } from "./payments";
@@ -12,7 +11,7 @@ import { badgesFor, evaluateAchievements, leaderboard, notifyOvertake } from "./
 import { reportError } from "./errors";
 import type { ModeSlug } from "./kinds";
 import { effectivePlan } from "./subscription";
-import { wouldExceed } from "./linequota";
+import { sendMail, signature } from "./mail";
 import { recordSplit } from "./band";
 import { planHasPro } from "./plans";
 import { track } from "./usage";
@@ -353,21 +352,10 @@ async function afterPaid(p: Performer, o: Order) {
   const queue = o.sessionId && o.kind === "request" ? await sessionQueue(o.sessionId) : [];
   const ahead = o.kind === "request" ? positionIn(queue, o) : 0;
 
-  if (p.notifyLine && p.lineUserId) {
-    const lines =
-      o.kind === "request"
-        ? [`🎵 新點歌 #${o.queueSeq}〈${o.itemTitle}〉`, `${who}・${nt(o.amount)}`, o.message ? `💬「${o.message}」` : "", `目前排隊 ${queue.filter((q) => q.queueStatus === "waiting").length} 首`, `演出控制台：${env.baseUrl}/dashboard/stage`]
-        : [`💰 ${who} 打賞 ${nt(o.amount)}`, o.message ? `💬「${o.message}」` : ""];
-    await pushMessage(p.lineUserId, [{ type: "text", text: lines.filter(Boolean).join("\n") }]);
-  }
-  const fanLine = await fanLineId(o.fanId);
-  if (fanLine) {
-    const text =
-      o.kind === "request"
-        ? `✅ 點歌成功〈${o.itemTitle}〉\n${ahead <= 1 ? "下一首就是你！" : `你前面還有 ${ahead} 首，約 ${ahead * p.avgSongMinutes} 分鐘`}\n即時排隊：${orderUrl(o.tradeNo)}`
-        : `✅ 已打賞 ${p.displayName} ${nt(o.amount)}\n${p.displayName}：${p.thankYouText}`;
-    await pushMessage(fanLine, [{ type: "text", text }]);
-  }
+  // 成交之後不推任何訊息。表演者的控制台和觀眾的訂單頁都是即時更新的，
+  // 而且兩邊的人就站在同一個現場——再送一則通知只是多一個會壞的環節。
+  void queue;
+  void ahead;
   await checkLowBalance(p);
 }
 
@@ -378,14 +366,15 @@ async function checkLowBalance(p: Performer) {
   const db = await getDb();
   await db.update(performers).set({ lowBalanceNotifiedAt: new Date() }).where(eq(performers.id, p.id));
   const paused = !canAcceptOrders(p.pointsCents);
-  await pushMessage(p.lineUserId, [
-    {
-      type: "text",
-      text: paused
-        ? `⚠️ 點數已用完（${fmtPoints(p.pointsCents)} 點），點歌與打賞已暫停。\n補充點數：${env.baseUrl}/dashboard/points`
-        : `🔋 點數剩 ${fmtPoints(p.pointsCents)} 點，用完會暫停接單。\n補充點數：${env.baseUrl}/dashboard/points`,
-    },
-  ]);
+  await sendMail({
+    to: p.email!,
+    subject: paused ? "點數用完了，已暫停接單" : `點數剩 ${fmtPoints(p.pointsCents)} 點`,
+    text:
+      (paused
+        ? `你的點數已經用完（${fmtPoints(p.pointsCents)} 點），點歌與打賞暫時停止接單。`
+        : `你的點數剩下 ${fmtPoints(p.pointsCents)} 點，用完之後會暫停接單。`) +
+      `\n\n補充點數：${env.baseUrl}/dashboard/points` + signature(),
+  }).catch(() => {});
 }
 
 /* ────────────── 手動確認（免申請模式） ────────────── */
@@ -429,8 +418,7 @@ export async function rejectManual(p: Performer, where: { id?: string; code?: st
   if (!o) throw new OrderError("這筆已處理或已過期");
   const db = await getDb();
   await db.update(orders).set({ status: "failed" }).where(and(eq(orders.id, o.id), inArray(orders.status, ["awaiting", "expired"])));
-  const l = await fanLineId(o.fanId);
-  if (l) await pushMessage(l, [{ type: "text", text: `${p.displayName} 沒有查到點歌碼 ${o.payCode} 的轉帳，這筆已取消。若確定已付款，請直接跟藝人說。` }]);
+  // 觀眾的訂單頁會即時變成「已取消」，不另外送訊息
   return o;
 }
 
@@ -443,56 +431,26 @@ export async function claimOrder(tradeNo: string) {
     .where(and(eq(orders.tradeNo, tradeNo), eq(orders.payMode, "manual"), inArray(orders.status, ["awaiting", "expired"])))
     .returning();
   if (!o) return null;
-  const p = await getPerformerById(o.performerId);
-  if (p?.lineUserId && p.notifyLine) {
-    await pushMessage(p.lineUserId, [
-      {
-        type: "text",
-        text: `💸 ${displayName(o)} 說已轉帳 ${nt(o.amount)}\n點歌碼 ${o.payCode}${o.itemTitle ? `〈${o.itemTitle}〉` : "（打賞）"}\n請對一下 LINE Pay 入帳備註`,
-        quickReply: {
-          items: [
-            { type: "action", action: { type: "postback", label: `✅ 已收到 ${o.payCode}`, data: `confirm:${o.id}`, displayText: `已收到 ${o.payCode}` } },
-            { type: "action", action: { type: "postback", label: "❌ 沒收到", data: `reject:${o.id}`, displayText: `沒收到 ${o.payCode}` } },
-          ],
-        },
-      },
-    ]);
-  }
+  // 控制台的「待確認轉帳」區塊會立刻出現這一筆，不需要另外通知。
+  // 快速確認按鈕原本掛在 LINE 的訊息上，現在在控制台直接按。
   return o;
 }
 
 /* ────────────── 演出控制 ────────────── */
 
-export async function goLive(p: Performer, location: string, notifyFans: boolean, mode: ModeSlug = "onsite") {
+/**
+ * 開始演出。
+ *
+ * 原本這裡會推播給所有粉絲。拿掉 LINE 之後沒有這一步了——
+ * 現場的人是掃桌上的碼進來的，不是收到通知才來的。
+ */
+export async function goLive(p: Performer, location: string, mode: ModeSlug = "onsite") {
   const db = await getDb();
-  if (p.liveSessionId) return { notified: 0 };
+  if (p.liveSessionId) return { ok: false as const };
   const [s] = await db.insert(liveSessions).values({ performerId: p.id, location: location.slice(0, 60), mode }).returning();
   await db.update(performers).set({ liveSessionId: s.id, queueOpen: true }).where(eq(performers.id, p.id));
-  if (!notifyFans) return { notified: 0 };
-
-  const rows = await db
-    .select({ line: fans.lineUserId })
-    .from(follows)
-    .innerJoin(fans, eq(fans.id, follows.fanId))
-    .where(and(eq(follows.performerId, p.id), eq(follows.notifyLive, true), isNotNull(fans.lineUserId)));
   track("go_live", p.id);
-  const ids = rows.map((r) => r.line);
-  if (!ids.length) return { notified: 0 };
-  // 額度不夠就不發，但演出照常開始——通知發不出去不該讓人無法上台
-  if (await wouldExceed(ids.length)) return { notified: 0, quotaBlocked: true };
-  await multicast(ids, [
-    {
-      type: "text",
-      text:
-        mode === "indoor"
-          ? `🔴 ${p.displayName} 開播了！\n現在就能點歌：${env.baseUrl}/p/${p.slug}`
-          : `🎤 ${p.displayName} 開唱了！${location ? `\n📍 ${location}` : ""}\n現在就能點歌：${env.baseUrl}/p/${p.slug}`,
-    },
-  ], "live", p.id);
-  const cost = ids.length * env.billing.liveNotifyCents;
-  if (cost) await applyPoints(db, p.id, -cost, "live_notify", { note: `開唱通知 ${ids.length} 位粉絲` });
-  await db.update(liveSessions).set({ notifiedCount: ids.length }).where(eq(liveSessions.id, s.id));
-  return { notified: ids.length };
+  return { ok: true as const, sessionId: s.id };
 }
 
 export async function endLive(p: Performer) {
@@ -516,25 +474,14 @@ export async function queueAction(p: Performer, orderId: string, action: "start"
       .set({ queueStatus: "done", finishedAt: now })
       .where(and(eq(orders.sessionId, o.sessionId), eq(orders.queueStatus, "playing")));
     await db.update(orders).set({ queueStatus: "playing", startedAt: now }).where(eq(orders.id, o.id));
-    const l = await fanLineId(o.fanId);
-    if (l) await pushMessage(l, [{ type: "text", text: `🎤 ${p.displayName} 正在為你演唱〈${o.itemTitle}〉！` }]);
   } else {
     await db
       .update(orders)
       .set({ queueStatus: action === "done" ? "done" : "skipped", finishedAt: now })
       .where(eq(orders.id, o.id));
-    if (action === "skip") {
-      const l = await fanLineId(o.fanId);
-      if (l) await pushMessage(l, [{ type: "text", text: `${p.displayName} 這次無法演唱〈${o.itemTitle}〉，退款請直接與藝人聯繫，抱歉！` }]);
-    }
   }
-  // 通知「下一首就是你」
-  const queue = await sessionQueue(o.sessionId);
-  const next = queue.find((q) => q.queueStatus === "waiting" && positionIn(queue, q) <= 1);
-  if (next && next.id !== o.id) {
-    const l = await fanLineId(next.fanId);
-    if (l && action === "start") await pushMessage(l, [{ type: "text", text: `⏭ 下一首就是你點的〈${next.itemTitle}〉，準備好囉！` }]);
-  }
+  // 「下一首就是你」原本是推播。現在觀眾的訂單頁本來就在輪詢排隊位置，
+  // 他低頭就看得到自己排第幾個，不需要再收一則訊息。
 }
 
 /** 觀眾查自己的點歌 */

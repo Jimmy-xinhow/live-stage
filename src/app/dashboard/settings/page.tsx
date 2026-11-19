@@ -14,7 +14,7 @@ export default async function Settings() {
       initial={{
         slug: p.slug, displayName: p.displayName, avatarUrl: p.avatarUrl ?? "", bio: p.bio, category: p.category as "busker", themeColor: p.themeColor, city: p.city, district: p.district,
         thankYouText: p.thankYouText, presetAmounts: p.presetAmounts, minAmount: p.minAmount, maxAmount: p.maxAmount, maxQueue: p.maxQueue,
-        avgSongMinutes: p.avgSongMinutes, showAmounts: p.showAmounts, hideBranding: p.hideBranding, streamDelaySec: p.streamDelaySec, notifyLine: p.notifyLine,
+        avgSongMinutes: p.avgSongMinutes, showAmounts: p.showAmounts, hideBranding: p.hideBranding, streamDelaySec: p.streamDelaySec,
       }}
       gatewayLabel={GATEWAY_LABEL[p.gateway] ?? p.gateway}
       merchantId={p.gatewayMerchantId}

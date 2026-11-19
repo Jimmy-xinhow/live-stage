@@ -8,8 +8,8 @@ import { initial as initialOf } from "@/lib/format";
 
 const HANDS = [["sing", "想上台合唱"], ["ask", "想問問題"], ["wish", "告白・祝福"]] as const;
 
-export function HubApp(props: { slug: string; name: string; avatar: string | null; initial: HubState; nowPlaying: { title: string; by: string } | null; nextTitle: string | null; waiting: number; gameOn: string | null; fan: FanInfo; liffId: string; devLogin: boolean }) {
-  const { ensureFan } = useFan(props.fan, props.liffId, props.devLogin);
+export function HubApp(props: { slug: string; name: string; avatar: string | null; initial: HubState; nowPlaying: { title: string; by: string } | null; nextTitle: string | null; waiting: number; gameOn: string | null; fan: FanInfo;}) {
+  const { ensureFan } = useFan(props.fan);
   const [s, setS] = useState(props.initial);
   const [msg, setMsg] = useState("");
   const [sheet, setSheet] = useState<null | "hand" | "wish">(null);

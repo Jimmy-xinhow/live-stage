@@ -1,6 +1,5 @@
 import { systemChecks } from "@/lib/admin";
 import { preflightSummary } from "@/lib/preflight";
-import { outboxStats } from "@/lib/linequota";
 import { APP_NAME, POINT_PACKAGES, env } from "@/lib/env";
 import { FEATURES } from "@/lib/features";
 import { Table } from "../Bits";
@@ -16,13 +15,11 @@ const FEATURE_LABELS: Record<string, string> = {
   map: "表演地圖",
   seoAreas: "地區 SEO 頁",
   discovery: "公開搜尋與瀏覽",
-  rewards: "成就與獎勵",
-};
+  rewards: "成就與獎勵" };
 
 export default async function System() {
   const checks = systemChecks();
   const pf = preflightSummary();
-  const line = await outboxStats();
   return (
     <div className="flex flex-col gap-8">
       <PageHead title="系統" desc={<>目前這個環境的設定。價格與費率都在環境變數裡，改完重新部署就生效。</>} />
@@ -53,26 +50,6 @@ export default async function System() {
       <section className="sec">
         <h2 className="h2">設定健檢</h2>
         <Table head={["項目", "狀態", "說明"]} rows={checks.map((c) => [c.name, c.ok ? <span key="o" className="text-ok">正常</span> : <span key="o" className="text-nowtext">要注意</span>, c.value])} />
-      </section>
-
-      <section className="sec">
-        <h2 className="h2">LINE 推播</h2>
-        <p className="small mb-3 max-w-[680px]">
-          官方帳號的免費訊息按<strong>收件人數</strong>計算，不是按發送次數。
-          上限跟著帳號方案走，所以放在環境變數 <code className="num">LINE_MONTHLY_QUOTA</code>；
-          沒設就不擋，只記錄用量——寧可不擋，也不要用猜的數字擋掉該發的開演通知。
-        </p>
-        <Table
-          head={["項目", "數值"]}
-          rows={[
-            [`${line.usage.month} 已送出`, `${line.usage.sent} 則`],
-            ["本月失敗", `${line.usage.failed} 則`],
-            ["每月上限", line.usage.quota > 0 ? `${line.usage.quota} 則` : "未設定（不擋）"],
-            ["剩餘", line.usage.left === null ? "—" : `${line.usage.left} 則（已用 ${line.usage.pct}%）`],
-            ["等待重送", `${line.pending} 則`],
-            ["重送到放棄", line.dead ? <span key="d" className="text-nowtext">{line.dead} 則</span> : "0 則"],
-          ]}
-        />
       </section>
 
       <section className="sec">

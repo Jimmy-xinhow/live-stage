@@ -1,7 +1,6 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { chatMessages, checkins, fans, hands, liveSessions, lotteries, lotteryEntries, performers, wishes, wishVotes, type Performer } from "./db/schema";
-import { pushMessage } from "./line";
 import { track } from "./usage";
 import { env } from "./env";
 
@@ -171,7 +170,7 @@ export async function drawLottery(p: Performer) {
   const winner = entries[randomInt(entries.length)].fanId;
   await db.update(lotteries).set({ status: "drawn", winnerFanId: winner }).where(eq(lotteries.id, lot.id));
   const [f] = await db.select().from(fans).where(eq(fans.id, winner));
-  if (f) await pushMessage(f.lineUserId, [{ type: "text", text: `你抽中了 ${p.displayName} 的「${lot.prize}」！請到台前找表演者領取。\n${env.baseUrl}/p/${p.slug}/hub` }]).catch(() => null);
+  // 中獎名字會出現在大螢幕與觀眾自己的互動頁上，不另外送訊息
   return f?.name ?? "";
 }
 
@@ -179,8 +178,7 @@ export async function pickHand(p: Performer, handId: string) {
   const db = await getDb();
   const [h] = await db.update(hands).set({ status: "picked" }).where(and(eq(hands.id, handId), eq(hands.performerId, p.id))).returning();
   if (!h) throw new HubError("找不到");
-  const [f] = await db.select().from(fans).where(eq(fans.id, h.fanId));
-  if (f) await pushMessage(f.lineUserId, [{ type: "text", text: `${p.displayName} 點到你了（${HAND_LABEL[h.kind]}）！請舉手讓表演者看到你。` }]).catch(() => null);
+  // 被點到的人，自己的互動頁上狀態會變成「點到你了」
 }
 
 export async function resetHype(p: Performer) {
@@ -193,10 +191,9 @@ export async function setWishStatus(p: Performer, wishId: string, status: "open"
   const db = await getDb();
   const [w] = await db.update(wishes).set({ status, note: note.slice(0, 100) }).where(and(eq(wishes.id, wishId), eq(wishes.performerId, p.id))).returning();
   if (!w) throw new HubError("找不到");
-  if (status === "done") {
-    const voters = await db.select({ line: fans.lineUserId }).from(wishVotes).innerJoin(fans, eq(fans.id, wishVotes.fanId)).where(eq(wishVotes.wishId, wishId));
-    for (const v of voters) await pushMessage(v.line, [{ type: "text", text: `你許願的〈${w.title}〉，${p.displayName} 學會了！下次演出就能點。\n${env.baseUrl}/p/${p.slug}` }]).catch(() => null);
-  }
+  // 許願學會了原本會通知許願的人。沒有推播之後，許願池上那一首會標成
+  // 「學會了」，下次他來就看得到。
+  void w;
 }
 
 /** 演出護照：跨表演者的簽到章 */

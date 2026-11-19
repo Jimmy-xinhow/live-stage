@@ -6,12 +6,11 @@ import { ACTS, BUDGETS, GUESTS, OCCASIONS } from "@/lib/acts";
 import { AREAS } from "@/lib/areas";
 import { useFan, type FanInfo } from "@/components/useFan";
 
-export function InviteForm(props: { to: { slug: string; name: string; act: string } | null; init: { city: string; act: string; occasion: string }; fan: FanInfo; liffId: string; devLogin: boolean }) {
-  const { fan, ensureFan } = useFan(props.fan, props.liffId, props.devLogin);
+export function InviteForm(props: { to: { slug: string; name: string; act: string } | null; init: { city: string; act: string; occasion: string }; fan: FanInfo;}) {
+  const { fan, ensureFan } = useFan(props.fan);
   const [f, setF] = useState({
     contactName: props.fan?.name ?? "", occasion: OCCASIONS.includes(props.init.occasion) ? props.init.occasion : OCCASIONS[0], actType: props.init.act, eventDate: "", timeText: "",
-    city: props.init.city, place: "", guests: GUESTS[1], budget: BUDGETS[1], note: "", broadcast: !props.to,
-  });
+    city: props.init.city, place: "", guests: GUESTS[1], budget: BUDGETS[1], note: "", broadcast: !props.to });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState<string[] | null>(null);

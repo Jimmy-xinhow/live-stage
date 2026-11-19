@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { submitForm } from "@/lib/liff-client";
+import { submitForm } from "@/lib/formpost";
 
 export function BuyButton({ packageId }: { packageId: string }) {
   const [busy, setBusy] = useState(false);

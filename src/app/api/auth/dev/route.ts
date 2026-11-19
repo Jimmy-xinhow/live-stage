@@ -14,6 +14,6 @@ export async function GET(req: Request) {
   const db = await getDb();
   const [p] = await db.select().from(performers).where(eq(performers.slug, slug));
   if (!p) return NextResponse.json({ error: "no such account" }, { status: 404 });
-  await createSession({ performerId: p.id, lineUserId: p.lineUserId ?? "Udev", isAdmin: p.accountType === "performer" });
+  await createSession({ performerId: p.id, isAdmin: p.accountType === "performer" });
   return NextResponse.redirect(`${env.baseUrl}${homeOf(p.accountType)}`);
 }
