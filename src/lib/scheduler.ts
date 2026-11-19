@@ -17,10 +17,16 @@ import { reportError } from "./errors";
 const LOCK = 727002;
 const EVERY = 60 * 60_000;
 
-let timer: NodeJS.Timeout | null = null;
-let lastRun: { at: string; ok: boolean; detail?: unknown } | null = null;
+/**
+ * 狀態掛在 globalThis：啟動時跑 startScheduler 的是 instrumentation 的 bundle，
+ * 讀 schedulerStatus 的是 /api/health 的 bundle。模組變數在這兩邊各有一份，
+ * 健康檢查會永遠回報「沒在跑」，即使排程好好的。
+ */
+type SchedState = { timer: NodeJS.Timeout | null; lastRun: { at: string; ok: boolean; detail?: unknown } | null };
+const g = globalThis as unknown as { __sched?: SchedState };
+const st: SchedState = (g.__sched ??= { timer: null, lastRun: null });
 
-export const schedulerStatus = () => ({ running: !!timer, lastRun });
+export const schedulerStatus = () => ({ running: !!st.timer, lastRun: st.lastRun });
 
 async function withLock<T>(fn: () => Promise<T>) {
   const db = await getDb();
@@ -44,17 +50,17 @@ async function tick() {
       const plans = await runPlanRenewals();
       return { maintenance, plans };
     });
-    if (out) lastRun = { at: new Date().toISOString(), ok: true, detail: out };
+    if (out) st.lastRun = { at: new Date().toISOString(), ok: true, detail: out };
   } catch (e) {
-    lastRun = { at: new Date().toISOString(), ok: false, detail: String(e) };
+    st.lastRun = { at: new Date().toISOString(), ok: false, detail: String(e) };
     reportError("scheduler", e);
   }
 }
 
 /** 啟動時呼叫一次。開發環境不跑，免得每次存檔都觸發 */
 export function startScheduler() {
-  if (timer || process.env.NODE_ENV !== "production") return;
+  if (st.timer || process.env.NODE_ENV !== "production") return;
   // 開機後等一分鐘再跑第一次，讓容器先把流量接起來
   setTimeout(() => void tick(), 60_000);
-  timer = setInterval(() => void tick(), EVERY);
+  st.timer = setInterval(() => void tick(), EVERY);
 }

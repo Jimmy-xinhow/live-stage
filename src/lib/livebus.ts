@@ -31,7 +31,15 @@ type Room = {
   busy: boolean;
 };
 
-const rooms = new Map<string, Room>();
+/**
+ * 房間掛在 globalThis，不是模組變數。
+ *
+ * Next 會把 instrumentation、middleware、路由處理器打包成不同的 bundle，
+ * 同一個檔案可能被載入成好幾份。那樣的話 bump() 推的是 A 份的房間、
+ * SSE 連線訂閱的是 B 份——永遠對不上，而且完全不會報錯，只是推不出去。
+ */
+const g = globalThis as unknown as { __liveRooms?: Map<string, Room> };
+const rooms = (g.__liveRooms ??= new Map<string, Room>());
 
 /** 有遊戲在跑時抓快一點，現場的分數要跟得上手指 */
 const TICK_IDLE = 4000;
